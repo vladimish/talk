@@ -32,6 +32,7 @@ func main() {
 	pg, err := sqlx.Connect("pgx", os.Getenv("DATABASE_URL"))
 	if err != nil {
 		log.Error("can't connect to database", "error", err)
+		//nolint:gocritic
 		os.Exit(1)
 	}
 	queries := generated.New(pg)
