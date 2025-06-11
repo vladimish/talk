@@ -4,3 +4,6 @@ migrate:
 
 generate:
 	go tool sqlc generate
+
+lint:
+	go tool golangci-lint run

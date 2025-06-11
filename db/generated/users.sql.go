@@ -7,7 +7,39 @@ package generated
 
 import (
 	"context"
+	"time"
 )
+
+const createUser = `-- name: CreateUser :one
+INSERT INTO users (foreign_id, language, created_at, updated_at)
+VALUES ($1, $2, $3, $4)
+RETURNING id, foreign_id, language, created_at, updated_at
+`
+
+type CreateUserParams struct {
+	ForeignID int64
+	Language  string
+	CreatedAt time.Time
+	UpdatedAt time.Time
+}
+
+func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
+	row := q.db.QueryRowContext(ctx, createUser,
+		arg.ForeignID,
+		arg.Language,
+		arg.CreatedAt,
+		arg.UpdatedAt,
+	)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.ForeignID,
+		&i.Language,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
 
 const getUserByForeignID = `-- name: GetUserByForeignID :one
 SELECT id, foreign_id, language, created_at, updated_at

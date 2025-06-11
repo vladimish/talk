@@ -1,6 +1,7 @@
 package domain
 
 type Update struct {
-	ExternalID string
-	Message    Message
+	ExternalID   string
+	Message      Message
+	UserLanguage string
 }
