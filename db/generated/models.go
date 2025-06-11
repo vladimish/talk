@@ -5,13 +5,69 @@
 package generated
 
 import (
+	"database/sql"
+	"database/sql/driver"
+	"encoding/json"
+	"fmt"
 	"time"
 )
 
+type MessageSender string
+
+const (
+	MessageSenderUser MessageSender = "user"
+	MessageSenderBot  MessageSender = "bot"
+)
+
+func (e *MessageSender) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = MessageSender(s)
+	case string:
+		*e = MessageSender(s)
+	default:
+		return fmt.Errorf("unsupported scan type for MessageSender: %T", src)
+	}
+	return nil
+}
+
+type NullMessageSender struct {
+	MessageSender MessageSender
+	Valid         bool // Valid is true if MessageSender is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullMessageSender) Scan(value interface{}) error {
+	if value == nil {
+		ns.MessageSender, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.MessageSender.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullMessageSender) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.MessageSender), nil
+}
+
+type Message struct {
+	ID          int64
+	MessageType json.RawMessage
+	UserID      int64
+	SentBy      MessageSender
+	CreatedAt   sql.NullTime
+	UpdatedAt   sql.NullTime
+}
+
 type User struct {
-	ID        int64
-	ForeignID int64
-	Language  string
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	ID          int64
+	ForeignID   int64
+	Language    string
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+	CurrentStep sql.NullString
 }

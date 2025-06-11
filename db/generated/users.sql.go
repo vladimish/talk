@@ -7,13 +7,14 @@ package generated
 
 import (
 	"context"
+	"database/sql"
 	"time"
 )
 
 const createUser = `-- name: CreateUser :one
 INSERT INTO users (foreign_id, language, created_at, updated_at)
 VALUES ($1, $2, $3, $4)
-RETURNING id, foreign_id, language, created_at, updated_at
+RETURNING id, foreign_id, language, created_at, updated_at, current_step
 `
 
 type CreateUserParams struct {
@@ -37,12 +38,13 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		&i.Language,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.CurrentStep,
 	)
 	return i, err
 }
 
 const getUserByForeignID = `-- name: GetUserByForeignID :one
-SELECT id, foreign_id, language, created_at, updated_at
+SELECT id, foreign_id, language, created_at, updated_at, current_step
 FROM users
 WHERE foreign_id = $1
 LIMIT 1
@@ -57,6 +59,23 @@ func (q *Queries) GetUserByForeignID(ctx context.Context, foreignID int64) (User
 		&i.Language,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.CurrentStep,
 	)
 	return i, err
+}
+
+const updateUserCurrentStep = `-- name: UpdateUserCurrentStep :exec
+UPDATE users
+SET current_step = $2, updated_at = NOW()
+WHERE id = $1
+`
+
+type UpdateUserCurrentStepParams struct {
+	ID          int64
+	CurrentStep sql.NullString
+}
+
+func (q *Queries) UpdateUserCurrentStep(ctx context.Context, arg UpdateUserCurrentStepParams) error {
+	_, err := q.db.ExecContext(ctx, updateUserCurrentStep, arg.ID, arg.CurrentStep)
+	return err
 }

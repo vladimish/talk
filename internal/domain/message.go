@@ -1,8 +1,23 @@
 package domain
 
+import "time"
+
+type MessageSender string
+
+const (
+	MessageSenderUser MessageSender = "user"
+	MessageSenderBot  MessageSender = "bot"
+)
+
 type Message struct {
-	ID             string
-	ExternalID     string
-	ExternalUserID string
-	Content        MessageContent
+	ID          int64
+	UserID      int64
+	MessageType MessageType
+	SentBy      MessageSender
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+}
+
+type MessageType struct {
+	Text string `json:"text"`
 }

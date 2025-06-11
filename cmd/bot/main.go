@@ -9,7 +9,7 @@ import (
 	"talk/db/generated"
 	"talk/internal/adapter/in/tg"
 	pgAdapter "talk/internal/adapter/out/pg"
-	tg2 "talk/internal/adapter/out/tg"
+	tgAdapter "talk/internal/adapter/out/tg"
 	"talk/internal/service"
 	"talk/pkg/slogctx"
 
@@ -43,7 +43,7 @@ func main() {
 		panic(err)
 	}
 
-	sender := tg2.NewSender(b)
+	sender := tgAdapter.NewSender(b)
 	updateService := service.NewUpdateService(log, store, sender)
 	botAdapter := tg.NewBot(log, updateService)
 

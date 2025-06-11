@@ -3,8 +3,6 @@ package tg
 import (
 	"context"
 	"fmt"
-	"strconv"
-	"talk/internal/domain"
 
 	"github.com/go-telegram/bot"
 	"github.com/go-telegram/bot/models"
@@ -18,16 +16,15 @@ func NewSender(bot *bot.Bot) *Sender {
 	return &Sender{bot: bot}
 }
 
-func (u *Sender) SendMessage(ctx context.Context, message domain.Message) (*domain.Message, error) {
-	m, err := u.bot.SendMessage(ctx, &bot.SendMessageParams{
-		ChatID:    message.ExternalUserID,
-		Text:      message.Content.Text,
+func (u *Sender) SendMessage(ctx context.Context, externalUserID string, text string) (string, error) {
+	_, err := u.bot.SendMessage(ctx, &bot.SendMessageParams{
+		ChatID:    externalUserID,
+		Text:      text,
 		ParseMode: models.ParseModeMarkdown,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("can't send message: %w", err)
+		return "", fmt.Errorf("can't send message: %w", err)
 	}
 
-	message.ExternalID = strconv.Itoa(m.ID)
-	return &message, nil
+	return text, nil
 }

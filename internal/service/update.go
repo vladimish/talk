@@ -26,13 +26,13 @@ func NewUpdateService(logger *slog.Logger, storage storage.Storage, sender sende
 }
 
 func (s *UpdateService) HandleUpdate(ctx context.Context, update domain.Update) error {
-	user, err := s.storage.GetUserByExternalUserID(ctx, update.Message.ExternalUserID)
+	user, err := s.storage.GetUserByExternalUserID(ctx, update.ExternalUserID)
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
 			language := update.UserLanguage
 			now := time.Now()
 			newUser := &domain.User{
-				ExternalID: update.Message.ExternalUserID,
+				ExternalID: update.ExternalUserID,
 				Language:   language,
 				CreatedAt:  now,
 				UpdatedAt:  now,
@@ -50,12 +50,39 @@ func (s *UpdateService) HandleUpdate(ctx context.Context, update domain.Update) 
 		}
 	}
 
-	_, err = s.sender.SendMessage(ctx, domain.Message{
-		ExternalUserID: user.ExternalID,
-		Content:        update.Message.Content,
+	// Save incoming message from user
+	_, err = s.storage.CreateMessage(ctx, &domain.Message{
+		UserID: user.ID,
+		MessageType: domain.MessageType{
+			Text: update.MessageText,
+		},
+		SentBy:    domain.MessageSenderUser,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
 	})
 	if err != nil {
+		return fmt.Errorf("can't save user message: %w", err)
+	}
+
+	// Send echo response
+	responseText := update.MessageText
+	response, err := s.sender.SendMessage(ctx, user.ExternalID, responseText)
+	if err != nil {
 		return fmt.Errorf("can't send message: %w", err)
+	}
+
+	// Save bot's response
+	_, err = s.storage.CreateMessage(ctx, &domain.Message{
+		UserID: user.ID,
+		MessageType: domain.MessageType{
+			Text: response,
+		},
+		SentBy:    domain.MessageSenderBot,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	})
+	if err != nil {
+		return fmt.Errorf("can't save bot message: %w", err)
 	}
 
 	return nil
