@@ -4,12 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/vladimish/talk/internal/domain"
+	"github.com/vladimish/talk/internal/port/completion"
+	"github.com/vladimish/talk/internal/port/sender"
+	"github.com/vladimish/talk/internal/port/storage"
 	"log/slog"
 	"strings"
-	"talk/internal/domain"
-	"talk/internal/port/completion"
-	"talk/internal/port/sender"
-	"talk/internal/port/storage"
 	"time"
 )
 
@@ -75,28 +75,67 @@ func (s *UpdateService) HandleUpdate(ctx context.Context, update domain.Update) 
 		return fmt.Errorf("can't get messages: %w", err)
 	}
 
+	// Send typing indicator
+	err = s.sender.SendTyping(ctx, user.ExternalID)
+	if err != nil {
+		s.logger.WarnContext(ctx, "failed to send typing indicator", slog.String("error", err.Error()))
+	}
+
 	// Get AI completion with streaming
 	tokenStream, err := s.completion.CompleteStream(ctx, user.SelectedModel, messages)
 	if err != nil {
 		return fmt.Errorf("can't get completion: %w", err)
 	}
 
-	// Collect response tokens
+	// Send initial empty message to get message ID
+	messageID, err := s.sender.SendMessage(ctx, user.ExternalID, "\\.\\.\\.")
+	if err != nil {
+		return fmt.Errorf("can't send initial message: %w", err)
+	}
+
+	// Track all message IDs (starts with just one)
+	messageIDs := []string{messageID}
+
+	// Stream response tokens and update message
 	var responseBuilder strings.Builder
+	lastUpdate := time.Now()
+
 	for token := range tokenStream {
 		if token.Error != nil {
 			return fmt.Errorf("completion stream error: %w", token.Error)
 		}
 		responseBuilder.WriteString(token.Content)
-		// TODO: In a real implementation, you might want to send partial responses
+
+		// Update message at most once per second
+		if time.Since(lastUpdate) >= time.Second/2 {
+			// Send typing indicator to keep the conversation active
+			err = s.sender.SendTyping(ctx, user.ExternalID)
+			if err != nil {
+				s.logger.WarnContext(ctx, "failed to send typing indicator", slog.String("error", err.Error()))
+			}
+
+			// Update all tracked messages
+			updatedMessageIDs, err := s.sender.UpdateMessages(ctx, user.ExternalID, messageIDs, responseBuilder.String())
+			if err != nil {
+				return fmt.Errorf("can't update messages: %w", err)
+			}
+			// Update our tracked message IDs
+			messageIDs = updatedMessageIDs
+			lastUpdate = time.Now()
+		}
+	}
+
+	// Send final update if needed
+	if time.Since(lastUpdate) > 0 {
+		updatedMessageIDs, err := s.sender.UpdateMessages(ctx, user.ExternalID, messageIDs, responseBuilder.String())
+		if err != nil {
+			return fmt.Errorf("can't update final messages: %w", err)
+		}
+		// Update our tracked message IDs for final state
+		messageIDs = updatedMessageIDs
 	}
 
 	responseText := responseBuilder.String()
-
-	_, err = s.sender.SendMessage(ctx, user.ExternalID, responseText)
-	if err != nil {
-		return fmt.Errorf("can't send message: %w", err)
-	}
 
 	_, err = s.storage.CreateMessage(ctx, &domain.Message{
 		UserID: user.ID,

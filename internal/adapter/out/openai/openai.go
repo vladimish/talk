@@ -3,9 +3,9 @@ package openai
 import (
 	"context"
 	"fmt"
+	"github.com/vladimish/talk/internal/domain"
+	"github.com/vladimish/talk/internal/port/completion"
 	"io"
-	"talk/internal/domain"
-	"talk/internal/port/completion"
 
 	"github.com/openai/openai-go"
 	"github.com/openai/openai-go/option"

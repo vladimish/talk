@@ -1,4 +1,4 @@
-module talk
+module github.com/vladimish/talk
 
 go 1.24
 

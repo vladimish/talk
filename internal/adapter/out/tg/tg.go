@@ -3,28 +3,197 @@ package tg
 import (
 	"context"
 	"fmt"
-
 	"github.com/go-telegram/bot"
 	"github.com/go-telegram/bot/models"
+	"github.com/vladimish/talk/internal/port/formatter"
+	"log/slog"
+	"strconv"
+	"strings"
 )
 
 type Sender struct {
-	bot *bot.Bot
+	bot       *bot.Bot
+	formatter formatter.Formatter
+	logger    *slog.Logger
 }
 
-func NewSender(bot *bot.Bot) *Sender {
-	return &Sender{bot: bot}
+func NewSender(bot *bot.Bot, formatter formatter.Formatter, logger *slog.Logger) *Sender {
+	return &Sender{
+		bot:       bot,
+		formatter: formatter,
+		logger:    logger,
+	}
 }
 
 func (u *Sender) SendMessage(ctx context.Context, externalUserID string, text string) (string, error) {
-	_, err := u.bot.SendMessage(ctx, &bot.SendMessageParams{
+	// Format the text for Telegram
+	formattedText, err := u.formatter.FormatMarkdown(ctx, text)
+	if err != nil {
+		u.logger.WarnContext(ctx, "failed to format markdown, using raw text", slog.String("error", err.Error()))
+		formattedText = text
+	}
+
+	msg, err := u.bot.SendMessage(ctx, &bot.SendMessageParams{
 		ChatID:    externalUserID,
-		Text:      text,
-		ParseMode: models.ParseModeMarkdownV1,
+		Text:      formattedText,
+		ParseMode: models.ParseModeMarkdown,
 	})
 	if err != nil {
 		return "", fmt.Errorf("can't send message: %w", err)
 	}
 
-	return text, nil
+	return strconv.Itoa(msg.ID), nil
+}
+
+func (u *Sender) UpdateMessage(ctx context.Context, externalUserID string, messageID string, text string) ([]string, error) {
+	const maxMessageLength = 4096
+
+	// Split text first, then format each chunk
+	chunks := splitText(text, maxMessageLength)
+	messageIDs := make([]string, 0, len(chunks))
+
+	for i, chunk := range chunks {
+		// Format each chunk individually
+		formattedChunk, err := u.formatter.FormatMarkdown(ctx, chunk)
+		if err != nil {
+			u.logger.WarnContext(ctx, "failed to format markdown for chunk, using raw text", slog.String("error", err.Error()))
+			formattedChunk = chunk
+		}
+
+		if i == 0 {
+			// Update the first message
+			msgID, err := strconv.Atoi(messageID)
+			if err != nil {
+				return nil, fmt.Errorf("invalid message ID: %w", err)
+			}
+
+			_, err = u.bot.EditMessageText(ctx, &bot.EditMessageTextParams{
+				ChatID:    externalUserID,
+				MessageID: msgID,
+				Text:      formattedChunk,
+				ParseMode: models.ParseModeMarkdown,
+			})
+			if err != nil {
+				// Check if it's the "message is not modified" error
+				if strings.Contains(err.Error(), "message is not modified") {
+					u.logger.DebugContext(ctx, "message content unchanged, skipping update")
+					return []string{messageID}, nil
+				}
+				return nil, fmt.Errorf("can't edit message: %w", err)
+			}
+			messageIDs = append(messageIDs, messageID)
+		} else {
+			// Send additional messages for overflow
+			msg, err := u.bot.SendMessage(ctx, &bot.SendMessageParams{
+				ChatID:    externalUserID,
+				Text:      formattedChunk,
+				ParseMode: models.ParseModeMarkdown,
+			})
+			if err != nil {
+				return nil, fmt.Errorf("can't send overflow message: %w", err)
+			}
+			messageIDs = append(messageIDs, strconv.Itoa(msg.ID))
+		}
+	}
+
+	return messageIDs, nil
+}
+
+func (u *Sender) UpdateMessages(ctx context.Context, externalUserID string, messageIDs []string, text string) ([]string, error) {
+	const maxMessageLength = 4096
+
+	// Split text first, then format each chunk
+	chunks := splitText(text, maxMessageLength)
+	resultMessageIDs := make([]string, 0, len(chunks))
+
+	for i, chunk := range chunks {
+		// Format each chunk individually
+		formattedChunk, err := u.formatter.FormatMarkdown(ctx, chunk)
+		if err != nil {
+			u.logger.WarnContext(ctx, "failed to format markdown for chunk, using raw text", slog.String("error", err.Error()))
+			formattedChunk = chunk
+		}
+
+		if i < len(messageIDs) {
+			// Update existing message
+			msgID, err := strconv.Atoi(messageIDs[i])
+			if err != nil {
+				return nil, fmt.Errorf("invalid message ID %s: %w", messageIDs[i], err)
+			}
+
+			_, err = u.bot.EditMessageText(ctx, &bot.EditMessageTextParams{
+				ChatID:    externalUserID,
+				MessageID: msgID,
+				Text:      formattedChunk,
+				ParseMode: models.ParseModeMarkdown,
+			})
+			if err != nil {
+				// Check if it's the "message is not modified" error
+				if strings.Contains(err.Error(), "message is not modified") {
+					u.logger.DebugContext(ctx, "message content unchanged, skipping update", slog.String("message_id", messageIDs[i]))
+				} else {
+					return nil, fmt.Errorf("can't edit message %s: %w", messageIDs[i], err)
+				}
+			}
+			resultMessageIDs = append(resultMessageIDs, messageIDs[i])
+		} else {
+			// Send new message for overflow
+			msg, err := u.bot.SendMessage(ctx, &bot.SendMessageParams{
+				ChatID:    externalUserID,
+				Text:      formattedChunk,
+				ParseMode: models.ParseModeMarkdown,
+			})
+			if err != nil {
+				return nil, fmt.Errorf("can't send overflow message: %w", err)
+			}
+			resultMessageIDs = append(resultMessageIDs, strconv.Itoa(msg.ID))
+		}
+	}
+
+	// Note: We don't delete leftover messages if we have fewer chunks now
+	// They will just remain as-is. This is simpler and avoids potential issues.
+
+	return resultMessageIDs, nil
+}
+
+func splitText(text string, maxLength int) []string {
+	// Fix will be applied per chunk below
+
+	if len(text) <= maxLength {
+		return []string{text}
+	}
+
+	var chunks []string
+	runes := []rune(text)
+
+	for len(runes) > 0 {
+		chunkSize := maxLength
+		if len(runes) < chunkSize {
+			chunkSize = len(runes)
+		}
+
+		// Try to break at a word boundary
+		if chunkSize < len(runes) {
+			for i := chunkSize - 1; i >= maxLength/2; i-- {
+				if runes[i] == ' ' || runes[i] == '\n' {
+					chunkSize = i + 1
+					break
+				}
+			}
+		}
+
+		chunk := string(runes[:chunkSize])
+		chunks = append(chunks, chunk)
+		runes = runes[chunkSize:]
+	}
+
+	return chunks
+}
+
+func (u *Sender) SendTyping(ctx context.Context, externalUserID string) error {
+	_, err := u.bot.SendChatAction(ctx, &bot.SendChatActionParams{
+		ChatID: externalUserID,
+		Action: models.ChatActionTyping,
+	})
+	return err
 }

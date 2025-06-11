@@ -3,7 +3,7 @@ package storage
 import (
 	"context"
 	"errors"
-	"talk/internal/domain"
+	"github.com/vladimish/talk/internal/domain"
 )
 
 type Storage interface {

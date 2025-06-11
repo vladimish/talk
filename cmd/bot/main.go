@@ -2,17 +2,18 @@ package main
 
 import (
 	"context"
+	"github.com/vladimish/talk/db/generated"
+	"github.com/vladimish/talk/internal/adapter/in/tg"
+	"github.com/vladimish/talk/internal/adapter/out/openai"
+	pgAdapter "github.com/vladimish/talk/internal/adapter/out/pg"
+	"github.com/vladimish/talk/internal/adapter/out/telegramify"
+	tgAdapter "github.com/vladimish/talk/internal/adapter/out/tg"
+	"github.com/vladimish/talk/internal/service"
+	"github.com/vladimish/talk/pkg/slogctx"
 	"log/slog"
 	"os"
 	"os/signal"
 	"syscall"
-	"talk/db/generated"
-	"talk/internal/adapter/in/tg"
-	"talk/internal/adapter/out/openai"
-	pgAdapter "talk/internal/adapter/out/pg"
-	tgAdapter "talk/internal/adapter/out/tg"
-	"talk/internal/service"
-	"talk/pkg/slogctx"
 
 	"github.com/go-telegram/bot"
 	_ "github.com/jackc/pgx/v5/stdlib"
@@ -51,7 +52,14 @@ func main() {
 	}
 	completion := openai.NewOpenAICompletion(openAIKey)
 
-	sender := tgAdapter.NewSender(b)
+	telegramifyURL := os.Getenv("TELEGRAMIFY_URL")
+	if telegramifyURL == "" {
+		telegramifyURL = "http://localhost:8000"
+		log.Warn("TELEGRAMIFY_URL not set, using default", "url", telegramifyURL)
+	}
+	formatter := telegramify.New(telegramifyURL)
+
+	sender := tgAdapter.NewSender(b, formatter, log)
 	updateService := service.NewUpdateService(log, store, sender, completion)
 	botAdapter := tg.NewBot(log, updateService)
 

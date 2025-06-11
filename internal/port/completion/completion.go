@@ -2,7 +2,7 @@ package completion
 
 import (
 	"context"
-	"talk/internal/domain"
+	"github.com/vladimish/talk/internal/domain"
 )
 
 type StreamToken struct {

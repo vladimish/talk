@@ -6,10 +6,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/vladimish/talk/db/generated"
+	"github.com/vladimish/talk/internal/domain"
+	"github.com/vladimish/talk/internal/port/storage"
 	"strconv"
-	"talk/db/generated"
-	"talk/internal/domain"
-	"talk/internal/port/storage"
 )
 
 type PG struct {

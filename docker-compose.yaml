@@ -19,6 +19,18 @@ services:
       timeout: 5s
       retries: 5
 
+  telegramify:
+    image: ghcr.io/vladimish/telegramify-markdown-api:latest
+    container_name: telegramify
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8000/" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
 volumes:
   postgres_data:
     driver: local
