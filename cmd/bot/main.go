@@ -8,6 +8,7 @@ import (
 	"syscall"
 	"talk/db/generated"
 	"talk/internal/adapter/in/tg"
+	"talk/internal/adapter/out/openai"
 	pgAdapter "talk/internal/adapter/out/pg"
 	tgAdapter "talk/internal/adapter/out/tg"
 	"talk/internal/service"
@@ -43,8 +44,15 @@ func main() {
 		panic(err)
 	}
 
+	openAIKey := os.Getenv("OPENAI_API_KEY")
+	if openAIKey == "" {
+		log.Error("OPENAI_API_KEY environment variable is required")
+		os.Exit(1)
+	}
+	completion := openai.NewOpenAICompletion(openAIKey)
+
 	sender := tgAdapter.NewSender(b)
-	updateService := service.NewUpdateService(log, store, sender)
+	updateService := service.NewUpdateService(log, store, sender, completion)
 	botAdapter := tg.NewBot(log, updateService)
 
 	b.RegisterHandler(bot.HandlerTypeMessageText, "", bot.MatchTypeContains, botAdapter.Handle)

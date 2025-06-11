@@ -40,13 +40,20 @@ func (p *PG) GetUserByExternalUserID(ctx context.Context, id string) (*domain.Us
 		currentStep = &u.CurrentStep.String
 	}
 
+	var conversation *string
+	if u.CurrentConversation.Valid {
+		conversation = &u.CurrentConversation.String
+	}
+
 	return &domain.User{
-		ID:          u.ID,
-		ExternalID:  strconv.FormatInt(u.ForeignID, 10),
-		Language:    u.Language,
-		CurrentStep: currentStep,
-		CreatedAt:   u.CreatedAt,
-		UpdatedAt:   u.UpdatedAt,
+		ID:                  u.ID,
+		ExternalID:          strconv.FormatInt(u.ForeignID, 10),
+		Language:            u.Language,
+		CurrentStep:         currentStep,
+		SelectedModel:       u.SelectedModel,
+		CurrentConversation: conversation,
+		CreatedAt:           u.CreatedAt,
+		UpdatedAt:           u.UpdatedAt,
 	}, nil
 }
 

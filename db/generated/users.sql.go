@@ -12,22 +12,24 @@ import (
 )
 
 const createUser = `-- name: CreateUser :one
-INSERT INTO users (foreign_id, language, created_at, updated_at)
-VALUES ($1, $2, $3, $4)
-RETURNING id, foreign_id, language, created_at, updated_at, current_step
+INSERT INTO users (foreign_id, language, selected_model, created_at, updated_at)
+VALUES ($1, $2, $3, $4, $5)
+RETURNING id, foreign_id, language, created_at, updated_at, current_step, selected_model, current_conversation
 `
 
 type CreateUserParams struct {
-	ForeignID int64
-	Language  string
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	ForeignID     int64
+	Language      string
+	SelectedModel string
+	CreatedAt     time.Time
+	UpdatedAt     time.Time
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
 	row := q.db.QueryRowContext(ctx, createUser,
 		arg.ForeignID,
 		arg.Language,
+		arg.SelectedModel,
 		arg.CreatedAt,
 		arg.UpdatedAt,
 	)
@@ -39,12 +41,14 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.CurrentStep,
+		&i.SelectedModel,
+		&i.CurrentConversation,
 	)
 	return i, err
 }
 
 const getUserByForeignID = `-- name: GetUserByForeignID :one
-SELECT id, foreign_id, language, created_at, updated_at, current_step
+SELECT id, foreign_id, language, created_at, updated_at, current_step, selected_model, current_conversation
 FROM users
 WHERE foreign_id = $1
 LIMIT 1
@@ -60,8 +64,26 @@ func (q *Queries) GetUserByForeignID(ctx context.Context, foreignID int64) (User
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.CurrentStep,
+		&i.SelectedModel,
+		&i.CurrentConversation,
 	)
 	return i, err
+}
+
+const updateUserCurrentConversation = `-- name: UpdateUserCurrentConversation :exec
+UPDATE users
+SET current_conversation = $2, updated_at = NOW()
+WHERE id = $1
+`
+
+type UpdateUserCurrentConversationParams struct {
+	ID                  int64
+	CurrentConversation sql.NullString
+}
+
+func (q *Queries) UpdateUserCurrentConversation(ctx context.Context, arg UpdateUserCurrentConversationParams) error {
+	_, err := q.db.ExecContext(ctx, updateUserCurrentConversation, arg.ID, arg.CurrentConversation)
+	return err
 }
 
 const updateUserCurrentStep = `-- name: UpdateUserCurrentStep :exec
@@ -77,5 +99,21 @@ type UpdateUserCurrentStepParams struct {
 
 func (q *Queries) UpdateUserCurrentStep(ctx context.Context, arg UpdateUserCurrentStepParams) error {
 	_, err := q.db.ExecContext(ctx, updateUserCurrentStep, arg.ID, arg.CurrentStep)
+	return err
+}
+
+const updateUserSelectedModel = `-- name: UpdateUserSelectedModel :exec
+UPDATE users
+SET selected_model = $2, updated_at = NOW()
+WHERE id = $1
+`
+
+type UpdateUserSelectedModelParams struct {
+	ID            int64
+	SelectedModel string
+}
+
+func (q *Queries) UpdateUserSelectedModel(ctx context.Context, arg UpdateUserSelectedModelParams) error {
+	_, err := q.db.ExecContext(ctx, updateUserSelectedModel, arg.ID, arg.SelectedModel)
 	return err
 }

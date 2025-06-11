@@ -20,7 +20,7 @@ func (u *Sender) SendMessage(ctx context.Context, externalUserID string, text st
 	_, err := u.bot.SendMessage(ctx, &bot.SendMessageParams{
 		ChatID:    externalUserID,
 		Text:      text,
-		ParseMode: models.ParseModeMarkdown,
+		ParseMode: models.ParseModeMarkdownV1,
 	})
 	if err != nil {
 		return "", fmt.Errorf("can't send message: %w", err)
