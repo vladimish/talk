@@ -157,12 +157,14 @@ func (u *Sender) UpdateMessages(ctx context.Context, externalUserID string, mess
 }
 
 func splitText(text string, maxLength int) []string {
-	// Fix will be applied per chunk below
-
 	if len(text) <= maxLength {
 		return []string{text}
 	}
 
+	return smartSplitWithCodeBlocks(text, maxLength)
+}
+
+func smartSplitWithCodeBlocks(text string, maxLength int) []string {
 	var chunks []string
 	runes := []rune(text)
 
@@ -183,11 +185,93 @@ func splitText(text string, maxLength int) []string {
 		}
 
 		chunk := string(runes[:chunkSize])
+
+		// Check if chunk ends with an unclosed code block
+		if chunkSize < len(runes) { // Only if there's more text
+			adjustedChunk, newChunkSize := handleCodeBlockInChunk(chunk, runes, chunkSize, maxLength)
+			if newChunkSize != chunkSize {
+				chunk = adjustedChunk
+				chunkSize = newChunkSize
+			}
+		}
+
 		chunks = append(chunks, chunk)
 		runes = runes[chunkSize:]
 	}
 
 	return chunks
+}
+
+func handleCodeBlockInChunk(chunk string, allRunes []rune, chunkSize int, maxLength int) (string, int) {
+	// Count code block markers in the chunk
+	codeBlockCount := strings.Count(chunk, "```")
+
+	// If even number (or zero), chunk is fine
+	if codeBlockCount%2 == 0 {
+		return chunk, chunkSize
+	}
+
+	// We have an unclosed code block - try to move it to next chunk
+	chunkRunes := []rune(chunk)
+
+	// Find the last ``` in the chunk
+	lastCodeBlockStart := -1
+	for i := len(chunkRunes) - 3; i >= 0; i-- {
+		if i+2 < len(chunkRunes) &&
+			chunkRunes[i] == '`' && chunkRunes[i+1] == '`' && chunkRunes[i+2] == '`' {
+			lastCodeBlockStart = i
+			break
+		}
+	}
+
+	if lastCodeBlockStart == -1 {
+		// Couldn't find the code block start, use fallback
+		return addCodeBlockBoundaries(chunk, true), chunkSize
+	}
+
+	// Check if moving the code block to next chunk would make it fit
+	beforeCodeBlock := string(chunkRunes[:lastCodeBlockStart])
+
+	// Look ahead to see if the code block will be complete and fit in maxLength
+	remainingText := string(allRunes[chunkSize:])
+	codeBlockPart := string(chunkRunes[lastCodeBlockStart:])
+
+	// Try to find where this code block ends in the remaining text
+	completeCodeBlock := findCompleteCodeBlock(codeBlockPart + remainingText)
+
+	// If the complete code block fits in maxLength, move it to next chunk
+	if len([]rune(completeCodeBlock)) <= maxLength {
+		// Move the code block to next chunk
+		return beforeCodeBlock, lastCodeBlockStart
+	}
+
+	// Code block is too large, use fallback splitting
+	return addCodeBlockBoundaries(chunk, true), chunkSize
+}
+
+func findCompleteCodeBlock(text string) string {
+	runes := []rune(text)
+	if len(runes) < 3 || runes[0] != '`' || runes[1] != '`' || runes[2] != '`' {
+		return text
+	}
+
+	// Find the closing ```
+	for i := 3; i < len(runes)-2; i++ {
+		if runes[i] == '`' && runes[i+1] == '`' && runes[i+2] == '`' {
+			// Found closing, include it
+			return string(runes[:i+3])
+		}
+	}
+
+	// No closing found, return the whole text (unclosed code block)
+	return text
+}
+
+func addCodeBlockBoundaries(chunk string, isUnclosed bool) string {
+	if isUnclosed {
+		return chunk + "\n```"
+	}
+	return "```\n" + chunk
 }
 
 func (u *Sender) SendTyping(ctx context.Context, externalUserID string) error {
