@@ -14,7 +14,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U myuser -d mydatabase" ]
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d postgres" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -25,11 +25,27 @@ services:
     restart: unless-stopped
     ports:
       - "8000:8000"
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: talk_bot
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/postgres
+      - TELEGRAMIFY_URL=http://telegramify:8000
+      - TG_TOKEN=${TG_TOKEN}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:8000/" ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      test: ["CMD", "ps", "aux", "|", "grep", "[m]ain"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
 
 volumes:
   postgres_data:

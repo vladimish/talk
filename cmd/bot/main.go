@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"log/slog"
 	"os"
 	"os/signal"
@@ -19,6 +20,7 @@ import (
 	"github.com/go-telegram/bot"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/jmoiron/sqlx"
+	"github.com/pressly/goose/v3"
 )
 
 func main() {
@@ -38,6 +40,12 @@ func main() {
 		//nolint:gocritic
 		os.Exit(1)
 	}
+
+	if err = runMigrations(ctx, log, pg.DB); err != nil {
+		log.Error("failed to run migrations", "error", err)
+		os.Exit(1)
+	}
+
 	queries := generated.New(pg)
 	store := pgAdapter.NewPg(queries)
 
@@ -70,4 +78,19 @@ func main() {
 
 	<-ctx.Done()
 	log.Info("shutting down")
+}
+
+func runMigrations(ctx context.Context, log *slog.Logger, db *sql.DB) error {
+	log.InfoContext(ctx, "running database migrations")
+
+	if err := goose.SetDialect("postgres"); err != nil {
+		return err
+	}
+
+	if err := goose.Up(db, "db/migrations"); err != nil {
+		return err
+	}
+
+	log.InfoContext(ctx, "database migrations completed successfully")
+	return nil
 }
