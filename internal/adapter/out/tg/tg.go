@@ -176,15 +176,16 @@ func (u *Sender) UpdateMessages(
 	ctx context.Context,
 	externalUserID string,
 	messageIDs []string,
-	text string,
+	previousText, currentText string,
 ) ([]string, error) {
 	const maxMessageLength = 4096
 
-	// Split text first, then format each chunk
-	chunks := splitText(text, maxMessageLength)
-	resultMessageIDs := make([]string, 0, len(chunks))
+	// Split both previous and current text into chunks
+	previousChunks := splitText(previousText, maxMessageLength)
+	currentChunks := splitText(currentText, maxMessageLength)
+	resultMessageIDs := make([]string, 0, len(currentChunks))
 
-	for i, chunk := range chunks {
+	for i, chunk := range currentChunks {
 		// Format each chunk individually
 		formattedChunk, formatErr := u.formatter.FormatMarkdown(ctx, chunk)
 		if formatErr != nil {
@@ -200,8 +201,25 @@ func (u *Sender) UpdateMessages(
 		var err error
 
 		if i < len(messageIDs) {
-			// Update existing message
-			messageID, err = u.handleExistingMessageUpdate(ctx, externalUserID, messageIDs[i], formattedChunk)
+			// Check if we need to update this chunk
+			shouldUpdate := true
+			if i < len(previousChunks) {
+				// Format previous chunk for comparison
+				formattedPrevChunk, prevFormatErr := u.formatter.FormatMarkdown(ctx, previousChunks[i])
+				if prevFormatErr == nil && formattedPrevChunk == formattedChunk {
+					// Chunks are identical, no need to update
+					shouldUpdate = false
+					messageID = messageIDs[i]
+					u.logger.DebugContext(ctx, "chunk unchanged, skipping update",
+						slog.String("message_id", messageID),
+						slog.Int("chunk_index", i))
+				}
+			}
+
+			if shouldUpdate {
+				// Update existing message
+				messageID, err = u.handleExistingMessageUpdate(ctx, externalUserID, messageIDs[i], formattedChunk)
+			}
 		} else {
 			// Send new message for overflow
 			messageID, err = u.sendOverflowMessage(ctx, externalUserID, formattedChunk)
@@ -230,16 +248,23 @@ func splitText(text string, maxLength int) []string {
 func smartSplitWithCodeBlocks(text string, maxLength int) []string {
 	var chunks []string
 	runes := []rune(text)
+	inCodeBlock := false
 
 	for len(runes) > 0 {
-		chunkSize := maxLength
+		// Account for potential code block markers we'll add
+		adjustedMaxLength := maxLength
+		if inCodeBlock {
+			adjustedMaxLength -= 4 // "```\n"
+		}
+
+		chunkSize := adjustedMaxLength
 		if len(runes) < chunkSize {
 			chunkSize = len(runes)
 		}
 
 		// Try to break at a word boundary
-		if chunkSize < len(runes) {
-			for i := chunkSize - 1; i >= maxLength/2; i-- {
+		if chunkSize < len(runes) && chunkSize > adjustedMaxLength/2 {
+			for i := chunkSize - 1; i >= adjustedMaxLength/2; i-- {
 				if runes[i] == ' ' || runes[i] == '\n' {
 					chunkSize = i + 1
 					break
@@ -248,93 +273,90 @@ func smartSplitWithCodeBlocks(text string, maxLength int) []string {
 		}
 
 		chunk := string(runes[:chunkSize])
+		originalChunk := chunk
 
-		// Check if chunk ends with an unclosed code block
-		if chunkSize < len(runes) { // Only if there's more text
-			adjustedChunk, newChunkSize := handleCodeBlockInChunk(chunk, runes, chunkSize, maxLength)
-			if newChunkSize != chunkSize {
-				chunk = adjustedChunk
-				chunkSize = newChunkSize
+		// Count ``` occurrences in the original chunk (before we add any)
+		codeBlockCount := strings.Count(originalChunk, "```")
+
+		// Determine if we'll be in a code block after this chunk
+		newInCodeBlock := inCodeBlock
+		if inCodeBlock {
+			// We started in a code block, odd number of ``` closes it
+			newInCodeBlock = (codeBlockCount % 2) == 0
+		} else {
+			// We started outside, odd number of ``` opens it
+			newInCodeBlock = (codeBlockCount % 2) == 1
+		}
+
+		// If we'll be in a code block and there's more text, we need to handle this carefully
+		if newInCodeBlock && chunkSize < len(runes) {
+			// Find the start of the unclosed code block in this chunk
+			lastCodeBlockStart := -1
+			chunkText := originalChunk
+			for i := len(chunkText) - 3; i >= 0; i-- {
+				if i+2 < len(chunkText) &&
+					chunkText[i] == '`' && chunkText[i+1] == '`' && chunkText[i+2] == '`' {
+					// Check if this is an opening ``` (odd total count up to this point)
+					prefixCount := strings.Count(chunkText[:i], "```")
+					totalCount := prefixCount
+					if inCodeBlock {
+						totalCount++ // We started in a code block
+					}
+					if totalCount%2 == 0 {
+						// This is an opening ```, so it's the start of our unclosed block
+						lastCodeBlockStart = i
+						break
+					}
+				}
 			}
+
+			if lastCodeBlockStart > 0 { // Only move if there's content before the code block
+				// Move the entire code block to the next chunk
+				chunk = originalChunk[:lastCodeBlockStart]
+				chunkSize = lastCodeBlockStart
+				newInCodeBlock = inCodeBlock // Reset since we removed the code block
+
+				// Update counts after removing the code block
+				codeBlockCount = strings.Count(chunk, "```")
+				if inCodeBlock {
+					newInCodeBlock = (codeBlockCount % 2) == 0
+				} else {
+					newInCodeBlock = (codeBlockCount % 2) == 1
+				}
+			} else if lastCodeBlockStart == 0 {
+				// Look ahead to find the closing ``` in the remaining text
+				remainingText := string(runes)
+				closingPos := -1
+				searchStart := chunkSize + 3 // Start after the opening ```
+				for i := searchStart; i <= len(remainingText)-3; i++ {
+					if remainingText[i] == '`' && remainingText[i+1] == '`' && remainingText[i+2] == '`' {
+						closingPos = i
+						break
+					}
+				}
+
+				if closingPos != -1 && closingPos+3 <= maxLength {
+					// The entire code block fits in one chunk, use it all
+					chunkSize = closingPos + 3
+					chunk = string(runes[:chunkSize])
+					newInCodeBlock = false // Code block is now closed
+				}
+				// If code block is too large, we continue it in the next chunk without artificial closing
+			}
+			// If we can't find the code block start, we continue it in the next chunk without artificial closing
+		}
+
+		// If we're continuing a code block from the previous chunk, prepend ```
+		if inCodeBlock {
+			chunk = "```\n" + chunk
 		}
 
 		chunks = append(chunks, chunk)
 		runes = runes[chunkSize:]
+		inCodeBlock = newInCodeBlock
 	}
 
 	return chunks
-}
-
-func handleCodeBlockInChunk(chunk string, allRunes []rune, chunkSize int, maxLength int) (string, int) {
-	codeBlockCount := strings.Count(chunk, "```")
-
-	// If even number (or zero), chunk is fine
-	if codeBlockCount%2 == 0 {
-		return chunk, chunkSize
-	}
-
-	// We have an unclosed code block - try to move it to next chunk
-	chunkRunes := []rune(chunk)
-
-	// Find the last ``` in the chunk
-	const codeBlockMarkerLen = 3
-	lastCodeBlockStart := -1
-	for i := len(chunkRunes) - codeBlockMarkerLen; i >= 0; i-- {
-		if i+2 < len(chunkRunes) &&
-			chunkRunes[i] == '`' && chunkRunes[i+1] == '`' && chunkRunes[i+2] == '`' {
-			lastCodeBlockStart = i
-			break
-		}
-	}
-
-	if lastCodeBlockStart == -1 {
-		// Couldn't find the code block start, use fallback
-		return addCodeBlockBoundaries(chunk, true), chunkSize
-	}
-
-	// Check if moving the code block to next chunk would make it fit
-	beforeCodeBlock := string(chunkRunes[:lastCodeBlockStart])
-
-	// Look ahead to see if the code block will be complete and fit in maxLength
-	remainingText := string(allRunes[chunkSize:])
-	codeBlockPart := string(chunkRunes[lastCodeBlockStart:])
-
-	// Try to find where this code block ends in the remaining text
-	completeCodeBlock := findCompleteCodeBlock(codeBlockPart + remainingText)
-
-	// If the complete code block fits in maxLength, move it to next chunk
-	if len([]rune(completeCodeBlock)) <= maxLength {
-		// Move the code block to next chunk
-		return beforeCodeBlock, lastCodeBlockStart
-	}
-
-	// Code block is too large, use fallback splitting
-	return addCodeBlockBoundaries(chunk, true), chunkSize
-}
-
-func findCompleteCodeBlock(text string) string {
-	runes := []rune(text)
-	if len(runes) < 3 || runes[0] != '`' || runes[1] != '`' || runes[2] != '`' {
-		return text
-	}
-
-	// Find the closing ```
-	for i := 3; i < len(runes)-2; i++ {
-		if runes[i] == '`' && runes[i+1] == '`' && runes[i+2] == '`' {
-			// Found closing, include it
-			return string(runes[:i+3])
-		}
-	}
-
-	// No closing found, return the whole text (unclosed code block)
-	return text
-}
-
-func addCodeBlockBoundaries(chunk string, isUnclosed bool) string {
-	if isUnclosed {
-		return chunk + "\n```"
-	}
-	return "```\n" + chunk
 }
 
 func (u *Sender) SendTyping(ctx context.Context, externalUserID string) error {

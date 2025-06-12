@@ -112,6 +112,7 @@ func (s *UpdateService) HandleUpdate(ctx context.Context, update domain.Update) 
 
 	// Stream response tokens and update message
 	var responseBuilder strings.Builder
+	var previousContent string
 	lastUpdate := time.Now()
 
 	for token := range tokenStream {
@@ -122,41 +123,47 @@ func (s *UpdateService) HandleUpdate(ctx context.Context, update domain.Update) 
 
 		// Update message at most once per second
 		if time.Since(lastUpdate) >= time.Second/2 {
+			currentContent := responseBuilder.String()
+
 			// Send typing indicator to keep the conversation active
 			err = s.sender.SendTyping(ctx, user.ExternalID)
 			if err != nil {
 				s.logger.WarnContext(ctx, "failed to send typing indicator", slog.String("error", err.Error()))
 			}
 
-			// Update all tracked messages
+			// Update all tracked messages with optimization
 			updatedMessageIDs, updateErr := s.sender.UpdateMessages(
 				ctx,
 				user.ExternalID,
 				messageIDs,
-				responseBuilder.String(),
+				previousContent,
+				currentContent,
 			)
 			if updateErr != nil {
 				return fmt.Errorf("can't update messages: %w", updateErr)
 			}
 			// Update our tracked message IDs
 			messageIDs = updatedMessageIDs
+			previousContent = currentContent
 			lastUpdate = time.Now()
 		}
 	}
 
 	// Send final update if needed
 	if time.Since(lastUpdate) > 0 {
+		finalContent := responseBuilder.String()
 		updatedMessageIDs, finalUpdateErr := s.sender.UpdateMessages(
 			ctx,
 			user.ExternalID,
 			messageIDs,
-			responseBuilder.String(),
+			previousContent,
+			finalContent,
 		)
 		if finalUpdateErr != nil {
 			return fmt.Errorf("can't update final messages: %w", finalUpdateErr)
 		}
 		// Update our tracked message IDs for final state
-		_ = updatedMessageIDs // We don't need the result after final update
+		messageIDs = updatedMessageIDs
 	}
 
 	responseText := responseBuilder.String()
