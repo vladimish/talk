@@ -12,5 +12,10 @@ type StreamToken struct {
 }
 
 type Completion interface {
-	CompleteStream(ctx context.Context, model string, messages []*domain.Message) (<-chan StreamToken, error)
+	CompleteStream(
+		ctx context.Context,
+		model string,
+		systemPrompt string,
+		messages []*domain.Message,
+	) (<-chan StreamToken, error)
 }

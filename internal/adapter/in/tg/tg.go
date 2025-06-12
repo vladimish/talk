@@ -40,10 +40,11 @@ func (b *Bot) Handle(ctx context.Context, _ *bot.Bot, update *models.Update) {
 	}
 
 	err := b.s.HandleUpdate(ctx, domain.Update{
-		ExternalID:     strconv.FormatInt(update.ID, 10),
-		ExternalUserID: strconv.FormatInt(update.Message.From.ID, 10),
-		UserLanguage:   update.Message.From.LanguageCode,
-		MessageText:    update.Message.Text,
+		ExternalID:        strconv.FormatInt(update.ID, 10),
+		ExternalUserID:    strconv.FormatInt(update.Message.From.ID, 10),
+		UserLanguage:      update.Message.From.LanguageCode,
+		MessageText:       update.Message.Text,
+		ExternalMessageID: update.Message.ID,
 	})
 	if err != nil {
 		b.l.ErrorContext(ctx, fmt.Errorf("error while handling update: %w", err).Error())

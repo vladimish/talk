@@ -59,7 +59,6 @@ func (u *Sender) UpdateMessage(
 	messageIDs := make([]string, 0, len(chunks))
 
 	for i, chunk := range chunks {
-		// Format each chunk individually
 		formattedChunk, formatErr := u.formatter.FormatMarkdown(ctx, chunk)
 		if formatErr != nil {
 			u.logger.WarnContext(
@@ -74,10 +73,8 @@ func (u *Sender) UpdateMessage(
 		var err error
 
 		if i == 0 {
-			// Update the first message
 			newMessageID, err = u.handleFirstMessageUpdate(ctx, externalUserID, messageID, formattedChunk)
 		} else {
-			// Send additional messages for overflow
 			newMessageID, err = u.sendOverflowMessage(ctx, externalUserID, formattedChunk)
 		}
 
@@ -269,7 +266,6 @@ func smartSplitWithCodeBlocks(text string, maxLength int) []string {
 }
 
 func handleCodeBlockInChunk(chunk string, allRunes []rune, chunkSize int, maxLength int) (string, int) {
-	// Count code block markers in the chunk
 	codeBlockCount := strings.Count(chunk, "```")
 
 	// If even number (or zero), chunk is fine

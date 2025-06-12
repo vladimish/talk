@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"strconv"
 	"strings"
 	"time"
 
@@ -62,7 +63,7 @@ func (s *UpdateService) HandleUpdate(ctx context.Context, update domain.Update) 
 	}
 
 	// Save incoming message from user
-	_, err = s.storage.CreateMessage(ctx, &domain.Message{
+	userMessage, err := s.storage.CreateMessage(ctx, &domain.Message{
 		UserID: user.ID,
 		MessageType: domain.MessageType{
 			Text: update.MessageText,
@@ -73,6 +74,13 @@ func (s *UpdateService) HandleUpdate(ctx context.Context, update domain.Update) 
 	})
 	if err != nil {
 		return fmt.Errorf("can't save user message: %w", err)
+	}
+
+	if update.ExternalMessageID > 0 {
+		err = s.storage.CreateForeignMessage(ctx, int32(userMessage.ID), int32(update.ExternalMessageID))
+		if err != nil {
+			s.logger.WarnContext(ctx, "failed to save foreign message mapping", slog.String("error", err.Error()))
+		}
 	}
 
 	// Get conversation history
@@ -87,8 +95,8 @@ func (s *UpdateService) HandleUpdate(ctx context.Context, update domain.Update) 
 		s.logger.WarnContext(ctx, "failed to send typing indicator", slog.String("error", err.Error()))
 	}
 
-	// Get AI completion with streaming
-	tokenStream, err := s.completion.CompleteStream(ctx, user.SelectedModel, messages)
+	systemPrompt := "You are a helpful assistant."
+	tokenStream, err := s.completion.CompleteStream(ctx, user.SelectedModel, systemPrompt, messages)
 	if err != nil {
 		return fmt.Errorf("can't get completion: %w", err)
 	}
@@ -153,7 +161,7 @@ func (s *UpdateService) HandleUpdate(ctx context.Context, update domain.Update) 
 
 	responseText := responseBuilder.String()
 
-	_, err = s.storage.CreateMessage(ctx, &domain.Message{
+	botMessage, err := s.storage.CreateMessage(ctx, &domain.Message{
 		UserID: user.ID,
 		MessageType: domain.MessageType{
 			Text: responseText,
@@ -164,6 +172,35 @@ func (s *UpdateService) HandleUpdate(ctx context.Context, update domain.Update) 
 	})
 	if err != nil {
 		return fmt.Errorf("can't save bot message: %w", err)
+	}
+
+	// Save foreign message mappings for all bot messages
+	for _, msgIDStr := range messageIDs {
+		if msgIDStr == "" {
+			continue
+		}
+
+		// Parse message ID from string to int
+		msgID, err := strconv.ParseInt(msgIDStr, 10, 32)
+		if err != nil {
+			s.logger.WarnContext(ctx, "failed to parse message ID",
+				slog.String("message_id", msgIDStr),
+				slog.String("error", err.Error()))
+			continue
+		}
+
+		// Create foreign message mapping
+		err = s.storage.CreateForeignMessage(ctx, int32(botMessage.ID), int32(msgID))
+		if err != nil {
+			s.logger.WarnContext(ctx, "failed to save foreign message mapping for bot",
+				slog.String("telegram_message_id", msgIDStr),
+				slog.Int64("db_message_id", botMessage.ID),
+				slog.String("error", err.Error()))
+		} else {
+			s.logger.DebugContext(ctx, "saved foreign message mapping",
+				slog.String("telegram_message_id", msgIDStr),
+				slog.Int64("db_message_id", botMessage.ID))
+		}
 	}
 
 	return nil

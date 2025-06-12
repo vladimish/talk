@@ -14,6 +14,8 @@ type Storage interface {
 
 	CreateMessage(ctx context.Context, message *domain.Message) (*domain.Message, error)
 	GetMessagesByUserID(ctx context.Context, userID int64) ([]*domain.Message, error)
+
+	CreateForeignMessage(ctx context.Context, messageID int32, foreignMessageID int32) error
 }
 
 var ErrNotFound = errors.New("not found")

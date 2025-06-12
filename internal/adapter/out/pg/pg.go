@@ -151,3 +151,18 @@ func (p *PG) CreateUser(ctx context.Context, user *domain.User) (*domain.User, e
 		UpdatedAt:   u.UpdatedAt,
 	}, nil
 }
+
+func (p *PG) CreateForeignMessage(ctx context.Context, messageID int32, foreignMessageID int32) error {
+	_, err := p.q.CreateForeignMessage(ctx, generated.CreateForeignMessageParams{
+		MessageID:        messageID,
+		ForeignMessageID: foreignMessageID,
+	})
+	if err != nil {
+		// sql.ErrNoRows is not an error in this case - it means the conflict was handled
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil
+		}
+		return fmt.Errorf("can't create foreign message: %w", err)
+	}
+	return nil
+}

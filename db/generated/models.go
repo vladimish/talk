@@ -54,6 +54,13 @@ func (ns NullMessageSender) Value() (driver.Value, error) {
 	return string(ns.MessageSender), nil
 }
 
+type ForeignMessage struct {
+	ID               int32
+	MessageID        int32
+	ForeignMessageID int32
+	CreatedAt        time.Time
+}
+
 type Message struct {
 	ID          int64
 	MessageType json.RawMessage
