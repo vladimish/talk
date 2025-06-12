@@ -3,12 +3,13 @@ package tg
 import (
 	"context"
 	"fmt"
-	"github.com/go-telegram/bot"
-	"github.com/go-telegram/bot/models"
-	"github.com/vladimish/talk/internal/port/formatter"
 	"log/slog"
 	"strconv"
 	"strings"
+
+	"github.com/go-telegram/bot"
+	"github.com/go-telegram/bot/models"
+	"github.com/vladimish/talk/internal/port/formatter"
 )
 
 type Sender struct {
@@ -45,7 +46,12 @@ func (u *Sender) SendMessage(ctx context.Context, externalUserID string, text st
 	return strconv.Itoa(msg.ID), nil
 }
 
-func (u *Sender) UpdateMessage(ctx context.Context, externalUserID string, messageID string, text string) ([]string, error) {
+func (u *Sender) UpdateMessage(
+	ctx context.Context,
+	externalUserID string,
+	messageID string,
+	text string,
+) ([]string, error) {
 	const maxMessageLength = 4096
 
 	// Split text first, then format each chunk
@@ -54,52 +60,127 @@ func (u *Sender) UpdateMessage(ctx context.Context, externalUserID string, messa
 
 	for i, chunk := range chunks {
 		// Format each chunk individually
-		formattedChunk, err := u.formatter.FormatMarkdown(ctx, chunk)
-		if err != nil {
-			u.logger.WarnContext(ctx, "failed to format markdown for chunk, using raw text", slog.String("error", err.Error()))
+		formattedChunk, formatErr := u.formatter.FormatMarkdown(ctx, chunk)
+		if formatErr != nil {
+			u.logger.WarnContext(
+				ctx,
+				"failed to format markdown for chunk, using raw text",
+				slog.String("error", formatErr.Error()),
+			)
 			formattedChunk = chunk
 		}
 
+		var newMessageID string
+		var err error
+
 		if i == 0 {
 			// Update the first message
-			msgID, err := strconv.Atoi(messageID)
-			if err != nil {
-				return nil, fmt.Errorf("invalid message ID: %w", err)
-			}
-
-			_, err = u.bot.EditMessageText(ctx, &bot.EditMessageTextParams{
-				ChatID:    externalUserID,
-				MessageID: msgID,
-				Text:      formattedChunk,
-				ParseMode: models.ParseModeMarkdown,
-			})
-			if err != nil {
-				// Check if it's the "message is not modified" error
-				if strings.Contains(err.Error(), "message is not modified") {
-					u.logger.DebugContext(ctx, "message content unchanged, skipping update")
-					return []string{messageID}, nil
-				}
-				return nil, fmt.Errorf("can't edit message: %w", err)
-			}
-			messageIDs = append(messageIDs, messageID)
+			newMessageID, err = u.handleFirstMessageUpdate(ctx, externalUserID, messageID, formattedChunk)
 		} else {
 			// Send additional messages for overflow
-			msg, err := u.bot.SendMessage(ctx, &bot.SendMessageParams{
-				ChatID:    externalUserID,
-				Text:      formattedChunk,
-				ParseMode: models.ParseModeMarkdown,
-			})
-			if err != nil {
-				return nil, fmt.Errorf("can't send overflow message: %w", err)
-			}
-			messageIDs = append(messageIDs, strconv.Itoa(msg.ID))
+			newMessageID, err = u.sendOverflowMessage(ctx, externalUserID, formattedChunk)
 		}
+
+		if err != nil {
+			return nil, err
+		}
+		messageIDs = append(messageIDs, newMessageID)
 	}
 
 	return messageIDs, nil
 }
 
-func (u *Sender) UpdateMessages(ctx context.Context, externalUserID string, messageIDs []string, text string) ([]string, error) {
+func (u *Sender) updateFirstMessage(ctx context.Context, externalUserID, messageID, text string) error {
+	msgID, err := strconv.Atoi(messageID)
+	if err != nil {
+		return fmt.Errorf("invalid message ID: %w", err)
+	}
+
+	_, err = u.bot.EditMessageText(ctx, &bot.EditMessageTextParams{
+		ChatID:    externalUserID,
+		MessageID: msgID,
+		Text:      text,
+		ParseMode: models.ParseModeMarkdown,
+	})
+	if err != nil {
+		return fmt.Errorf("can't edit message: %w", err)
+	}
+
+	return nil
+}
+
+func (u *Sender) handleFirstMessageUpdate(ctx context.Context, externalUserID, messageID, text string) (string, error) {
+	err := u.updateFirstMessage(ctx, externalUserID, messageID, text)
+	if err != nil {
+		if isMessageNotModified(err) {
+			u.logger.DebugContext(ctx, "message content unchanged, skipping update")
+			return messageID, nil
+		}
+		return "", err
+	}
+	return messageID, nil
+}
+
+func (u *Sender) sendOverflowMessage(ctx context.Context, externalUserID, text string) (string, error) {
+	msg, err := u.bot.SendMessage(ctx, &bot.SendMessageParams{
+		ChatID:    externalUserID,
+		Text:      text,
+		ParseMode: models.ParseModeMarkdown,
+	})
+	if err != nil {
+		return "", fmt.Errorf("can't send overflow message: %w", err)
+	}
+
+	return strconv.Itoa(msg.ID), nil
+}
+
+func (u *Sender) updateExistingMessage(ctx context.Context, externalUserID, messageID, text string) error {
+	msgID, err := strconv.Atoi(messageID)
+	if err != nil {
+		return fmt.Errorf("invalid message ID %s: %w", messageID, err)
+	}
+
+	_, err = u.bot.EditMessageText(ctx, &bot.EditMessageTextParams{
+		ChatID:    externalUserID,
+		MessageID: msgID,
+		Text:      text,
+		ParseMode: models.ParseModeMarkdown,
+	})
+	if err != nil {
+		return fmt.Errorf("can't edit message %s: %w", messageID, err)
+	}
+
+	return nil
+}
+
+func (u *Sender) handleExistingMessageUpdate(
+	ctx context.Context,
+	externalUserID, messageID, text string,
+) (string, error) {
+	err := u.updateExistingMessage(ctx, externalUserID, messageID, text)
+	if err != nil {
+		if !isMessageNotModified(err) {
+			return "", err
+		}
+		u.logger.DebugContext(
+			ctx,
+			"message content unchanged, skipping update",
+			slog.String("message_id", messageID),
+		)
+	}
+	return messageID, nil
+}
+
+func isMessageNotModified(err error) bool {
+	return strings.Contains(err.Error(), "message is not modified")
+}
+
+func (u *Sender) UpdateMessages(
+	ctx context.Context,
+	externalUserID string,
+	messageIDs []string,
+	text string,
+) ([]string, error) {
 	const maxMessageLength = 4096
 
 	// Split text first, then format each chunk
@@ -108,46 +189,31 @@ func (u *Sender) UpdateMessages(ctx context.Context, externalUserID string, mess
 
 	for i, chunk := range chunks {
 		// Format each chunk individually
-		formattedChunk, err := u.formatter.FormatMarkdown(ctx, chunk)
-		if err != nil {
-			u.logger.WarnContext(ctx, "failed to format markdown for chunk, using raw text", slog.String("error", err.Error()))
+		formattedChunk, formatErr := u.formatter.FormatMarkdown(ctx, chunk)
+		if formatErr != nil {
+			u.logger.WarnContext(
+				ctx,
+				"failed to format markdown for chunk, using raw text",
+				slog.String("error", formatErr.Error()),
+			)
 			formattedChunk = chunk
 		}
 
+		var messageID string
+		var err error
+
 		if i < len(messageIDs) {
 			// Update existing message
-			msgID, err := strconv.Atoi(messageIDs[i])
-			if err != nil {
-				return nil, fmt.Errorf("invalid message ID %s: %w", messageIDs[i], err)
-			}
-
-			_, err = u.bot.EditMessageText(ctx, &bot.EditMessageTextParams{
-				ChatID:    externalUserID,
-				MessageID: msgID,
-				Text:      formattedChunk,
-				ParseMode: models.ParseModeMarkdown,
-			})
-			if err != nil {
-				// Check if it's the "message is not modified" error
-				if strings.Contains(err.Error(), "message is not modified") {
-					u.logger.DebugContext(ctx, "message content unchanged, skipping update", slog.String("message_id", messageIDs[i]))
-				} else {
-					return nil, fmt.Errorf("can't edit message %s: %w", messageIDs[i], err)
-				}
-			}
-			resultMessageIDs = append(resultMessageIDs, messageIDs[i])
+			messageID, err = u.handleExistingMessageUpdate(ctx, externalUserID, messageIDs[i], formattedChunk)
 		} else {
 			// Send new message for overflow
-			msg, err := u.bot.SendMessage(ctx, &bot.SendMessageParams{
-				ChatID:    externalUserID,
-				Text:      formattedChunk,
-				ParseMode: models.ParseModeMarkdown,
-			})
-			if err != nil {
-				return nil, fmt.Errorf("can't send overflow message: %w", err)
-			}
-			resultMessageIDs = append(resultMessageIDs, strconv.Itoa(msg.ID))
+			messageID, err = u.sendOverflowMessage(ctx, externalUserID, formattedChunk)
 		}
+
+		if err != nil {
+			return nil, err
+		}
+		resultMessageIDs = append(resultMessageIDs, messageID)
 	}
 
 	// Note: We don't delete leftover messages if we have fewer chunks now
@@ -215,8 +281,9 @@ func handleCodeBlockInChunk(chunk string, allRunes []rune, chunkSize int, maxLen
 	chunkRunes := []rune(chunk)
 
 	// Find the last ``` in the chunk
+	const codeBlockMarkerLen = 3
 	lastCodeBlockStart := -1
-	for i := len(chunkRunes) - 3; i >= 0; i-- {
+	for i := len(chunkRunes) - codeBlockMarkerLen; i >= 0; i-- {
 		if i+2 < len(chunkRunes) &&
 			chunkRunes[i] == '`' && chunkRunes[i+1] == '`' && chunkRunes[i+2] == '`' {
 			lastCodeBlockStart = i

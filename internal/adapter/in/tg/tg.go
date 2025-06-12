@@ -3,11 +3,12 @@ package tg
 import (
 	"context"
 	"fmt"
+	"log/slog"
+	"strconv"
+
 	"github.com/vladimish/talk/internal/domain"
 	"github.com/vladimish/talk/internal/service"
 	"github.com/vladimish/talk/pkg/slogctx"
-	"log/slog"
-	"strconv"
 
 	"github.com/go-telegram/bot"
 	"github.com/go-telegram/bot/models"

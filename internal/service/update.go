@@ -4,13 +4,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
+	"strings"
+	"time"
+
 	"github.com/vladimish/talk/internal/domain"
 	"github.com/vladimish/talk/internal/port/completion"
 	"github.com/vladimish/talk/internal/port/sender"
 	"github.com/vladimish/talk/internal/port/storage"
-	"log/slog"
-	"strings"
-	"time"
 )
 
 type UpdateService struct {
@@ -20,7 +21,12 @@ type UpdateService struct {
 	completion completion.Completion
 }
 
-func NewUpdateService(logger *slog.Logger, storage storage.Storage, sender sender.Sender, completion completion.Completion) *UpdateService {
+func NewUpdateService(
+	logger *slog.Logger,
+	storage storage.Storage,
+	sender sender.Sender,
+	completion completion.Completion,
+) *UpdateService {
 	return &UpdateService{
 		logger:     logger,
 		storage:    storage,
@@ -115,9 +121,14 @@ func (s *UpdateService) HandleUpdate(ctx context.Context, update domain.Update) 
 			}
 
 			// Update all tracked messages
-			updatedMessageIDs, err := s.sender.UpdateMessages(ctx, user.ExternalID, messageIDs, responseBuilder.String())
-			if err != nil {
-				return fmt.Errorf("can't update messages: %w", err)
+			updatedMessageIDs, updateErr := s.sender.UpdateMessages(
+				ctx,
+				user.ExternalID,
+				messageIDs,
+				responseBuilder.String(),
+			)
+			if updateErr != nil {
+				return fmt.Errorf("can't update messages: %w", updateErr)
 			}
 			// Update our tracked message IDs
 			messageIDs = updatedMessageIDs
@@ -127,12 +138,17 @@ func (s *UpdateService) HandleUpdate(ctx context.Context, update domain.Update) 
 
 	// Send final update if needed
 	if time.Since(lastUpdate) > 0 {
-		updatedMessageIDs, err := s.sender.UpdateMessages(ctx, user.ExternalID, messageIDs, responseBuilder.String())
-		if err != nil {
-			return fmt.Errorf("can't update final messages: %w", err)
+		updatedMessageIDs, finalUpdateErr := s.sender.UpdateMessages(
+			ctx,
+			user.ExternalID,
+			messageIDs,
+			responseBuilder.String(),
+		)
+		if finalUpdateErr != nil {
+			return fmt.Errorf("can't update final messages: %w", finalUpdateErr)
 		}
 		// Update our tracked message IDs for final state
-		messageIDs = updatedMessageIDs
+		_ = updatedMessageIDs // We don't need the result after final update
 	}
 
 	responseText := responseBuilder.String()

@@ -2,6 +2,11 @@ package main
 
 import (
 	"context"
+	"log/slog"
+	"os"
+	"os/signal"
+	"syscall"
+
 	"github.com/vladimish/talk/db/generated"
 	"github.com/vladimish/talk/internal/adapter/in/tg"
 	"github.com/vladimish/talk/internal/adapter/out/openai"
@@ -10,10 +15,6 @@ import (
 	tgAdapter "github.com/vladimish/talk/internal/adapter/out/tg"
 	"github.com/vladimish/talk/internal/service"
 	"github.com/vladimish/talk/pkg/slogctx"
-	"log/slog"
-	"os"
-	"os/signal"
-	"syscall"
 
 	"github.com/go-telegram/bot"
 	_ "github.com/jackc/pgx/v5/stdlib"

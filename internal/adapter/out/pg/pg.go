@@ -6,10 +6,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strconv"
+
 	"github.com/vladimish/talk/db/generated"
 	"github.com/vladimish/talk/internal/domain"
 	"github.com/vladimish/talk/internal/port/storage"
-	"strconv"
 )
 
 type PG struct {
@@ -80,8 +81,8 @@ func (p *PG) CreateMessage(ctx context.Context, message *domain.Message) (*domai
 	}
 
 	var msgType domain.MessageType
-	if err := json.Unmarshal(m.MessageType, &msgType); err != nil {
-		return nil, fmt.Errorf("can't unmarshal message type: %w", err)
+	if unmarshalErr := json.Unmarshal(m.MessageType, &msgType); unmarshalErr != nil {
+		return nil, fmt.Errorf("can't unmarshal message type: %w", unmarshalErr)
 	}
 
 	return &domain.Message{
@@ -103,8 +104,8 @@ func (p *PG) GetMessagesByUserID(ctx context.Context, userID int64) ([]*domain.M
 	result := make([]*domain.Message, len(messages))
 	for i, m := range messages {
 		var msgType domain.MessageType
-		if err := json.Unmarshal(m.MessageType, &msgType); err != nil {
-			return nil, fmt.Errorf("can't unmarshal message type: %w", err)
+		if unmarshalErr := json.Unmarshal(m.MessageType, &msgType); unmarshalErr != nil {
+			return nil, fmt.Errorf("can't unmarshal message type: %w", unmarshalErr)
 		}
 
 		result[i] = &domain.Message{

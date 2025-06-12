@@ -2,6 +2,7 @@ package completion
 
 import (
 	"context"
+
 	"github.com/vladimish/talk/internal/domain"
 )
 

@@ -16,11 +16,13 @@ type Client struct {
 	httpClient *http.Client
 }
 
+const defaultTimeout = 30 * time.Second
+
 func New(baseURL string) formatter.Formatter {
 	return &Client{
 		baseURL: baseURL,
 		httpClient: &http.Client{
-			Timeout: 30 * time.Second,
+			Timeout: defaultTimeout,
 		},
 	}
 }
@@ -41,7 +43,12 @@ func (c *Client) FormatMarkdown(ctx context.Context, text string) (string, error
 		return "", fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, c.baseURL+"/markdownify", bytes.NewBuffer(jsonData))
+	httpReq, err := http.NewRequestWithContext(
+		ctx,
+		http.MethodPost,
+		c.baseURL+"/markdownify",
+		bytes.NewBuffer(jsonData),
+	)
 	if err != nil {
 		return "", fmt.Errorf("failed to create request: %w", err)
 	}
@@ -59,8 +66,8 @@ func (c *Client) FormatMarkdown(ctx context.Context, text string) (string, error
 	}
 
 	var result markdownifyResponse
-	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		return "", fmt.Errorf("failed to decode response: %w", err)
+	if decodeErr := json.NewDecoder(resp.Body).Decode(&result); decodeErr != nil {
+		return "", fmt.Errorf("failed to decode response: %w", decodeErr)
 	}
 
 	return result.Result, nil

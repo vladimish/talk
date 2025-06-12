@@ -2,45 +2,52 @@ package openai
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"io"
+
 	"github.com/vladimish/talk/internal/domain"
 	"github.com/vladimish/talk/internal/port/completion"
-	"io"
 
 	"github.com/openai/openai-go"
 	"github.com/openai/openai-go/option"
 )
 
-type OpenAICompletion struct {
+type Completion struct {
 	client *openai.Client
 }
 
-func NewOpenAICompletion(apiKey string) *OpenAICompletion {
+func NewOpenAICompletion(apiKey string) *Completion {
 	client := openai.NewClient(
 		option.WithAPIKey(apiKey),
 		option.WithBaseURL("https://openrouter.ai/api/v1"),
 	)
 
-	return &OpenAICompletion{
+	return &Completion{
 		client: &client,
 	}
 }
 
-func (o *OpenAICompletion) CompleteStream(ctx context.Context, model string, messages []*domain.Message) (<-chan completion.StreamToken, error) {
+func (o *Completion) CompleteStream(
+	ctx context.Context,
+	model string,
+	messages []*domain.Message,
+) (<-chan completion.StreamToken, error) {
 	// Convert domain messages to OpenAI messages
 	chatMessages := make([]openai.ChatCompletionMessageParamUnion, 0, len(messages))
 
 	for _, msg := range messages {
-		if msg.SentBy == domain.MessageSenderUser {
+		switch msg.SentBy {
+		case domain.MessageSenderUser:
 			chatMessages = append(chatMessages, openai.UserMessage(msg.MessageType.Text))
-		} else if msg.SentBy == domain.MessageSenderBot {
+		case domain.MessageSenderBot:
 			chatMessages = append(chatMessages, openai.AssistantMessage(msg.MessageType.Text))
 		}
 	}
 
 	// Create streaming request
 	stream := o.client.Chat.Completions.NewStreaming(ctx, openai.ChatCompletionNewParams{
-		Model:    openai.ChatModel(model),
+		Model:    model,
 		Messages: chatMessages,
 	})
 
@@ -74,8 +81,13 @@ func (o *OpenAICompletion) CompleteStream(ctx context.Context, model string, mes
 	return tokenChan, nil
 }
 
-// CompleteStreamWithSystemPrompt adds a system prompt before the messages
-func (o *OpenAICompletion) CompleteStreamWithSystemPrompt(ctx context.Context, model string, systemPrompt string, messages []*domain.Message) (<-chan completion.StreamToken, error) {
+// CompleteStreamWithSystemPrompt adds a system prompt before the messages.
+func (o *Completion) CompleteStreamWithSystemPrompt(
+	ctx context.Context,
+	model string,
+	systemPrompt string,
+	messages []*domain.Message,
+) (<-chan completion.StreamToken, error) {
 	// Convert domain messages to OpenAI messages
 	chatMessages := make([]openai.ChatCompletionMessageParamUnion, 0, len(messages)+1)
 
@@ -86,16 +98,17 @@ func (o *OpenAICompletion) CompleteStreamWithSystemPrompt(ctx context.Context, m
 
 	// Add conversation messages
 	for _, msg := range messages {
-		if msg.SentBy == domain.MessageSenderUser {
+		switch msg.SentBy {
+		case domain.MessageSenderUser:
 			chatMessages = append(chatMessages, openai.UserMessage(msg.MessageType.Text))
-		} else if msg.SentBy == domain.MessageSenderBot {
+		case domain.MessageSenderBot:
 			chatMessages = append(chatMessages, openai.AssistantMessage(msg.MessageType.Text))
 		}
 	}
 
 	// Create streaming request
 	stream := o.client.Chat.Completions.NewStreaming(ctx, openai.ChatCompletionNewParams{
-		Model:    openai.ChatModel(model),
+		Model:    model,
 		Messages: chatMessages,
 	})
 
@@ -119,7 +132,7 @@ func (o *OpenAICompletion) CompleteStreamWithSystemPrompt(ctx context.Context, m
 		}
 
 		// Check for any errors after streaming completes
-		if err := stream.Err(); err != nil && err != io.EOF {
+		if err := stream.Err(); err != nil && !errors.Is(err, io.EOF) {
 			select {
 			case tokenChan <- completion.StreamToken{Error: fmt.Errorf("stream error: %w", err)}:
 			case <-ctx.Done():
