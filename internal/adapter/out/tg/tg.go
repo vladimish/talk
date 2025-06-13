@@ -245,108 +245,198 @@ func splitText(text string, maxLength int) []string {
 	return smartSplitWithCodeBlocks(text, maxLength)
 }
 
+func calculateAdjustedMaxLength(maxLength int, inCodeBlock bool) int {
+	adjustedMaxLength := maxLength
+	if inCodeBlock {
+		adjustedMaxLength -= 4 // "```\n"
+	}
+	return adjustedMaxLength
+}
+
+func calculateInitialChunkSize(runes []rune, adjustedMaxLength int) int {
+	chunkSize := adjustedMaxLength
+	if len(runes) < chunkSize {
+		chunkSize = len(runes)
+	}
+	return chunkSize
+}
+
+func findWordBoundary(runes []rune, chunkSize, adjustedMaxLength int) int {
+	if chunkSize < len(runes) && chunkSize > adjustedMaxLength/2 {
+		for i := chunkSize - 1; i >= adjustedMaxLength/2; i-- {
+			if runes[i] == ' ' || runes[i] == '\n' {
+				return i + 1
+			}
+		}
+	}
+	return chunkSize
+}
+
+func calculateNewCodeBlockState(inCodeBlock bool, codeBlockCount int) bool {
+	if inCodeBlock {
+		return (codeBlockCount % 2) == 0
+	}
+	return (codeBlockCount % 2) == 1
+}
+
+func findLastCodeBlockStart(chunkText string, inCodeBlock bool) int {
+	for i := len(chunkText) - 3; i >= 0; i-- {
+		if i+2 < len(chunkText) &&
+			chunkText[i] == '`' && chunkText[i+1] == '`' && chunkText[i+2] == '`' {
+			prefixCount := strings.Count(chunkText[:i], "```")
+			totalCount := prefixCount
+			if inCodeBlock {
+				totalCount++
+			}
+			if totalCount%2 == 0 {
+				return i
+			}
+		}
+	}
+	return -1
+}
+
+func findCodeBlockClosing(runes []rune, chunkSize int) int {
+	remainingText := string(runes)
+	searchStart := chunkSize + 3
+	for i := searchStart; i <= len(remainingText)-3; i++ {
+		if remainingText[i] == '`' && remainingText[i+1] == '`' && remainingText[i+2] == '`' {
+			return i
+		}
+	}
+	return -1
+}
+
+type codeBlockResult struct {
+	chunk          string
+	chunkSize      int
+	newInCodeBlock bool
+}
+
+func handleCodeBlockBoundary(runes []rune, chunk string, chunkSize int, inCodeBlock, newInCodeBlock bool, maxLength int) codeBlockResult {
+	if !newInCodeBlock || chunkSize >= len(runes) {
+		return codeBlockResult{chunk, chunkSize, newInCodeBlock}
+	}
+
+	originalChunk := chunk
+	lastCodeBlockStart := findLastCodeBlockStart(originalChunk, inCodeBlock)
+
+	if lastCodeBlockStart > 0 {
+		adjustedChunk := originalChunk[:lastCodeBlockStart]
+		adjustedSize := lastCodeBlockStart
+		codeBlockCount := strings.Count(adjustedChunk, "```")
+		adjustedNewInCodeBlock := calculateNewCodeBlockState(inCodeBlock, codeBlockCount)
+		return codeBlockResult{adjustedChunk, adjustedSize, adjustedNewInCodeBlock}
+	}
+
+	if lastCodeBlockStart == 0 {
+		closingPos := findCodeBlockClosing(runes, chunkSize)
+		if closingPos != -1 && closingPos+3 <= maxLength {
+			fullChunk := string(runes[:closingPos+3])
+			return codeBlockResult{fullChunk, closingPos + 3, false}
+		}
+	}
+
+	return codeBlockResult{chunk, chunkSize, newInCodeBlock}
+}
+
+func findNextEmptyLinePosition(remainingText string) int {
+	currentPos := 0
+	lines := strings.Split(remainingText, "\n")
+	for i, line := range lines {
+		if i > 0 && strings.TrimSpace(line) == "" {
+			return currentPos
+		}
+		currentPos += len(line) + 1
+	}
+	return -1
+}
+
+func findDoubleNewlineBreakPoint(chunk string, chunkSize, remainingInChunk int) (int, bool) {
+	for i := chunkSize - 1; i >= chunkSize-remainingInChunk; i-- {
+		if i < len(chunk) && chunk[i] == '\n' && i > 0 && chunk[i-1] == '\n' {
+			return i, true
+		}
+	}
+	return chunkSize, false
+}
+
+func findSingleNewlineBreakPoint(runes []rune, chunk string, chunkSize, remainingInChunk int) int {
+	const singleNewlineThreshold = 100
+	if remainingInChunk >= singleNewlineThreshold {
+		return chunkSize
+	}
+
+	remainingText := string(runes[chunkSize:])
+	nextNewlinePos := -1
+	for i, char := range remainingText {
+		if char == '\n' {
+			nextNewlinePos = i
+			break
+		}
+	}
+
+	if nextNewlinePos > 0 && nextNewlinePos <= singleNewlineThreshold {
+		for i := chunkSize - 1; i >= chunkSize-remainingInChunk; i-- {
+			if i < len(chunk) && chunk[i] == '\n' {
+				return i + 1
+			}
+		}
+	}
+	return chunkSize
+}
+
+func optimizeTextBlockBoundary(runes []rune, chunk string, chunkSize, adjustedMaxLength int, newInCodeBlock bool) (string, int) {
+	if newInCodeBlock || chunkSize >= len(runes) {
+		return chunk, chunkSize
+	}
+
+	const threshold = 200
+	remainingInChunk := adjustedMaxLength - chunkSize
+
+	if remainingInChunk <= 0 || remainingInChunk >= threshold {
+		return chunk, chunkSize
+	}
+
+	remainingText := string(runes[chunkSize:])
+	nextEmptyLinePos := findNextEmptyLinePosition(remainingText)
+
+	if nextEmptyLinePos <= 0 || nextEmptyLinePos > threshold {
+		return chunk, chunkSize
+	}
+
+	newChunkSize, found := findDoubleNewlineBreakPoint(chunk, chunkSize, remainingInChunk)
+	if found {
+		return string(runes[:newChunkSize]), newChunkSize
+	}
+
+	newChunkSize = findSingleNewlineBreakPoint(runes, chunk, chunkSize, remainingInChunk)
+	return string(runes[:newChunkSize]), newChunkSize
+}
+
 func smartSplitWithCodeBlocks(text string, maxLength int) []string {
 	var chunks []string
 	runes := []rune(text)
 	inCodeBlock := false
 
 	for len(runes) > 0 {
-		// Account for potential code block markers we'll add
-		adjustedMaxLength := maxLength
-		if inCodeBlock {
-			adjustedMaxLength -= 4 // "```\n"
-		}
-
-		chunkSize := adjustedMaxLength
-		if len(runes) < chunkSize {
-			chunkSize = len(runes)
-		}
-
-		// Try to break at a word boundary
-		if chunkSize < len(runes) && chunkSize > adjustedMaxLength/2 {
-			for i := chunkSize - 1; i >= adjustedMaxLength/2; i-- {
-				if runes[i] == ' ' || runes[i] == '\n' {
-					chunkSize = i + 1
-					break
-				}
-			}
-		}
+		adjustedMaxLength := calculateAdjustedMaxLength(maxLength, inCodeBlock)
+		chunkSize := calculateInitialChunkSize(runes, adjustedMaxLength)
+		chunkSize = findWordBoundary(runes, chunkSize, adjustedMaxLength)
 
 		chunk := string(runes[:chunkSize])
 		originalChunk := chunk
 
-		// Count ``` occurrences in the original chunk (before we add any)
 		codeBlockCount := strings.Count(originalChunk, "```")
+		newInCodeBlock := calculateNewCodeBlockState(inCodeBlock, codeBlockCount)
 
-		// Determine if we'll be in a code block after this chunk
-		newInCodeBlock := inCodeBlock
-		if inCodeBlock {
-			// We started in a code block, odd number of ``` closes it
-			newInCodeBlock = (codeBlockCount % 2) == 0
-		} else {
-			// We started outside, odd number of ``` opens it
-			newInCodeBlock = (codeBlockCount % 2) == 1
-		}
+		result := handleCodeBlockBoundary(runes, chunk, chunkSize, inCodeBlock, newInCodeBlock, maxLength)
+		chunk = result.chunk
+		chunkSize = result.chunkSize
+		newInCodeBlock = result.newInCodeBlock
 
-		// If we'll be in a code block and there's more text, we need to handle this carefully
-		if newInCodeBlock && chunkSize < len(runes) {
-			// Find the start of the unclosed code block in this chunk
-			lastCodeBlockStart := -1
-			chunkText := originalChunk
-			for i := len(chunkText) - 3; i >= 0; i-- {
-				if i+2 < len(chunkText) &&
-					chunkText[i] == '`' && chunkText[i+1] == '`' && chunkText[i+2] == '`' {
-					// Check if this is an opening ``` (odd total count up to this point)
-					prefixCount := strings.Count(chunkText[:i], "```")
-					totalCount := prefixCount
-					if inCodeBlock {
-						totalCount++ // We started in a code block
-					}
-					if totalCount%2 == 0 {
-						// This is an opening ```, so it's the start of our unclosed block
-						lastCodeBlockStart = i
-						break
-					}
-				}
-			}
+		chunk, chunkSize = optimizeTextBlockBoundary(runes, chunk, chunkSize, adjustedMaxLength, newInCodeBlock)
 
-			if lastCodeBlockStart > 0 { // Only move if there's content before the code block
-				// Move the entire code block to the next chunk
-				chunk = originalChunk[:lastCodeBlockStart]
-				chunkSize = lastCodeBlockStart
-				newInCodeBlock = inCodeBlock // Reset since we removed the code block
-
-				// Update counts after removing the code block
-				codeBlockCount = strings.Count(chunk, "```")
-				if inCodeBlock {
-					newInCodeBlock = (codeBlockCount % 2) == 0
-				} else {
-					newInCodeBlock = (codeBlockCount % 2) == 1
-				}
-			} else if lastCodeBlockStart == 0 {
-				// Look ahead to find the closing ``` in the remaining text
-				remainingText := string(runes)
-				closingPos := -1
-				searchStart := chunkSize + 3 // Start after the opening ```
-				for i := searchStart; i <= len(remainingText)-3; i++ {
-					if remainingText[i] == '`' && remainingText[i+1] == '`' && remainingText[i+2] == '`' {
-						closingPos = i
-						break
-					}
-				}
-
-				if closingPos != -1 && closingPos+3 <= maxLength {
-					// The entire code block fits in one chunk, use it all
-					chunkSize = closingPos + 3
-					chunk = string(runes[:chunkSize])
-					newInCodeBlock = false // Code block is now closed
-				}
-				// If code block is too large, we continue it in the next chunk without artificial closing
-			}
-			// If we can't find the code block start, we continue it in the next chunk without artificial closing
-		}
-
-		// If we're continuing a code block from the previous chunk, prepend ```
 		if inCodeBlock {
 			chunk = "```\n" + chunk
 		}
