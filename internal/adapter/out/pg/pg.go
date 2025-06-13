@@ -60,6 +60,13 @@ func (p *PG) UpdateUserCurrentStep(ctx context.Context, userID int64, currentSte
 	})
 }
 
+func (p *PG) UpdateUserSelectedModel(ctx context.Context, userID int64, selectedModel string) error {
+	return p.q.UpdateUserSelectedModel(ctx, generated.UpdateUserSelectedModelParams{
+		ID:            userID,
+		SelectedModel: selectedModel,
+	})
+}
+
 func (p *PG) CreateMessage(ctx context.Context, message *domain.Message) (*domain.Message, error) {
 	messageType, err := json.Marshal(message.MessageType)
 	if err != nil {

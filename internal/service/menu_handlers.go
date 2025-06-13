@@ -14,14 +14,28 @@ func (s *UpdateService) handleMenuState(ctx context.Context, user *domain.User, 
 		return s.transitionToConversation(ctx, user)
 	}
 
+	// Check if user sent "select model" text
+	if update.MessageText == domain.ButtonModelSelect {
+		return s.transitionToModelSelect(ctx, user)
+	}
+
 	// Send menu with keyboard
+	return s.sendMenu(ctx, user, "Welcome! Choose an option:")
+}
+
+func (s *UpdateService) sendMenu(ctx context.Context, user *domain.User, text string) error {
 	content := domain.MessageContent{
-		Text: "Welcome! Choose an option:",
+		Text: text,
 		ReplyKeyboard: &domain.ReplyKeyboard{
 			Buttons: [][]domain.KeyboardButton{
 				{
 					{
 						Text: domain.ButtonStartConversation,
+					},
+				},
+				{
+					{
+						Text: domain.ButtonModelSelect,
 					},
 				},
 			},
@@ -71,21 +85,5 @@ func (s *UpdateService) transitionToMenu(ctx context.Context, user *domain.User)
 		return fmt.Errorf("can't update user state: %w", err)
 	}
 
-	content := domain.MessageContent{
-		Text: "🏠 Back to main menu. Choose an option:",
-		ReplyKeyboard: &domain.ReplyKeyboard{
-			Buttons: [][]domain.KeyboardButton{
-				{
-					{
-						Text: domain.ButtonStartConversation,
-					},
-				},
-			},
-			Resize:  true,
-			OneTime: true,
-		},
-	}
-
-	_, err = s.sender.SendMessageWithContent(ctx, user.ExternalID, content)
-	return err
+	return s.sendMenu(ctx, user, "🏠 Back to main menu. Choose an option:")
 }

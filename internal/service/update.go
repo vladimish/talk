@@ -48,6 +48,8 @@ func (s *UpdateService) HandleUpdate(ctx context.Context, update domain.Update) 
 		return s.handleMenuState(ctx, user, update)
 	case domain.UserStateConversation:
 		return s.handleConversationState(ctx, user, update)
+	case domain.UserStateModelSelect:
+		return s.handleModelSelectState(ctx, user, update)
 	default:
 		// Default to menu state for unknown states
 		return s.handleMenuState(ctx, user, update)
