@@ -19,9 +19,10 @@ func (s *UpdateService) handleConversationMessage(ctx context.Context, user *dom
 		MessageType: domain.MessageType{
 			Text: update.MessageText,
 		},
-		SentBy:    domain.MessageSenderUser,
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+		SentBy:       domain.MessageSenderUser,
+		Conversation: user.CurrentConversation,
+		CreatedAt:    time.Now(),
+		UpdatedAt:    time.Now(),
 	})
 	if err != nil {
 		return fmt.Errorf("can't save user message: %w", err)
@@ -39,9 +40,12 @@ func (s *UpdateService) handleConversationMessage(ctx context.Context, user *dom
 	}
 
 	// Get conversation history
-	messages, err := s.storage.GetMessagesByUserID(ctx, user.ID)
-	if err != nil {
-		return fmt.Errorf("can't get messages: %w", err)
+	var messages []*domain.Message
+	if user.CurrentConversation != nil {
+		messages, err = s.storage.GetMessagesByConversation(ctx, *user.CurrentConversation)
+		if err != nil {
+			return fmt.Errorf("can't get messages: %w", err)
+		}
 	}
 
 	// Send typing indicator
@@ -128,9 +132,10 @@ func (s *UpdateService) handleConversationMessage(ctx context.Context, user *dom
 		MessageType: domain.MessageType{
 			Text: responseText,
 		},
-		SentBy:    domain.MessageSenderBot,
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+		SentBy:       domain.MessageSenderBot,
+		Conversation: user.CurrentConversation,
+		CreatedAt:    time.Now(),
+		UpdatedAt:    time.Now(),
 	})
 	if err != nil {
 		return fmt.Errorf("can't save bot message: %w", err)

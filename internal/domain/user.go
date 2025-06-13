@@ -3,15 +3,17 @@ package domain
 import "time"
 
 const (
-	UserStateMenu         = "menu"
-	UserStateConversation = "conversation"
-	UserStateModelSelect  = "model_select"
+	UserStateMenu             = "menu"
+	UserStateConversation     = "conversation"
+	UserStateModelSelect      = "model_select"
+	UserStateConversationList = "conversation_list"
 )
 
 const (
 	ButtonStartConversation = "💬️ Start Conversation"
 	ButtonModelSelect       = "🤖 Select Model"
 	ButtonBackToMenu        = "🔙 Back to Menu"
+	ButtonNewConversation   = "➕ New Conversation"
 )
 
 var AvailableModels = []string{

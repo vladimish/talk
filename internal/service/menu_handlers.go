@@ -11,7 +11,7 @@ import (
 func (s *UpdateService) handleMenuState(ctx context.Context, user *domain.User, update domain.Update) error {
 	// Check if user sent "start conversation" text
 	if update.MessageText == domain.ButtonStartConversation {
-		return s.transitionToConversation(ctx, user)
+		return s.transitionToConversationList(ctx, user)
 	}
 
 	// Check if user sent "select model" text

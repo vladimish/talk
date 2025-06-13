@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/google/uuid"
 	"github.com/vladimish/talk/db/generated"
 	"github.com/vladimish/talk/internal/domain"
 	"github.com/vladimish/talk/internal/port/storage"
@@ -73,10 +74,20 @@ func (p *PG) CreateMessage(ctx context.Context, message *domain.Message) (*domai
 		return nil, fmt.Errorf("can't marshal message type: %w", err)
 	}
 
+	var conversation uuid.NullUUID
+	if message.Conversation != nil {
+		parsedUUID, parseErr := uuid.Parse(*message.Conversation)
+		if parseErr != nil {
+			return nil, fmt.Errorf("can't parse conversation UUID: %w", parseErr)
+		}
+		conversation = uuid.NullUUID{UUID: parsedUUID, Valid: true}
+	}
+
 	m, err := p.q.CreateMessage(ctx, generated.CreateMessageParams{
-		MessageType: json.RawMessage(messageType),
-		UserID:      message.UserID,
-		SentBy:      generated.MessageSender(message.SentBy),
+		MessageType:  json.RawMessage(messageType),
+		UserID:       message.UserID,
+		SentBy:       generated.MessageSender(message.SentBy),
+		Conversation: conversation,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("can't create message: %w", err)
@@ -87,13 +98,20 @@ func (p *PG) CreateMessage(ctx context.Context, message *domain.Message) (*domai
 		return nil, fmt.Errorf("can't unmarshal message type: %w", unmarshalErr)
 	}
 
+	var messageConversation *string
+	if m.Conversation.Valid {
+		conversationStr := m.Conversation.UUID.String()
+		messageConversation = &conversationStr
+	}
+
 	return &domain.Message{
-		ID:          m.ID,
-		UserID:      m.UserID,
-		MessageType: msgType,
-		SentBy:      domain.MessageSender(m.SentBy),
-		CreatedAt:   m.CreatedAt.Time,
-		UpdatedAt:   m.UpdatedAt.Time,
+		ID:           m.ID,
+		UserID:       m.UserID,
+		MessageType:  msgType,
+		SentBy:       domain.MessageSender(m.SentBy),
+		Conversation: messageConversation,
+		CreatedAt:    m.CreatedAt.Time,
+		UpdatedAt:    m.UpdatedAt.Time,
 	}, nil
 }
 
@@ -110,17 +128,88 @@ func (p *PG) GetMessagesByUserID(ctx context.Context, userID int64) ([]*domain.M
 			return nil, fmt.Errorf("can't unmarshal message type: %w", unmarshalErr)
 		}
 
+		var messageConversation *string
+		if m.Conversation.Valid {
+			conversationStr := m.Conversation.UUID.String()
+			messageConversation = &conversationStr
+		}
+
 		result[i] = &domain.Message{
-			ID:          m.ID,
-			UserID:      m.UserID,
-			MessageType: msgType,
-			SentBy:      domain.MessageSender(m.SentBy),
-			CreatedAt:   m.CreatedAt.Time,
-			UpdatedAt:   m.UpdatedAt.Time,
+			ID:           m.ID,
+			UserID:       m.UserID,
+			MessageType:  msgType,
+			SentBy:       domain.MessageSender(m.SentBy),
+			Conversation: messageConversation,
+			CreatedAt:    m.CreatedAt.Time,
+			UpdatedAt:    m.UpdatedAt.Time,
 		}
 	}
 
 	return result, nil
+}
+
+func (p *PG) GetMessagesByConversation(ctx context.Context, conversationID string) ([]*domain.Message, error) {
+	parsedUUID, parseErr := uuid.Parse(conversationID)
+	if parseErr != nil {
+		return nil, fmt.Errorf("can't parse conversation UUID: %w", parseErr)
+	}
+
+	messages, err := p.q.GetMessagesByConversation(ctx, uuid.NullUUID{UUID: parsedUUID, Valid: true})
+	if err != nil {
+		return nil, fmt.Errorf("can't get messages by conversation: %w", err)
+	}
+
+	result := make([]*domain.Message, len(messages))
+	for i, m := range messages {
+		var msgType domain.MessageType
+		if unmarshalErr := json.Unmarshal(m.MessageType, &msgType); unmarshalErr != nil {
+			return nil, fmt.Errorf("can't unmarshal message type: %w", unmarshalErr)
+		}
+
+		var messageConversation *string
+		if m.Conversation.Valid {
+			conversationStr := m.Conversation.UUID.String()
+			messageConversation = &conversationStr
+		}
+
+		result[i] = &domain.Message{
+			ID:           m.ID,
+			UserID:       m.UserID,
+			MessageType:  msgType,
+			SentBy:       domain.MessageSender(m.SentBy),
+			Conversation: messageConversation,
+			CreatedAt:    m.CreatedAt.Time,
+			UpdatedAt:    m.UpdatedAt.Time,
+		}
+	}
+
+	return result, nil
+}
+
+func (p *PG) GetConversationsByUserID(ctx context.Context, userID int64) ([]string, error) {
+	conversations, err := p.q.GetConversationsByUserID(ctx, userID)
+	if err != nil {
+		return nil, fmt.Errorf("can't get conversations by user id: %w", err)
+	}
+
+	result := make([]string, len(conversations))
+	for i, conv := range conversations {
+		result[i] = conv.Conversation.UUID.String()
+	}
+
+	return result, nil
+}
+
+func (p *PG) UpdateUserCurrentConversation(ctx context.Context, userID int64, conversationID *string) error {
+	var conversation sql.NullString
+	if conversationID != nil {
+		conversation = sql.NullString{String: *conversationID, Valid: true}
+	}
+
+	return p.q.UpdateUserCurrentConversation(ctx, generated.UpdateUserCurrentConversationParams{
+		ID:                  userID,
+		CurrentConversation: conversation,
+	})
 }
 
 func (p *PG) CreateUser(ctx context.Context, user *domain.User) (*domain.User, error) {

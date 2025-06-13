@@ -10,6 +10,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type MessageSender string
@@ -62,12 +64,13 @@ type ForeignMessage struct {
 }
 
 type Message struct {
-	ID          int64
-	MessageType json.RawMessage
-	UserID      int64
-	SentBy      MessageSender
-	CreatedAt   sql.NullTime
-	UpdatedAt   sql.NullTime
+	ID           int64
+	MessageType  json.RawMessage
+	UserID       int64
+	SentBy       MessageSender
+	CreatedAt    sql.NullTime
+	UpdatedAt    sql.NullTime
+	Conversation uuid.NullUUID
 }
 
 type User struct {

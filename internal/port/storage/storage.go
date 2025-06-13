@@ -15,7 +15,10 @@ type Storage interface {
 
 	CreateMessage(ctx context.Context, message *domain.Message) (*domain.Message, error)
 	GetMessagesByUserID(ctx context.Context, userID int64) ([]*domain.Message, error)
+	GetMessagesByConversation(ctx context.Context, conversationID string) ([]*domain.Message, error)
+	GetConversationsByUserID(ctx context.Context, userID int64) ([]string, error)
 
+	UpdateUserCurrentConversation(ctx context.Context, userID int64, conversationID *string) error
 	CreateForeignMessage(ctx context.Context, messageID int32, foreignMessageID int32) error
 }
 
