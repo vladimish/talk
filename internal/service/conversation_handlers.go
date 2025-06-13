@@ -19,10 +19,10 @@ func (s *UpdateService) handleConversationMessage(ctx context.Context, user *dom
 		MessageType: domain.MessageType{
 			Text: update.MessageText,
 		},
-		SentBy:       domain.MessageSenderUser,
-		Conversation: user.CurrentConversation,
-		CreatedAt:    time.Now(),
-		UpdatedAt:    time.Now(),
+		SentBy:         domain.MessageSenderUser,
+		ConversationID: user.CurrentConversationID,
+		CreatedAt:      time.Now(),
+		UpdatedAt:      time.Now(),
 	})
 	if err != nil {
 		return fmt.Errorf("can't save user message: %w", err)
@@ -41,8 +41,8 @@ func (s *UpdateService) handleConversationMessage(ctx context.Context, user *dom
 
 	// Get conversation history
 	var messages []*domain.Message
-	if user.CurrentConversation != nil {
-		messages, err = s.storage.GetMessagesByConversation(ctx, *user.CurrentConversation)
+	if user.CurrentConversationID != nil {
+		messages, err = s.storage.GetMessagesByConversationID(ctx, *user.CurrentConversationID)
 		if err != nil {
 			return fmt.Errorf("can't get messages: %w", err)
 		}
@@ -132,10 +132,10 @@ func (s *UpdateService) handleConversationMessage(ctx context.Context, user *dom
 		MessageType: domain.MessageType{
 			Text: responseText,
 		},
-		SentBy:       domain.MessageSenderBot,
-		Conversation: user.CurrentConversation,
-		CreatedAt:    time.Now(),
-		UpdatedAt:    time.Now(),
+		SentBy:         domain.MessageSenderBot,
+		ConversationID: user.CurrentConversationID,
+		CreatedAt:      time.Now(),
+		UpdatedAt:      time.Now(),
 	})
 	if err != nil {
 		return fmt.Errorf("can't save bot message: %w", err)

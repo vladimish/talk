@@ -10,8 +10,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"time"
-
-	"github.com/google/uuid"
 )
 
 type MessageSender string
@@ -56,6 +54,14 @@ func (ns NullMessageSender) Value() (driver.Value, error) {
 	return string(ns.MessageSender), nil
 }
 
+type Conversation struct {
+	ID        int64
+	Name      string
+	UserID    int64
+	CreatedAt time.Time
+	UpdatedAt time.Time
+}
+
 type ForeignMessage struct {
 	ID               int32
 	MessageID        int32
@@ -64,13 +70,13 @@ type ForeignMessage struct {
 }
 
 type Message struct {
-	ID           int64
-	MessageType  json.RawMessage
-	UserID       int64
-	SentBy       MessageSender
-	CreatedAt    sql.NullTime
-	UpdatedAt    sql.NullTime
-	Conversation uuid.NullUUID
+	ID             int64
+	MessageType    json.RawMessage
+	UserID         int64
+	SentBy         MessageSender
+	CreatedAt      sql.NullTime
+	UpdatedAt      sql.NullTime
+	ConversationID sql.NullInt64
 }
 
 type User struct {
@@ -81,5 +87,5 @@ type User struct {
 	UpdatedAt           time.Time
 	CurrentStep         string
 	SelectedModel       string
-	CurrentConversation sql.NullString
+	CurrentConversation sql.NullInt64
 }

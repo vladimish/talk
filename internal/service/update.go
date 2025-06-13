@@ -68,7 +68,7 @@ func (s *UpdateService) getOrCreateUser(ctx context.Context, update domain.Updat
 				ExternalID:    update.ExternalUserID,
 				Language:      language,
 				CurrentStep:   domain.UserStateMenu,
-				SelectedModel: "gpt-4o-mini",
+				SelectedModel: "google/gemini-2.5-flash-preview-05-20",
 				CreatedAt:     now,
 				UpdatedAt:     now,
 			}

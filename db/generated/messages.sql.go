@@ -7,9 +7,8 @@ package generated
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
-
-	"github.com/google/uuid"
 )
 
 const createMessage = `-- name: CreateMessage :one
@@ -17,18 +16,18 @@ INSERT INTO messages (
     message_type,
     user_id,
     sent_by,
-    conversation
+    conversation_id
 ) VALUES (
     $1, $2, $3, $4
 )
-RETURNING id, message_type, user_id, sent_by, created_at, updated_at, conversation
+RETURNING id, message_type, user_id, sent_by, created_at, updated_at, conversation_id
 `
 
 type CreateMessageParams struct {
-	MessageType  json.RawMessage
-	UserID       int64
-	SentBy       MessageSender
-	Conversation uuid.NullUUID
+	MessageType    json.RawMessage
+	UserID         int64
+	SentBy         MessageSender
+	ConversationID sql.NullInt64
 }
 
 func (q *Queries) CreateMessage(ctx context.Context, arg CreateMessageParams) (Message, error) {
@@ -36,7 +35,7 @@ func (q *Queries) CreateMessage(ctx context.Context, arg CreateMessageParams) (M
 		arg.MessageType,
 		arg.UserID,
 		arg.SentBy,
-		arg.Conversation,
+		arg.ConversationID,
 	)
 	var i Message
 	err := row.Scan(
@@ -46,55 +45,19 @@ func (q *Queries) CreateMessage(ctx context.Context, arg CreateMessageParams) (M
 		&i.SentBy,
 		&i.CreatedAt,
 		&i.UpdatedAt,
-		&i.Conversation,
+		&i.ConversationID,
 	)
 	return i, err
 }
 
-const getConversationsByUserID = `-- name: GetConversationsByUserID :many
-SELECT DISTINCT conversation, MIN(created_at) as first_message_at
-FROM messages
-WHERE user_id = $1 AND conversation IS NOT NULL
-GROUP BY conversation
-ORDER BY first_message_at DESC
-`
-
-type GetConversationsByUserIDRow struct {
-	Conversation   uuid.NullUUID
-	FirstMessageAt interface{}
-}
-
-func (q *Queries) GetConversationsByUserID(ctx context.Context, userID int64) ([]GetConversationsByUserIDRow, error) {
-	rows, err := q.db.QueryContext(ctx, getConversationsByUserID, userID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []GetConversationsByUserIDRow
-	for rows.Next() {
-		var i GetConversationsByUserIDRow
-		if err := rows.Scan(&i.Conversation, &i.FirstMessageAt); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const getMessagesByConversation = `-- name: GetMessagesByConversation :many
-SELECT id, message_type, user_id, sent_by, created_at, updated_at, conversation FROM messages
-WHERE conversation = $1
+const getMessagesByConversationID = `-- name: GetMessagesByConversationID :many
+SELECT id, message_type, user_id, sent_by, created_at, updated_at, conversation_id FROM messages
+WHERE conversation_id = $1
 ORDER BY created_at ASC
 `
 
-func (q *Queries) GetMessagesByConversation(ctx context.Context, conversation uuid.NullUUID) ([]Message, error) {
-	rows, err := q.db.QueryContext(ctx, getMessagesByConversation, conversation)
+func (q *Queries) GetMessagesByConversationID(ctx context.Context, conversationID sql.NullInt64) ([]Message, error) {
+	rows, err := q.db.QueryContext(ctx, getMessagesByConversationID, conversationID)
 	if err != nil {
 		return nil, err
 	}
@@ -109,7 +72,7 @@ func (q *Queries) GetMessagesByConversation(ctx context.Context, conversation uu
 			&i.SentBy,
 			&i.CreatedAt,
 			&i.UpdatedAt,
-			&i.Conversation,
+			&i.ConversationID,
 		); err != nil {
 			return nil, err
 		}
@@ -125,7 +88,7 @@ func (q *Queries) GetMessagesByConversation(ctx context.Context, conversation uu
 }
 
 const getMessagesByUserID = `-- name: GetMessagesByUserID :many
-SELECT id, message_type, user_id, sent_by, created_at, updated_at, conversation FROM messages
+SELECT id, message_type, user_id, sent_by, created_at, updated_at, conversation_id FROM messages
 WHERE user_id = $1
 ORDER BY created_at ASC
 `
@@ -146,7 +109,7 @@ func (q *Queries) GetMessagesByUserID(ctx context.Context, userID int64) ([]Mess
 			&i.SentBy,
 			&i.CreatedAt,
 			&i.UpdatedAt,
-			&i.Conversation,
+			&i.ConversationID,
 		); err != nil {
 			return nil, err
 		}

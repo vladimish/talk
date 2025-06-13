@@ -72,19 +72,19 @@ func (q *Queries) GetUserByForeignID(ctx context.Context, foreignID int64) (User
 	return i, err
 }
 
-const updateUserCurrentConversation = `-- name: UpdateUserCurrentConversation :exec
+const updateUserCurrentConversationID = `-- name: UpdateUserCurrentConversationID :exec
 UPDATE users
 SET current_conversation = $2, updated_at = NOW()
 WHERE id = $1
 `
 
-type UpdateUserCurrentConversationParams struct {
+type UpdateUserCurrentConversationIDParams struct {
 	ID                  int64
-	CurrentConversation sql.NullString
+	CurrentConversation sql.NullInt64
 }
 
-func (q *Queries) UpdateUserCurrentConversation(ctx context.Context, arg UpdateUserCurrentConversationParams) error {
-	_, err := q.db.ExecContext(ctx, updateUserCurrentConversation, arg.ID, arg.CurrentConversation)
+func (q *Queries) UpdateUserCurrentConversationID(ctx context.Context, arg UpdateUserCurrentConversationIDParams) error {
+	_, err := q.db.ExecContext(ctx, updateUserCurrentConversationID, arg.ID, arg.CurrentConversation)
 	return err
 }
 

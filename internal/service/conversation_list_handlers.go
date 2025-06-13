@@ -3,8 +3,8 @@ package service
 import (
 	"context"
 	"fmt"
+	"time"
 
-	"github.com/google/uuid"
 	"github.com/vladimish/talk/internal/domain"
 )
 
@@ -21,7 +21,11 @@ func (s *UpdateService) transitionToConversationList(ctx context.Context, user *
 	return s.showConversationList(ctx, user)
 }
 
-func (s *UpdateService) handleConversationListState(ctx context.Context, user *domain.User, update domain.Update) error {
+func (s *UpdateService) handleConversationListState(
+	ctx context.Context,
+	user *domain.User,
+	update domain.Update,
+) error {
 	// Check if user sent "back to menu" text
 	if update.MessageText == domain.ButtonBackToMenu {
 		return s.transitionToMenu(ctx, user)
@@ -38,9 +42,9 @@ func (s *UpdateService) handleConversationListState(ctx context.Context, user *d
 		return fmt.Errorf("can't get conversations: %w", err)
 	}
 
-	for _, conversationID := range conversations {
-		if update.MessageText == fmt.Sprintf("💬 %s", conversationID[:8]) {
-			return s.selectConversation(ctx, user, conversationID)
+	for _, conversation := range conversations {
+		if update.MessageText == fmt.Sprintf("💬 %s", conversation.Name) {
+			return s.selectConversation(ctx, user, conversation.ID)
 		}
 	}
 
@@ -62,9 +66,9 @@ func (s *UpdateService) showConversationList(ctx context.Context, user *domain.U
 	})
 
 	// Add existing conversations
-	for _, conversationID := range conversations {
+	for _, conversation := range conversations {
 		buttons = append(buttons, []domain.KeyboardButton{
-			{Text: fmt.Sprintf("💬 %s", conversationID[:8])},
+			{Text: fmt.Sprintf("💬 %s", conversation.Name)},
 		})
 	}
 
@@ -92,12 +96,21 @@ func (s *UpdateService) showConversationList(ctx context.Context, user *domain.U
 }
 
 func (s *UpdateService) createNewConversation(ctx context.Context, user *domain.User) error {
-	// Generate new conversation UUID
-	conversationID := uuid.New().String()
+	// Create new conversation
+	conversationName := fmt.Sprintf("Conversation %s", time.Now().Format("Jan 2 15:04"))
+	conversation, err := s.storage.CreateConversation(ctx, &domain.Conversation{
+		Name:      conversationName,
+		UserID:    user.ID,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	})
+	if err != nil {
+		return fmt.Errorf("can't create conversation: %w", err)
+	}
 
 	// Update user's current conversation
-	user.CurrentConversation = &conversationID
-	err := s.storage.UpdateUserCurrentConversation(ctx, user.ID, &conversationID)
+	user.CurrentConversationID = &conversation.ID
+	err = s.storage.UpdateUserCurrentConversationID(ctx, user.ID, &conversation.ID)
 	if err != nil {
 		return fmt.Errorf("can't update user conversation: %w", err)
 	}
@@ -106,10 +119,10 @@ func (s *UpdateService) createNewConversation(ctx context.Context, user *domain.
 	return s.transitionToConversation(ctx, user)
 }
 
-func (s *UpdateService) selectConversation(ctx context.Context, user *domain.User, conversationID string) error {
+func (s *UpdateService) selectConversation(ctx context.Context, user *domain.User, conversationID int64) error {
 	// Update user's current conversation
-	user.CurrentConversation = &conversationID
-	err := s.storage.UpdateUserCurrentConversation(ctx, user.ID, &conversationID)
+	user.CurrentConversationID = &conversationID
+	err := s.storage.UpdateUserCurrentConversationID(ctx, user.ID, &conversationID)
 	if err != nil {
 		return fmt.Errorf("can't update user conversation: %w", err)
 	}

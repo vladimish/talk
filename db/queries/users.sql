@@ -19,7 +19,7 @@ UPDATE users
 SET selected_model = $2, updated_at = NOW()
 WHERE id = $1;
 
--- name: UpdateUserCurrentConversation :exec
+-- name: UpdateUserCurrentConversationID :exec
 UPDATE users
 SET current_conversation = $2, updated_at = NOW()
 WHERE id = $1;
