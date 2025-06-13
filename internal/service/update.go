@@ -14,11 +14,10 @@ import (
 )
 
 type UpdateService struct {
-	logger              *slog.Logger
-	storage             storage.Storage
-	sender              sender.Sender
-	completion          completion.Completion
-	conversationHandler *ConversationHandler
+	logger     *slog.Logger
+	storage    storage.Storage
+	sender     sender.Sender
+	completion completion.Completion
 }
 
 func NewUpdateService(
@@ -27,13 +26,11 @@ func NewUpdateService(
 	sender sender.Sender,
 	completion completion.Completion,
 ) *UpdateService {
-	conversationHandler := NewConversationHandler(logger, storage, sender, completion)
 	return &UpdateService{
-		logger:              logger,
-		storage:             storage,
-		sender:              sender,
-		completion:          completion,
-		conversationHandler: conversationHandler,
+		logger:     logger,
+		storage:    storage,
+		sender:     sender,
+		completion: completion,
 	}
 }
 
@@ -86,41 +83,15 @@ func (s *UpdateService) getOrCreateUser(ctx context.Context, update domain.Updat
 	return user, nil
 }
 
-func (s *UpdateService) handleMenuState(ctx context.Context, user *domain.User, update domain.Update) error {
-	// Check if user sent "start conversation" text
-	if update.MessageText == "🗣️ Start Conversation" {
-		return s.transitionToConversation(ctx, user)
-	}
-
-	// Send menu with keyboard
-	content := domain.MessageContent{
-		Text: "Welcome! Choose an option:",
-		ReplyKeyboard: &domain.ReplyKeyboard{
-			Buttons: [][]domain.KeyboardButton{
-				{
-					{
-						Text: "🗣️ Start Conversation",
-					},
-				},
-			},
-			Resize:  true,
-			OneTime: true,
-		},
-	}
-
-	_, err := s.sender.SendMessageWithContent(ctx, user.ExternalID, content)
-	return err
-}
-
 func (s *UpdateService) handleConversationState(ctx context.Context, user *domain.User, update domain.Update) error {
 	// Check if user sent "back to menu" text
-	if update.MessageText == "🔙 Back to Menu" {
+	if update.MessageText == domain.ButtonBackToMenu {
 		return s.transitionToMenu(ctx, user)
 	}
 
 	// Handle regular conversation message
-	if update.MessageText != "" && update.MessageText != "🔙 Back to Menu" {
-		return s.conversationHandler.Handle(ctx, user, update)
+	if update.MessageText != "" && update.MessageText != domain.ButtonBackToMenu {
+		return s.handleConversationMessage(ctx, user, update)
 	}
 
 	// Send back to menu button if no message text
@@ -130,7 +101,7 @@ func (s *UpdateService) handleConversationState(ctx context.Context, user *domai
 			Buttons: [][]domain.KeyboardButton{
 				{
 					{
-						Text: "🔙 Back to Menu",
+						Text: domain.ButtonBackToMenu,
 					},
 				},
 			},
@@ -140,61 +111,5 @@ func (s *UpdateService) handleConversationState(ctx context.Context, user *domai
 	}
 
 	_, err := s.sender.SendMessageWithContent(ctx, user.ExternalID, content)
-	return err
-}
-
-func (s *UpdateService) transitionToConversation(ctx context.Context, user *domain.User) error {
-	conversationState := domain.UserStateConversation
-	user.CurrentStep = conversationState
-
-	err := s.storage.UpdateUserCurrentStep(ctx, user.ID, conversationState)
-	if err != nil {
-		return fmt.Errorf("can't update user state: %w", err)
-	}
-
-	content := domain.MessageContent{
-		Text: "🗣️ Conversation started! Send me a message and I'll respond. You can always go back to the menu.",
-		ReplyKeyboard: &domain.ReplyKeyboard{
-			Buttons: [][]domain.KeyboardButton{
-				{
-					{
-						Text: "🔙 Back to Menu",
-					},
-				},
-			},
-			Resize:  true,
-			OneTime: false,
-		},
-	}
-
-	_, err = s.sender.SendMessageWithContent(ctx, user.ExternalID, content)
-	return err
-}
-
-func (s *UpdateService) transitionToMenu(ctx context.Context, user *domain.User) error {
-	menuState := domain.UserStateMenu
-	user.CurrentStep = menuState
-
-	err := s.storage.UpdateUserCurrentStep(ctx, user.ID, menuState)
-	if err != nil {
-		return fmt.Errorf("can't update user state: %w", err)
-	}
-
-	content := domain.MessageContent{
-		Text: "🏠 Back to main menu. Choose an option:",
-		ReplyKeyboard: &domain.ReplyKeyboard{
-			Buttons: [][]domain.KeyboardButton{
-				{
-					{
-						Text: "🗣️ Start Conversation",
-					},
-				},
-			},
-			Resize:  true,
-			OneTime: true,
-		},
-	}
-
-	_, err = s.sender.SendMessageWithContent(ctx, user.ExternalID, content)
 	return err
 }

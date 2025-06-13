@@ -7,6 +7,11 @@ const (
 	UserStateConversation = "conversation"
 )
 
+const (
+	ButtonStartConversation = "🗣️ Start Conversation"
+	ButtonBackToMenu        = "🔙 Back to Menu"
+)
+
 type User struct {
 	ID                  int64
 	ExternalID          string

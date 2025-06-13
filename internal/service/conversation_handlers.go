@@ -9,35 +9,12 @@ import (
 	"time"
 
 	"github.com/vladimish/talk/internal/domain"
-	"github.com/vladimish/talk/internal/port/completion"
-	"github.com/vladimish/talk/internal/port/sender"
-	"github.com/vladimish/talk/internal/port/storage"
 )
 
-type ConversationHandler struct {
-	logger     *slog.Logger
-	storage    storage.Storage
-	sender     sender.Sender
-	completion completion.Completion
-}
-
-func NewConversationHandler(
-	logger *slog.Logger,
-	storage storage.Storage,
-	sender sender.Sender,
-	completion completion.Completion,
-) *ConversationHandler {
-	return &ConversationHandler{
-		logger:     logger,
-		storage:    storage,
-		sender:     sender,
-		completion: completion,
-	}
-}
-
-func (h *ConversationHandler) Handle(ctx context.Context, user *domain.User, update domain.Update) error {
+// Conversation handlers.
+func (s *UpdateService) handleConversationMessage(ctx context.Context, user *domain.User, update domain.Update) error {
 	// Save incoming message from user
-	userMessage, err := h.storage.CreateMessage(ctx, &domain.Message{
+	userMessage, err := s.storage.CreateMessage(ctx, &domain.Message{
 		UserID: user.ID,
 		MessageType: domain.MessageType{
 			Text: update.MessageText,
@@ -52,35 +29,35 @@ func (h *ConversationHandler) Handle(ctx context.Context, user *domain.User, upd
 
 	if update.ExternalMessageID > 0 {
 		if userMessage.ID > int64(^uint32(0)>>1) || int64(update.ExternalMessageID) > int64(^uint32(0)>>1) {
-			h.logger.WarnContext(ctx, "message ID too large for foreign message mapping")
+			s.logger.WarnContext(ctx, "message ID too large for foreign message mapping")
 		} else {
-			err = h.storage.CreateForeignMessage(ctx, int32(userMessage.ID), int32(update.ExternalMessageID)) //nolint:gosec
+			err = s.storage.CreateForeignMessage(ctx, int32(userMessage.ID), int32(update.ExternalMessageID)) //nolint:gosec
 			if err != nil {
-				h.logger.WarnContext(ctx, "failed to save foreign message mapping", slog.String("error", err.Error()))
+				s.logger.WarnContext(ctx, "failed to save foreign message mapping", slog.String("error", err.Error()))
 			}
 		}
 	}
 
 	// Get conversation history
-	messages, err := h.storage.GetMessagesByUserID(ctx, user.ID)
+	messages, err := s.storage.GetMessagesByUserID(ctx, user.ID)
 	if err != nil {
 		return fmt.Errorf("can't get messages: %w", err)
 	}
 
 	// Send typing indicator
-	err = h.sender.SendTyping(ctx, user.ExternalID)
+	err = s.sender.SendTyping(ctx, user.ExternalID)
 	if err != nil {
-		h.logger.WarnContext(ctx, "failed to send typing indicator", slog.String("error", err.Error()))
+		s.logger.WarnContext(ctx, "failed to send typing indicator", slog.String("error", err.Error()))
 	}
 
 	systemPrompt := "You are a helpful assistant."
-	tokenStream, err := h.completion.CompleteStream(ctx, user.SelectedModel, systemPrompt, messages)
+	tokenStream, err := s.completion.CompleteStream(ctx, user.SelectedModel, systemPrompt, messages)
 	if err != nil {
 		return fmt.Errorf("can't get completion: %w", err)
 	}
 
 	// Send initial empty message to get message ID
-	messageID, err := h.sender.SendMessage(ctx, user.ExternalID, "\\.\\.\\.")
+	messageID, err := s.sender.SendMessage(ctx, user.ExternalID, "\\.\\.\\.")
 	if err != nil {
 		return fmt.Errorf("can't send initial message: %w", err)
 	}
@@ -104,13 +81,13 @@ func (h *ConversationHandler) Handle(ctx context.Context, user *domain.User, upd
 			currentContent := responseBuilder.String()
 
 			// Send typing indicator to keep the conversation active
-			err = h.sender.SendTyping(ctx, user.ExternalID)
+			err = s.sender.SendTyping(ctx, user.ExternalID)
 			if err != nil {
-				h.logger.WarnContext(ctx, "failed to send typing indicator", slog.String("error", err.Error()))
+				s.logger.WarnContext(ctx, "failed to send typing indicator", slog.String("error", err.Error()))
 			}
 
 			// Update all tracked messages with optimization
-			updatedMessageIDs, updateErr := h.sender.UpdateMessages(
+			updatedMessageIDs, updateErr := s.sender.UpdateMessages(
 				ctx,
 				user.ExternalID,
 				messageIDs,
@@ -130,7 +107,7 @@ func (h *ConversationHandler) Handle(ctx context.Context, user *domain.User, upd
 	// Send final update if needed
 	if time.Since(lastUpdate) > 0 {
 		finalContent := responseBuilder.String()
-		updatedMessageIDs, finalUpdateErr := h.sender.UpdateMessages(
+		updatedMessageIDs, finalUpdateErr := s.sender.UpdateMessages(
 			ctx,
 			user.ExternalID,
 			messageIDs,
@@ -146,7 +123,7 @@ func (h *ConversationHandler) Handle(ctx context.Context, user *domain.User, upd
 
 	responseText := responseBuilder.String()
 
-	botMessage, err := h.storage.CreateMessage(ctx, &domain.Message{
+	botMessage, err := s.storage.CreateMessage(ctx, &domain.Message{
 		UserID: user.ID,
 		MessageType: domain.MessageType{
 			Text: responseText,
@@ -168,7 +145,7 @@ func (h *ConversationHandler) Handle(ctx context.Context, user *domain.User, upd
 		// Parse message ID from string to int
 		msgID, parseErr := strconv.ParseInt(msgIDStr, 10, 32)
 		if parseErr != nil {
-			h.logger.WarnContext(ctx, "failed to parse message ID",
+			s.logger.WarnContext(ctx, "failed to parse message ID",
 				slog.String("message_id", msgIDStr),
 				slog.String("error", parseErr.Error()))
 			continue
@@ -176,17 +153,17 @@ func (h *ConversationHandler) Handle(ctx context.Context, user *domain.User, upd
 
 		// Create foreign message mapping
 		if botMessage.ID > int64(^uint32(0)>>1) || msgID > int64(^uint32(0)>>1) {
-			h.logger.WarnContext(ctx, "message ID too large for foreign message mapping")
+			s.logger.WarnContext(ctx, "message ID too large for foreign message mapping")
 			continue
 		}
-		err = h.storage.CreateForeignMessage(ctx, int32(botMessage.ID), int32(msgID)) //nolint:gosec
+		err = s.storage.CreateForeignMessage(ctx, int32(botMessage.ID), int32(msgID)) //nolint:gosec
 		if err != nil {
-			h.logger.WarnContext(ctx, "failed to save foreign message mapping for bot",
+			s.logger.WarnContext(ctx, "failed to save foreign message mapping for bot",
 				slog.String("telegram_message_id", msgIDStr),
 				slog.Int64("db_message_id", botMessage.ID),
 				slog.String("error", err.Error()))
 		} else {
-			h.logger.DebugContext(ctx, "saved foreign message mapping",
+			s.logger.DebugContext(ctx, "saved foreign message mapping",
 				slog.String("telegram_message_id", msgIDStr),
 				slog.Int64("db_message_id", botMessage.ID))
 		}
