@@ -5,8 +5,8 @@ WHERE foreign_id = $1
 LIMIT 1;
 
 -- name: CreateUser :one
-INSERT INTO users (foreign_id, language, selected_model, created_at, updated_at)
-VALUES ($1, $2, $3, $4, $5)
+INSERT INTO users (foreign_id, language, current_step, selected_model, created_at, updated_at)
+VALUES ($1, $2, $3, $4, $5, $6)
 RETURNING *;
 
 -- name: UpdateUserCurrentStep :exec

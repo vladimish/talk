@@ -76,7 +76,7 @@ type User struct {
 	Language            string
 	CreatedAt           time.Time
 	UpdatedAt           time.Time
-	CurrentStep         sql.NullString
+	CurrentStep         string
 	SelectedModel       string
 	CurrentConversation sql.NullString
 }

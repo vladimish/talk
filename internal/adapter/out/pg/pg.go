@@ -36,11 +36,6 @@ func (p *PG) GetUserByExternalUserID(ctx context.Context, id string) (*domain.Us
 		return nil, fmt.Errorf("can't get user by foreign id: %w", err)
 	}
 
-	var currentStep *string
-	if u.CurrentStep.Valid {
-		currentStep = &u.CurrentStep.String
-	}
-
 	var conversation *string
 	if u.CurrentConversation.Valid {
 		conversation = &u.CurrentConversation.String
@@ -50,7 +45,7 @@ func (p *PG) GetUserByExternalUserID(ctx context.Context, id string) (*domain.Us
 		ID:                  u.ID,
 		ExternalID:          strconv.FormatInt(u.ForeignID, 10),
 		Language:            u.Language,
-		CurrentStep:         currentStep,
+		CurrentStep:         u.CurrentStep,
 		SelectedModel:       u.SelectedModel,
 		CurrentConversation: conversation,
 		CreatedAt:           u.CreatedAt,
@@ -61,7 +56,7 @@ func (p *PG) GetUserByExternalUserID(ctx context.Context, id string) (*domain.Us
 func (p *PG) UpdateUserCurrentStep(ctx context.Context, userID int64, currentStep string) error {
 	return p.q.UpdateUserCurrentStep(ctx, generated.UpdateUserCurrentStepParams{
 		ID:          userID,
-		CurrentStep: sql.NullString{String: currentStep, Valid: true},
+		CurrentStep: currentStep,
 	})
 }
 
@@ -128,27 +123,31 @@ func (p *PG) CreateUser(ctx context.Context, user *domain.User) (*domain.User, e
 	}
 
 	u, err := p.q.CreateUser(ctx, generated.CreateUserParams{
-		ForeignID: foreignID,
-		Language:  user.Language,
-		CreatedAt: user.CreatedAt,
-		UpdatedAt: user.UpdatedAt,
+		ForeignID:     foreignID,
+		Language:      user.Language,
+		CurrentStep:   user.CurrentStep,
+		SelectedModel: user.SelectedModel,
+		CreatedAt:     user.CreatedAt,
+		UpdatedAt:     user.UpdatedAt,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("can't create user: %w", err)
 	}
 
-	var currentStep *string
-	if u.CurrentStep.Valid {
-		currentStep = &u.CurrentStep.String
+	var currentConversation *string
+	if u.CurrentConversation.Valid {
+		currentConversation = &u.CurrentConversation.String
 	}
 
 	return &domain.User{
-		ID:          u.ID,
-		ExternalID:  strconv.FormatInt(u.ForeignID, 10),
-		Language:    u.Language,
-		CurrentStep: currentStep,
-		CreatedAt:   u.CreatedAt,
-		UpdatedAt:   u.UpdatedAt,
+		ID:                  u.ID,
+		ExternalID:          strconv.FormatInt(u.ForeignID, 10),
+		Language:            u.Language,
+		CurrentStep:         u.CurrentStep,
+		SelectedModel:       u.SelectedModel,
+		CurrentConversation: currentConversation,
+		CreatedAt:           u.CreatedAt,
+		UpdatedAt:           u.UpdatedAt,
 	}, nil
 }
 

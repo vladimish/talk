@@ -9,6 +9,7 @@ import (
 
 	"github.com/go-telegram/bot"
 	"github.com/go-telegram/bot/models"
+	"github.com/vladimish/talk/internal/domain"
 	"github.com/vladimish/talk/internal/port/formatter"
 )
 
@@ -44,6 +45,60 @@ func (u *Sender) SendMessage(ctx context.Context, externalUserID string, text st
 	}
 
 	return strconv.Itoa(msg.ID), nil
+}
+
+func (u *Sender) SendMessageWithContent(
+	ctx context.Context,
+	externalUserID string,
+	content domain.MessageContent,
+) (string, error) {
+	// Format the text for Telegram
+	formattedText, err := u.formatter.FormatMarkdown(ctx, content.Text)
+	if err != nil {
+		u.logger.WarnContext(ctx, "failed to format markdown, using raw text", slog.String("error", err.Error()))
+		formattedText = content.Text
+	}
+
+	params := &bot.SendMessageParams{
+		ChatID:    externalUserID,
+		Text:      formattedText,
+		ParseMode: models.ParseModeMarkdown,
+	}
+
+	// Add reply keyboard if present
+	if content.ReplyKeyboard != nil {
+		keyboard := u.buildReplyKeyboard(content.ReplyKeyboard)
+		params.ReplyMarkup = keyboard
+	}
+
+	msg, err := u.bot.SendMessage(ctx, params)
+	if err != nil {
+		return "", fmt.Errorf("can't send message: %w", err)
+	}
+
+	return strconv.Itoa(msg.ID), nil
+}
+
+func (u *Sender) buildReplyKeyboard(keyboard *domain.ReplyKeyboard) *models.ReplyKeyboardMarkup {
+	var rows [][]models.KeyboardButton
+
+	for _, buttonRow := range keyboard.Buttons {
+		var tgRow []models.KeyboardButton
+		for _, button := range buttonRow {
+			tgButton := models.KeyboardButton{
+				Text: button.Text,
+			}
+			tgRow = append(tgRow, tgButton)
+		}
+		rows = append(rows, tgRow)
+	}
+
+	return &models.ReplyKeyboardMarkup{
+		Keyboard:              rows,
+		ResizeKeyboard:        keyboard.Resize,
+		OneTimeKeyboard:       keyboard.OneTime,
+		InputFieldPlaceholder: keyboard.Placeholder,
+	}
 }
 
 func (u *Sender) UpdateMessage(

@@ -12,14 +12,15 @@ import (
 )
 
 const createUser = `-- name: CreateUser :one
-INSERT INTO users (foreign_id, language, selected_model, created_at, updated_at)
-VALUES ($1, $2, $3, $4, $5)
+INSERT INTO users (foreign_id, language, current_step, selected_model, created_at, updated_at)
+VALUES ($1, $2, $3, $4, $5, $6)
 RETURNING id, foreign_id, language, created_at, updated_at, current_step, selected_model, current_conversation
 `
 
 type CreateUserParams struct {
 	ForeignID     int64
 	Language      string
+	CurrentStep   string
 	SelectedModel string
 	CreatedAt     time.Time
 	UpdatedAt     time.Time
@@ -29,6 +30,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 	row := q.db.QueryRowContext(ctx, createUser,
 		arg.ForeignID,
 		arg.Language,
+		arg.CurrentStep,
 		arg.SelectedModel,
 		arg.CreatedAt,
 		arg.UpdatedAt,
@@ -94,7 +96,7 @@ WHERE id = $1
 
 type UpdateUserCurrentStepParams struct {
 	ID          int64
-	CurrentStep sql.NullString
+	CurrentStep string
 }
 
 func (q *Queries) UpdateUserCurrentStep(ctx context.Context, arg UpdateUserCurrentStepParams) error {
