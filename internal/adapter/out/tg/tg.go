@@ -172,6 +172,45 @@ func isMessageNotModified(err error) bool {
 	return strings.Contains(err.Error(), "message is not modified")
 }
 
+func (u *Sender) handleMessageUpdate(
+	ctx context.Context,
+	externalUserID string,
+	messageIDs []string,
+	previousChunks []string,
+	formattedChunk string,
+	chunkIndex int,
+) (string, error) {
+	if chunkIndex < len(messageIDs) {
+		shouldUpdate := u.shouldUpdateChunk(ctx, previousChunks, formattedChunk, chunkIndex)
+		if !shouldUpdate {
+			return messageIDs[chunkIndex], nil
+		}
+		return u.handleExistingMessageUpdate(ctx, externalUserID, messageIDs[chunkIndex], formattedChunk)
+	}
+	return u.sendOverflowMessage(ctx, externalUserID, formattedChunk)
+}
+
+func (u *Sender) shouldUpdateChunk(
+	ctx context.Context,
+	previousChunks []string,
+	formattedChunk string,
+	chunkIndex int,
+) bool {
+	if chunkIndex >= len(previousChunks) {
+		return true
+	}
+
+	formattedPrevChunk, prevFormatErr := u.formatter.FormatMarkdown(ctx, previousChunks[chunkIndex])
+	if prevFormatErr != nil || formattedPrevChunk != formattedChunk {
+		return true
+	}
+
+	u.logger.DebugContext(ctx, "chunk unchanged, skipping update",
+		slog.String("message_id", ""), // Will be filled by caller
+		slog.Int("chunk_index", chunkIndex))
+	return false
+}
+
 func (u *Sender) UpdateMessages(
 	ctx context.Context,
 	externalUserID string,
@@ -200,30 +239,7 @@ func (u *Sender) UpdateMessages(
 		var messageID string
 		var err error
 
-		if i < len(messageIDs) {
-			// Check if we need to update this chunk
-			shouldUpdate := true
-			if i < len(previousChunks) {
-				// Format previous chunk for comparison
-				formattedPrevChunk, prevFormatErr := u.formatter.FormatMarkdown(ctx, previousChunks[i])
-				if prevFormatErr == nil && formattedPrevChunk == formattedChunk {
-					// Chunks are identical, no need to update
-					shouldUpdate = false
-					messageID = messageIDs[i]
-					u.logger.DebugContext(ctx, "chunk unchanged, skipping update",
-						slog.String("message_id", messageID),
-						slog.Int("chunk_index", i))
-				}
-			}
-
-			if shouldUpdate {
-				// Update existing message
-				messageID, err = u.handleExistingMessageUpdate(ctx, externalUserID, messageIDs[i], formattedChunk)
-			}
-		} else {
-			// Send new message for overflow
-			messageID, err = u.sendOverflowMessage(ctx, externalUserID, formattedChunk)
-		}
+		messageID, err = u.handleMessageUpdate(ctx, externalUserID, messageIDs, previousChunks, formattedChunk, i)
 
 		if err != nil {
 			return nil, err
@@ -272,15 +288,20 @@ func findWordBoundary(runes []rune, chunkSize, adjustedMaxLength int) int {
 	return chunkSize
 }
 
+const (
+	codeBlockMarkerLength = 3
+	codeBlockDivisor      = 2
+)
+
 func calculateNewCodeBlockState(inCodeBlock bool, codeBlockCount int) bool {
 	if inCodeBlock {
-		return (codeBlockCount % 2) == 0
+		return (codeBlockCount % codeBlockDivisor) == 0
 	}
-	return (codeBlockCount % 2) == 1
+	return (codeBlockCount % codeBlockDivisor) == 1
 }
 
 func findLastCodeBlockStart(chunkText string, inCodeBlock bool) int {
-	for i := len(chunkText) - 3; i >= 0; i-- {
+	for i := len(chunkText) - codeBlockMarkerLength; i >= 0; i-- {
 		if i+2 < len(chunkText) &&
 			chunkText[i] == '`' && chunkText[i+1] == '`' && chunkText[i+2] == '`' {
 			prefixCount := strings.Count(chunkText[:i], "```")
@@ -298,8 +319,8 @@ func findLastCodeBlockStart(chunkText string, inCodeBlock bool) int {
 
 func findCodeBlockClosing(runes []rune, chunkSize int) int {
 	remainingText := string(runes)
-	searchStart := chunkSize + 3
-	for i := searchStart; i <= len(remainingText)-3; i++ {
+	searchStart := chunkSize + codeBlockMarkerLength
+	for i := searchStart; i <= len(remainingText)-codeBlockMarkerLength; i++ {
 		if remainingText[i] == '`' && remainingText[i+1] == '`' && remainingText[i+2] == '`' {
 			return i
 		}
@@ -313,7 +334,13 @@ type codeBlockResult struct {
 	newInCodeBlock bool
 }
 
-func handleCodeBlockBoundary(runes []rune, chunk string, chunkSize int, inCodeBlock, newInCodeBlock bool, maxLength int) codeBlockResult {
+func handleCodeBlockBoundary(
+	runes []rune,
+	chunk string,
+	chunkSize int,
+	inCodeBlock, newInCodeBlock bool,
+	maxLength int,
+) codeBlockResult {
 	if !newInCodeBlock || chunkSize >= len(runes) {
 		return codeBlockResult{chunk, chunkSize, newInCodeBlock}
 	}
@@ -386,7 +413,12 @@ func findSingleNewlineBreakPoint(runes []rune, chunk string, chunkSize, remainin
 	return chunkSize
 }
 
-func optimizeTextBlockBoundary(runes []rune, chunk string, chunkSize, adjustedMaxLength int, newInCodeBlock bool) (string, int) {
+func optimizeTextBlockBoundary(
+	runes []rune,
+	chunk string,
+	chunkSize, adjustedMaxLength int,
+	newInCodeBlock bool,
+) (string, int) {
 	if newInCodeBlock || chunkSize >= len(runes) {
 		return chunk, chunkSize
 	}

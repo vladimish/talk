@@ -3,6 +3,7 @@ package openai
 import (
 	"context"
 	"fmt"
+
 	"github.com/vladimish/talk/internal/domain"
 	"github.com/vladimish/talk/internal/port/completion"
 

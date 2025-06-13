@@ -77,9 +77,13 @@ func (s *UpdateService) HandleUpdate(ctx context.Context, update domain.Update) 
 	}
 
 	if update.ExternalMessageID > 0 {
-		err = s.storage.CreateForeignMessage(ctx, int32(userMessage.ID), int32(update.ExternalMessageID))
-		if err != nil {
-			s.logger.WarnContext(ctx, "failed to save foreign message mapping", slog.String("error", err.Error()))
+		if userMessage.ID > int64(^uint32(0)>>1) || int64(update.ExternalMessageID) > int64(^uint32(0)>>1) {
+			s.logger.WarnContext(ctx, "message ID too large for foreign message mapping")
+		} else {
+			err = s.storage.CreateForeignMessage(ctx, int32(userMessage.ID), int32(update.ExternalMessageID)) //nolint:gosec
+			if err != nil {
+				s.logger.WarnContext(ctx, "failed to save foreign message mapping", slog.String("error", err.Error()))
+			}
 		}
 	}
 
@@ -188,16 +192,20 @@ func (s *UpdateService) HandleUpdate(ctx context.Context, update domain.Update) 
 		}
 
 		// Parse message ID from string to int
-		msgID, err := strconv.ParseInt(msgIDStr, 10, 32)
-		if err != nil {
+		msgID, parseErr := strconv.ParseInt(msgIDStr, 10, 32)
+		if parseErr != nil {
 			s.logger.WarnContext(ctx, "failed to parse message ID",
 				slog.String("message_id", msgIDStr),
-				slog.String("error", err.Error()))
+				slog.String("error", parseErr.Error()))
 			continue
 		}
 
 		// Create foreign message mapping
-		err = s.storage.CreateForeignMessage(ctx, int32(botMessage.ID), int32(msgID))
+		if botMessage.ID > int64(^uint32(0)>>1) || msgID > int64(^uint32(0)>>1) {
+			s.logger.WarnContext(ctx, "message ID too large for foreign message mapping")
+			continue
+		}
+		err = s.storage.CreateForeignMessage(ctx, int32(botMessage.ID), int32(msgID)) //nolint:gosec
 		if err != nil {
 			s.logger.WarnContext(ctx, "failed to save foreign message mapping for bot",
 				slog.String("telegram_message_id", msgIDStr),
