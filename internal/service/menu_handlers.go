@@ -25,6 +25,11 @@ func (s *UpdateService) handleMenuState(ctx context.Context, user *domain.User, 
 		return s.transitionToSettings(ctx, user)
 	}
 
+	// Check if user sent "profile" text
+	if update.MessageText == i18n.GetString(user.Language, i18n.ButtonProfile) {
+		return s.transitionToProfile(ctx, user)
+	}
+
 	// Send menu with keyboard
 	return s.sendMenu(ctx, user, i18n.GetString(user.Language, i18n.MenuWelcome))
 }
@@ -42,6 +47,9 @@ func (s *UpdateService) sendMenu(ctx context.Context, user *domain.User, text st
 				{
 					{
 						Text: i18n.GetString(user.Language, i18n.ButtonModelSelect),
+					},
+					{
+						Text: i18n.GetString(user.Language, i18n.ButtonProfile),
 					},
 				},
 				{

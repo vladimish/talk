@@ -11,6 +11,7 @@ import (
 
 	"github.com/vladimish/talk/internal/domain"
 	"github.com/vladimish/talk/internal/port/queue"
+	"github.com/vladimish/talk/pkg/i18n"
 )
 
 const (
@@ -22,22 +23,54 @@ const (
 
 // Conversation handlers.
 func (s *UpdateService) handleConversationMessage(ctx context.Context, user *domain.User, update domain.Update) error {
+	// Check if user has sufficient tokens for the selected model
+	modelCost, exists := domain.ModelCosts[user.SelectedModel]
+	if !exists {
+		// Default cost if model not found
+		modelCost = domain.ModelCost{
+			ModelName: user.SelectedModel,
+			Cost:      1,
+			TokenType: domain.TokenTypeRegular,
+		}
+	}
+
+	// Get user's current balance for the required token type
+	currentBalance, err := s.storage.GetUserTokenBalanceByType(ctx, user.ID, modelCost.TokenType)
+	if err != nil {
+		return fmt.Errorf("failed to get user token balance: %w", err)
+	}
+
+	// Check if user has sufficient tokens
+	if currentBalance < modelCost.Cost {
+		tokenTypeName := "regular"
+		if modelCost.TokenType == domain.TokenTypePremium {
+			tokenTypeName = "premium"
+		}
+		insufficientTokensMsg := fmt.Sprintf(
+			i18n.GetString(user.Language, i18n.ProfileInsufficientTokens),
+			modelCost.Cost,
+			tokenTypeName,
+		)
+		_, sendErr := s.sender.SendMessage(ctx, user.ExternalID, insufficientTokensMsg)
+		return sendErr
+	}
+
 	// Set processing lock with 5 minute timeout
-	if err := s.queue.SetProcessing(ctx, user.ExternalID, processingLockTimeout); err != nil {
-		if errors.Is(err, queue.ErrAlreadyProcessing) {
+	if lockErr := s.queue.SetProcessing(ctx, user.ExternalID, processingLockTimeout); lockErr != nil {
+		if errors.Is(lockErr, queue.ErrAlreadyProcessing) {
 			// This shouldn't happen as we check before, but handle it gracefully
 			return s.queue.EnqueueWithNotification(ctx, user.ExternalID, update, "")
 		}
 		s.logger.WarnContext(ctx, "failed to set processing lock",
-			slog.String("error", err.Error()))
+			slog.String("error", lockErr.Error()))
 		// Continue without lock on error
 	}
 
 	// Ensure we clear the lock and process queued messages when done
 	defer func() {
-		if err := s.queue.ClearProcessing(ctx, user.ExternalID); err != nil {
+		if clearErr := s.queue.ClearProcessing(ctx, user.ExternalID); clearErr != nil {
 			s.logger.ErrorContext(ctx, "failed to clear processing lock",
-				slog.String("error", err.Error()))
+				slog.String("error", clearErr.Error()))
 		}
 
 		// Process any queued messages
@@ -46,9 +79,9 @@ func (s *UpdateService) handleConversationMessage(ctx context.Context, user *dom
 	// Check if this is the first message in a new conversation
 	var isFirstMessage bool
 	if user.CurrentConversationID != nil {
-		messages, err := s.storage.GetMessagesByConversationID(ctx, *user.CurrentConversationID)
-		if err != nil {
-			return fmt.Errorf("can't check existing messages: %w", err)
+		messages, msgErr := s.storage.GetMessagesByConversationID(ctx, *user.CurrentConversationID)
+		if msgErr != nil {
+			return fmt.Errorf("can't check existing messages: %w", msgErr)
 		}
 		isFirstMessage = len(messages) == 0
 	}
@@ -228,6 +261,26 @@ func (s *UpdateService) handleConversationMessage(ctx context.Context, user *dom
 				slog.String("telegram_message_id", msgIDStr),
 				slog.Int64("db_message_id", botMessage.ID))
 		}
+	}
+
+	// Deduct tokens after successful completion
+	transaction := &domain.Transaction{
+		UserID:          user.ID,
+		TokenType:       modelCost.TokenType,
+		Amount:          -modelCost.Cost, // Negative for debit
+		TransactionType: domain.TransactionTypeMessageCost,
+		ModelUsed:       &modelCost.ModelName,
+		Description:     nil,
+		CreatedAt:       time.Now(),
+	}
+
+	_, err = s.storage.CreateTransaction(ctx, transaction)
+	if err != nil {
+		// Log error but don't fail the entire operation
+		s.logger.ErrorContext(ctx, "failed to create token deduction transaction",
+			slog.String("error", err.Error()),
+			slog.String("model", modelCost.ModelName),
+			slog.Int("cost", int(modelCost.Cost)))
 	}
 
 	return nil

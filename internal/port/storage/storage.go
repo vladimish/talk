@@ -28,6 +28,11 @@ type Storage interface {
 	UpdateUserCurrentConversationID(ctx context.Context, userID int64, conversationID *int64) error
 	CreateForeignMessage(ctx context.Context, messageID int32, foreignMessageID int32) error
 	GetForeignMessageByMessageID(ctx context.Context, messageID int32) (int32, error)
+
+	// Transaction methods
+	CreateTransaction(ctx context.Context, transaction *domain.Transaction) (*domain.Transaction, error)
+	GetUserTokenBalance(ctx context.Context, userID int64) (*domain.TokenBalance, error)
+	GetUserTokenBalanceByType(ctx context.Context, userID int64, tokenType domain.TokenType) (int32, error)
 }
 
 var ErrNotFound = errors.New("not found")

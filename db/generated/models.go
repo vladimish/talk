@@ -79,6 +79,17 @@ type Message struct {
 	ConversationID sql.NullInt64
 }
 
+type Transaction struct {
+	ID              int64
+	UserID          int64
+	TokenType       string
+	Amount          int32
+	TransactionType string
+	ModelUsed       sql.NullString
+	Description     sql.NullString
+	CreatedAt       time.Time
+}
+
 type User struct {
 	ID                     int64
 	ForeignID              int64

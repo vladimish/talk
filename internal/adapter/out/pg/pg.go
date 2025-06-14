@@ -375,3 +375,110 @@ func (p *PG) GetForeignMessageByMessageID(ctx context.Context, messageID int32) 
 
 	return fm.ForeignMessageID, nil
 }
+
+// CreateTransaction creates a new transaction record in the database.
+func (p *PG) CreateTransaction(ctx context.Context, transaction *domain.Transaction) (*domain.Transaction, error) {
+	var modelUsed sql.NullString
+	if transaction.ModelUsed != nil {
+		modelUsed = sql.NullString{String: *transaction.ModelUsed, Valid: true}
+	}
+
+	var description sql.NullString
+	if transaction.Description != nil {
+		description = sql.NullString{String: *transaction.Description, Valid: true}
+	}
+
+	t, err := p.q.CreateTransaction(ctx, generated.CreateTransactionParams{
+		UserID:          transaction.UserID,
+		TokenType:       string(transaction.TokenType),
+		Amount:          transaction.Amount,
+		TransactionType: string(transaction.TransactionType),
+		ModelUsed:       modelUsed,
+		Description:     description,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("can't create transaction: %w", err)
+	}
+
+	var resultModelUsed *string
+	if t.ModelUsed.Valid {
+		resultModelUsed = &t.ModelUsed.String
+	}
+
+	var resultDescription *string
+	if t.Description.Valid {
+		resultDescription = &t.Description.String
+	}
+
+	return &domain.Transaction{
+		ID:              t.ID,
+		UserID:          t.UserID,
+		TokenType:       domain.TokenType(t.TokenType),
+		Amount:          t.Amount,
+		TransactionType: domain.TransactionType(t.TransactionType),
+		ModelUsed:       resultModelUsed,
+		Description:     resultDescription,
+		CreatedAt:       t.CreatedAt,
+	}, nil
+}
+
+func (p *PG) GetUserTokenBalance(ctx context.Context, userID int64) (*domain.TokenBalance, error) {
+	balance, err := p.q.GetUserTokenBalance(ctx, userID)
+	if err != nil {
+		return nil, fmt.Errorf("can't get user token balance: %w", err)
+	}
+
+	// Convert interface{} to int32
+	premiumBalance, ok := balance.PremiumBalance.(int64)
+	if !ok {
+		premiumBalance = 0
+	}
+
+	regularBalance, ok := balance.RegularBalance.(int64)
+	if !ok {
+		regularBalance = 0
+	}
+
+	// Check for overflow before conversion
+	if premiumBalance > math.MaxInt32 {
+		premiumBalance = math.MaxInt32
+	} else if premiumBalance < math.MinInt32 {
+		premiumBalance = math.MinInt32
+	}
+
+	if regularBalance > math.MaxInt32 {
+		regularBalance = math.MaxInt32
+	} else if regularBalance < math.MinInt32 {
+		regularBalance = math.MinInt32
+	}
+
+	return &domain.TokenBalance{
+		PremiumBalance: int32(premiumBalance), //nolint:gosec
+		RegularBalance: int32(regularBalance), //nolint:gosec
+	}, nil
+}
+
+func (p *PG) GetUserTokenBalanceByType(ctx context.Context, userID int64, tokenType domain.TokenType) (int32, error) {
+	balance, err := p.q.GetUserTokenBalanceByType(ctx, generated.GetUserTokenBalanceByTypeParams{
+		UserID:    userID,
+		TokenType: string(tokenType),
+	})
+	if err != nil {
+		return 0, fmt.Errorf("can't get user token balance by type: %w", err)
+	}
+
+	// Convert interface{} to int32
+	balanceValue, ok := balance.(int64)
+	if !ok {
+		balanceValue = 0
+	}
+
+	// Check for overflow before conversion
+	if balanceValue > math.MaxInt32 {
+		balanceValue = math.MaxInt32
+	} else if balanceValue < math.MinInt32 {
+		balanceValue = math.MinInt32
+	}
+
+	return int32(balanceValue), nil //nolint:gosec
+}

@@ -9,6 +9,7 @@ const (
 	UserStateConversationList = "conversation_list"
 	UserStateSettings         = "settings"
 	UserStateLanguageSelect   = "language_select"
+	UserStateProfile          = "profile"
 )
 
 var AvailableModels = []string{

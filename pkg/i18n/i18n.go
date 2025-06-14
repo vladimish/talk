@@ -9,6 +9,7 @@ const (
 	ButtonNewConversation   = "button.new_conversation"
 	ButtonSettings          = "button.settings"
 	ButtonLanguage          = "button.language"
+	ButtonProfile           = "button.profile"
 	ButtonPrevPage          = "button.prev_page"
 	ButtonNextPage          = "button.next_page"
 
@@ -38,6 +39,13 @@ const (
 
 	// Queue messages.
 	QueueMessageQueued = "queue.message_queued"
+
+	// Profile messages.
+	ProfileTitle              = "profile.title"
+	ProfileTokenBalance       = "profile.token_balance"
+	ProfilePremiumTokens      = "profile.premium_tokens"
+	ProfileRegularTokens      = "profile.regular_tokens"
+	ProfileInsufficientTokens = "profile.insufficient_tokens" //nolint:gosec
 
 	// Language names (for language selection).
 	LangEnglish    = "lang.english"
@@ -108,6 +116,7 @@ var Strings = map[string]map[string]string{
 		ButtonNewConversation:   "➕ New Conversation",
 		ButtonSettings:          "⚙️ Settings",
 		ButtonLanguage:          "🌐 Language",
+		ButtonProfile:           "👤 Profile",
 		ButtonPrevPage:          "⬅️",
 		ButtonNextPage:          "➡️",
 
@@ -138,6 +147,13 @@ var Strings = map[string]map[string]string{
 		// Queue
 		QueueMessageQueued: "⏳ Your message has been queued (position: %d). I'll process it after finishing the current response.",
 
+		// Profile
+		ProfileTitle:              "👤 Your Profile",
+		ProfileTokenBalance:       "💰 Token Balance:",
+		ProfilePremiumTokens:      "🟡 Premium: %d tokens",
+		ProfileRegularTokens:      "🔵 Regular: %d tokens",
+		ProfileInsufficientTokens: "❌ Insufficient tokens. You need %d %s tokens to use this model.",
+
 		// Languages
 		LangEnglish:    "🇺🇸 English",
 		LangSpanish:    "🇪🇸 Español",
@@ -164,6 +180,7 @@ var Strings = map[string]map[string]string{
 		ButtonNewConversation:   "➕ Nueva Conversación",
 		ButtonSettings:          "⚙️ Configuración",
 		ButtonLanguage:          "🌐 Idioma",
+		ButtonProfile:           "👤 Perfil",
 		ButtonPrevPage:          "⬅️",
 		ButtonNextPage:          "➡️",
 
@@ -194,6 +211,13 @@ var Strings = map[string]map[string]string{
 		// Queue
 		QueueMessageQueued: "⏳ Tu mensaje ha sido puesto en cola (posición: %d). Lo procesaré después de terminar la respuesta actual.",
 
+		// Profile
+		ProfileTitle:              "👤 Tu Perfil",
+		ProfileTokenBalance:       "💰 Balance de Tokens:",
+		ProfilePremiumTokens:      "🟡 Premium: %d tokens",
+		ProfileRegularTokens:      "🔵 Regular: %d tokens",
+		ProfileInsufficientTokens: "❌ Tokens insuficientes. Necesitas %d tokens %s para usar este modelo.",
+
 		// Languages
 		LangEnglish:    "🇺🇸 English",
 		LangSpanish:    "🇪🇸 Español",
@@ -220,6 +244,7 @@ var Strings = map[string]map[string]string{
 		ButtonNewConversation:   "➕ Новая Беседа",
 		ButtonSettings:          "⚙️ Настройки",
 		ButtonLanguage:          "🌐 Язык",
+		ButtonProfile:           "👤 Профиль",
 		ButtonPrevPage:          "⬅️",
 		ButtonNextPage:          "➡️",
 
@@ -250,6 +275,13 @@ var Strings = map[string]map[string]string{
 		// Queue
 		QueueMessageQueued: "⏳ Ваше сообщение поставлено в очередь (позиция: %d). Я обработаю его после завершения текущего ответа.",
 
+		// Profile
+		ProfileTitle:              "👤 Ваш Профиль",
+		ProfileTokenBalance:       "💰 Баланс Токенов:",
+		ProfilePremiumTokens:      "🟡 Премиум: %d токенов",
+		ProfileRegularTokens:      "🔵 Обычные: %d токенов",
+		ProfileInsufficientTokens: "❌ Недостаточно токенов. Вам нужно %d %s токенов для использования этой модели.",
+
 		// Languages
 		LangEnglish:    "🇺🇸 English",
 		LangSpanish:    "🇪🇸 Español",
@@ -276,6 +308,7 @@ var Strings = map[string]map[string]string{
 		ButtonNewConversation:   "➕ Nouvelle Conversation",
 		ButtonSettings:          "⚙️ Paramètres",
 		ButtonLanguage:          "🌐 Langue",
+		ButtonProfile:           "👤 Profil",
 		ButtonPrevPage:          "⬅️",
 		ButtonNextPage:          "➡️",
 
@@ -306,6 +339,13 @@ var Strings = map[string]map[string]string{
 		// Queue
 		QueueMessageQueued: "⏳ Votre message a été mis en file d'attente (position : %d). Je le traiterai après avoir terminé la réponse actuelle.",
 
+		// Profile
+		ProfileTitle:              "👤 Votre Profil",
+		ProfileTokenBalance:       "💰 Solde de Jetons :",
+		ProfilePremiumTokens:      "🟡 Premium : %d jetons",
+		ProfileRegularTokens:      "🔵 Régulier : %d jetons",
+		ProfileInsufficientTokens: "❌ Jetons insuffisants. Vous avez besoin de %d jetons %s pour utiliser ce modèle.",
+
 		// Languages
 		LangEnglish:    "🇺🇸 English",
 		LangSpanish:    "🇪🇸 Español",
@@ -332,6 +372,7 @@ var Strings = map[string]map[string]string{
 		ButtonNewConversation:   "➕ Neues Gespräch",
 		ButtonSettings:          "⚙️ Einstellungen",
 		ButtonLanguage:          "🌐 Sprache",
+		ButtonProfile:           "👤 Profil",
 		ButtonPrevPage:          "⬅️",
 		ButtonNextPage:          "➡️",
 
@@ -362,6 +403,13 @@ var Strings = map[string]map[string]string{
 		// Queue
 		QueueMessageQueued: "⏳ Ihre Nachricht wurde in die Warteschlange eingereiht (Position: %d). Ich werde sie nach Beendigung der aktuellen Antwort bearbeiten.",
 
+		// Profile
+		ProfileTitle:              "👤 Ihr Profil",
+		ProfileTokenBalance:       "💰 Token-Guthaben:",
+		ProfilePremiumTokens:      "🟡 Premium: %d Token",
+		ProfileRegularTokens:      "🔵 Regulär: %d Token",
+		ProfileInsufficientTokens: "❌ Unzureichende Token. Sie benötigen %d %s Token, um dieses Modell zu verwenden.",
+
 		// Languages
 		LangEnglish:    "🇺🇸 English",
 		LangSpanish:    "🇪🇸 Español",
@@ -388,6 +436,7 @@ var Strings = map[string]map[string]string{
 		ButtonNewConversation:   "➕ Nuova Conversazione",
 		ButtonSettings:          "⚙️ Impostazioni",
 		ButtonLanguage:          "🌐 Lingua",
+		ButtonProfile:           "👤 Profilo",
 		ButtonPrevPage:          "⬅️",
 		ButtonNextPage:          "➡️",
 
@@ -418,6 +467,13 @@ var Strings = map[string]map[string]string{
 		// Queue
 		QueueMessageQueued: "⏳ Il tuo messaggio è stato messo in coda (posizione: %d). Lo elaborerò dopo aver terminato la risposta attuale.",
 
+		// Profile
+		ProfileTitle:              "👤 Il Tuo Profilo",
+		ProfileTokenBalance:       "💰 Saldo Token:",
+		ProfilePremiumTokens:      "🟡 Premium: %d token",
+		ProfileRegularTokens:      "🔵 Regolare: %d token",
+		ProfileInsufficientTokens: "❌ Token insufficienti. Hai bisogno di %d token %s per usare questo modello.",
+
 		// Languages
 		LangEnglish:    "🇺🇸 English",
 		LangSpanish:    "🇪🇸 Español",
@@ -444,6 +500,7 @@ var Strings = map[string]map[string]string{
 		ButtonNewConversation:   "➕ 新对话",
 		ButtonSettings:          "⚙️ 设置",
 		ButtonLanguage:          "🌐 语言",
+		ButtonProfile:           "👤 个人资料",
 		ButtonPrevPage:          "⬅️",
 		ButtonNextPage:          "➡️",
 
@@ -474,6 +531,13 @@ var Strings = map[string]map[string]string{
 		// Queue
 		QueueMessageQueued: "⏳ 您的消息已排队（位置：%d）。我会在完成当前回复后处理它。",
 
+		// Profile
+		ProfileTitle:              "👤 您的个人资料",
+		ProfileTokenBalance:       "💰 代币余额：",
+		ProfilePremiumTokens:      "🟡 高级：%d 代币",
+		ProfileRegularTokens:      "🔵 普通：%d 代币",
+		ProfileInsufficientTokens: "❌ 代币不足。您需要 %d 个 %s 代币来使用此模型。",
+
 		// Languages
 		LangEnglish:    "🇺🇸 English",
 		LangSpanish:    "🇪🇸 Español",
@@ -500,6 +564,7 @@ var Strings = map[string]map[string]string{
 		ButtonNewConversation:   "➕ 新しい会話",
 		ButtonSettings:          "⚙️ 設定",
 		ButtonLanguage:          "🌐 言語",
+		ButtonProfile:           "👤 プロフィール",
 		ButtonPrevPage:          "⬅️",
 		ButtonNextPage:          "➡️",
 
@@ -530,6 +595,13 @@ var Strings = map[string]map[string]string{
 		// Queue
 		QueueMessageQueued: "⏳ メッセージがキューに追加されました（位置：%d）。現在の応答を完了した後に処理します。",
 
+		// Profile
+		ProfileTitle:              "👤 あなたのプロフィール",
+		ProfileTokenBalance:       "💰 トークン残高：",
+		ProfilePremiumTokens:      "🟡 プレミアム：%d トークン",
+		ProfileRegularTokens:      "🔵 通常：%d トークン",
+		ProfileInsufficientTokens: "❌ トークンが不足しています。このモデルを使用するには %d 個の %s トークンが必要です。",
+
 		// Languages
 		LangEnglish:    "🇺🇸 English",
 		LangSpanish:    "🇪🇸 Español",
@@ -556,6 +628,7 @@ var Strings = map[string]map[string]string{
 		ButtonNewConversation:   "➕ 새 대화",
 		ButtonSettings:          "⚙️ 설정",
 		ButtonLanguage:          "🌐 언어",
+		ButtonProfile:           "👤 프로필",
 		ButtonPrevPage:          "⬅️",
 		ButtonNextPage:          "➡️",
 
@@ -586,6 +659,13 @@ var Strings = map[string]map[string]string{
 		// Queue
 		QueueMessageQueued: "⏳ 메시지가 대기열에 추가되었습니다 (위치: %d). 현재 응답을 완료한 후 처리하겠습니다.",
 
+		// Profile
+		ProfileTitle:              "👤 프로필",
+		ProfileTokenBalance:       "💰 토큰 잔고:",
+		ProfilePremiumTokens:      "🟡 프리미엄: %d 토큰",
+		ProfileRegularTokens:      "🔵 일반: %d 토큰",
+		ProfileInsufficientTokens: "❌ 토큰이 부족합니다. 이 모델을 사용하려면 %d개의 %s 토큰이 필요합니다.",
+
 		// Languages
 		LangEnglish:    "🇺🇸 English",
 		LangSpanish:    "🇪🇸 Español",
@@ -612,6 +692,7 @@ var Strings = map[string]map[string]string{
 		ButtonNewConversation:   "➕ Nova Conversa",
 		ButtonSettings:          "⚙️ Configurações",
 		ButtonLanguage:          "🌐 Idioma",
+		ButtonProfile:           "👤 Perfil",
 		ButtonPrevPage:          "⬅️",
 		ButtonNextPage:          "➡️",
 
@@ -642,6 +723,13 @@ var Strings = map[string]map[string]string{
 		// Queue
 		QueueMessageQueued: "⏳ Sua mensagem foi colocada na fila (posição: %d). Vou processá-la após terminar a resposta atual.",
 
+		// Profile
+		ProfileTitle:              "👤 Seu Perfil",
+		ProfileTokenBalance:       "💰 Saldo de Tokens:",
+		ProfilePremiumTokens:      "🟡 Premium: %d tokens",
+		ProfileRegularTokens:      "🔵 Regular: %d tokens",
+		ProfileInsufficientTokens: "❌ Tokens insuficientes. Você precisa de %d tokens %s para usar este modelo.",
+
 		// Languages
 		LangEnglish:    "🇺🇸 English",
 		LangSpanish:    "🇪🇸 Español",
@@ -668,6 +756,7 @@ var Strings = map[string]map[string]string{
 		ButtonNewConversation:   "➕ Նոր խոսակցություն",
 		ButtonSettings:          "⚙️ Կարգավորումներ",
 		ButtonLanguage:          "🌐 Լեզու",
+		ButtonProfile:           "👤 Պրոֆիլ",
 		ButtonPrevPage:          "⬅️",
 		ButtonNextPage:          "➡️",
 
@@ -698,6 +787,13 @@ var Strings = map[string]map[string]string{
 		// Queue
 		QueueMessageQueued: "⏳ Ձեր հաղորդագրությունը հերթի մեջ է (դիրքը՝ %d): Ես կմշակեմ այն ընթացիկ պատասխանն ավարտելուց հետո:",
 
+		// Profile
+		ProfileTitle:              "👤 Ձեր Պրոֆիլը",
+		ProfileTokenBalance:       "💰 Տոկենների Մնացորդ:",
+		ProfilePremiumTokens:      "🟡 Պրեմիում: %d տոկեն",
+		ProfileRegularTokens:      "🔵 Սովորական: %d տոկեն",
+		ProfileInsufficientTokens: "❌ Անբավարար տոկեններ: Այս մոդելն օգտագործելու համար ձեզ անհրաժեշտ է %d %s տոկեն:",
+
 		// Languages
 		LangEnglish:    "🇺🇸 English",
 		LangSpanish:    "🇪🇸 Español",
@@ -724,6 +820,7 @@ var Strings = map[string]map[string]string{
 		ButtonNewConversation:   "➕ Нова розмова",
 		ButtonSettings:          "⚙️ Налаштування",
 		ButtonLanguage:          "🌐 Мова",
+		ButtonProfile:           "👤 Профіль",
 		ButtonPrevPage:          "⬅️",
 		ButtonNextPage:          "➡️",
 
@@ -754,6 +851,13 @@ var Strings = map[string]map[string]string{
 		// Queue
 		QueueMessageQueued: "⏳ Ваше повідомлення поставлено в чергу (позиція: %d). Я оброблю його після завершення поточної відповіді.",
 
+		// Profile
+		ProfileTitle:              "👤 Ваш Профіль",
+		ProfileTokenBalance:       "💰 Баланс Токенів:",
+		ProfilePremiumTokens:      "🟡 Преміум: %d токенів",
+		ProfileRegularTokens:      "🔵 Звичайні: %d токенів",
+		ProfileInsufficientTokens: "❌ Недостатньо токенів. Вам потрібно %d %s токенів для використання цієї моделі.",
+
 		// Languages
 		LangEnglish:    "🇺🇸 English",
 		LangSpanish:    "🇪🇸 Español",
@@ -780,6 +884,7 @@ var Strings = map[string]map[string]string{
 		ButtonNewConversation:   "➕ Жаңа сөйлесу",
 		ButtonSettings:          "⚙️ Баптаулар",
 		ButtonLanguage:          "🌐 Тіл",
+		ButtonProfile:           "👤 Профиль",
 		ButtonPrevPage:          "⬅️",
 		ButtonNextPage:          "➡️",
 
@@ -810,6 +915,13 @@ var Strings = map[string]map[string]string{
 		// Queue
 		QueueMessageQueued: "⏳ Сіздің хабарламаңыз кезекке қойылды (орын: %d). Мен оны ағымдағы жауапты аяқтағаннан кейін өңдеймін.",
 
+		// Profile
+		ProfileTitle:              "👤 Сіздің Профиліңіз",
+		ProfileTokenBalance:       "💰 Токен Балансы:",
+		ProfilePremiumTokens:      "🟡 Премиум: %d токен",
+		ProfileRegularTokens:      "🔵 Кәдімгі: %d токен",
+		ProfileInsufficientTokens: "❌ Токендер жеткіліксіз. Осы модельді пайдалану үшін сізге %d %s токен қажет.",
+
 		// Languages
 		LangEnglish:    "🇺🇸 English",
 		LangSpanish:    "🇪🇸 Español",
@@ -836,6 +948,7 @@ var Strings = map[string]map[string]string{
 		ButtonNewConversation:   "➕ Жаңы маек",
 		ButtonSettings:          "⚙️ Жөндөөлөр",
 		ButtonLanguage:          "🌐 Тил",
+		ButtonProfile:           "👤 Профиль",
 		ButtonPrevPage:          "⬅️",
 		ButtonNextPage:          "➡️",
 
@@ -866,6 +979,13 @@ var Strings = map[string]map[string]string{
 		// Queue
 		QueueMessageQueued: "⏳ Сиздин билдирүүңүз кезекке коюлду (орун: %d). Мен аны учурдагы жоопту бүткөндөн кийин иштетем.",
 
+		// Profile
+		ProfileTitle:              "👤 Сиздин Профилиңиз",
+		ProfileTokenBalance:       "💰 Токен Баланс:",
+		ProfilePremiumTokens:      "🟡 Премиум: %d токен",
+		ProfileRegularTokens:      "🔵 Кадимки: %d токен",
+		ProfileInsufficientTokens: "❌ Токендер жетишсиз. Бул модель колдонуу үчүн сизге %d %s токен керек.",
+
 		// Languages
 		LangEnglish:    "🇺🇸 English",
 		LangSpanish:    "🇪🇸 Español",
@@ -892,6 +1012,7 @@ var Strings = map[string]map[string]string{
 		ButtonNewConversation:   "➕ محادثة جديدة",
 		ButtonSettings:          "⚙️ الإعدادات",
 		ButtonLanguage:          "🌐 اللغة",
+		ButtonProfile:           "👤 الملف الشخصي",
 		ButtonPrevPage:          "⬅️",
 		ButtonNextPage:          "➡️",
 
@@ -922,6 +1043,13 @@ var Strings = map[string]map[string]string{
 		// Queue
 		QueueMessageQueued: "⏳ تم وضع رسالتك في طابور الانتظار (الموضع: %d). سأقوم بمعالجتها بعد إنهاء الرد الحالي.",
 
+		// Profile
+		ProfileTitle:              "👤 ملفك الشخصي",
+		ProfileTokenBalance:       "💰 رصيد الرموز:",
+		ProfilePremiumTokens:      "🟡 مميز: %d رمز",
+		ProfileRegularTokens:      "🔵 عادي: %d رمز",
+		ProfileInsufficientTokens: "❌ رموز غير كافية. تحتاج إلى %d رمز %s لاستخدام هذا النموذج.",
+
 		// Languages
 		LangEnglish:    "🇺🇸 English",
 		LangSpanish:    "🇪🇸 Español",
@@ -948,6 +1076,7 @@ var Strings = map[string]map[string]string{
 		ButtonNewConversation:   "➕ नई बातचीत",
 		ButtonSettings:          "⚙️ सेटिंग्स",
 		ButtonLanguage:          "🌐 भाषा",
+		ButtonProfile:           "👤 प्रोफाइल",
 		ButtonPrevPage:          "⬅️",
 		ButtonNextPage:          "➡️",
 
@@ -977,6 +1106,13 @@ var Strings = map[string]map[string]string{
 
 		// Queue
 		QueueMessageQueued: "⏳ आपका संदेश कतार में रखा गया है (स्थिति: %d)। मैं वर्तमान जवाब पूरा करने के बाद इसे प्रोसेस करूंगा।",
+
+		// Profile
+		ProfileTitle:              "👤 आपकी प्रोफाइल",
+		ProfileTokenBalance:       "💰 टोकन बैलेंस:",
+		ProfilePremiumTokens:      "🟡 प्रीमियम: %d टोकन",
+		ProfileRegularTokens:      "🔵 नियमित: %d टोकन",
+		ProfileInsufficientTokens: "❌ अपर्याप्त टोकन। इस मॉडल का उपयोग करने के लिए आपको %d %s टोकन की आवश्यकता है।",
 
 		// Languages
 		LangEnglish:    "🇺🇸 English",
