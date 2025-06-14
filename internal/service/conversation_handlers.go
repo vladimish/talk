@@ -139,12 +139,8 @@ func (s *UpdateService) handleConversationMessage(ctx context.Context, user *dom
 	}
 
 	// Send initial empty message to get message ID
-	// If this is from a queued message, reply to the original
+	// No automatic reply for new messages - only reply when continuing old conversations
 	var replyToMessageID *int64
-	if update.ExternalMessageID > 0 {
-		msgID := int64(update.ExternalMessageID)
-		replyToMessageID = &msgID
-	}
 
 	initialContent := domain.MessageContent{
 		Text:             "\\.\\.\\.",
