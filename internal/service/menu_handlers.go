@@ -5,27 +5,28 @@ import (
 	"fmt"
 
 	"github.com/vladimish/talk/internal/domain"
+	"github.com/vladimish/talk/pkg/i18n"
 )
 
 // Menu state handlers.
 func (s *UpdateService) handleMenuState(ctx context.Context, user *domain.User, update domain.Update) error {
 	// Check if user sent "start conversation" text
-	if update.MessageText == domain.ButtonStartConversation {
+	if update.MessageText == i18n.GetString(user.Language, i18n.ButtonStartConversation) {
 		return s.transitionToConversationList(ctx, user)
 	}
 
 	// Check if user sent "select model" text
-	if update.MessageText == domain.ButtonModelSelect {
+	if update.MessageText == i18n.GetString(user.Language, i18n.ButtonModelSelect) {
 		return s.transitionToModelSelect(ctx, user)
 	}
 
 	// Check if user sent "settings" text
-	if update.MessageText == domain.ButtonSettings {
+	if update.MessageText == i18n.GetString(user.Language, i18n.ButtonSettings) {
 		return s.transitionToSettings(ctx, user)
 	}
 
 	// Send menu with keyboard
-	return s.sendMenu(ctx, user, "Welcome! Choose an option:")
+	return s.sendMenu(ctx, user, i18n.GetString(user.Language, i18n.MenuWelcome))
 }
 
 func (s *UpdateService) sendMenu(ctx context.Context, user *domain.User, text string) error {
@@ -35,17 +36,17 @@ func (s *UpdateService) sendMenu(ctx context.Context, user *domain.User, text st
 			Buttons: [][]domain.KeyboardButton{
 				{
 					{
-						Text: domain.ButtonStartConversation,
+						Text: i18n.GetString(user.Language, i18n.ButtonStartConversation),
 					},
 				},
 				{
 					{
-						Text: domain.ButtonModelSelect,
+						Text: i18n.GetString(user.Language, i18n.ButtonModelSelect),
 					},
 				},
 				{
 					{
-						Text: domain.ButtonSettings,
+						Text: i18n.GetString(user.Language, i18n.ButtonSettings),
 					},
 				},
 			},
@@ -71,9 +72,9 @@ func (s *UpdateService) transitionToConversation(
 		return fmt.Errorf("can't update user state: %w", err)
 	}
 
-	text := "🗣️ Conversation started! Send me a message and I'll respond. You can always go back to the menu."
+	text := i18n.GetString(user.Language, i18n.ConversationStarted)
 	if replyToMessageID != nil {
-		text = "🗣️ Conversation resumed! Send me a message and I'll respond. You can always go back to the menu."
+		text = i18n.GetString(user.Language, i18n.ConversationResumed)
 	}
 
 	content := domain.MessageContent{
@@ -83,7 +84,7 @@ func (s *UpdateService) transitionToConversation(
 			Buttons: [][]domain.KeyboardButton{
 				{
 					{
-						Text: domain.ButtonBackToMenu,
+						Text: i18n.GetString(user.Language, i18n.ButtonBackToMenu),
 					},
 				},
 			},
@@ -105,5 +106,5 @@ func (s *UpdateService) transitionToMenu(ctx context.Context, user *domain.User)
 		return fmt.Errorf("can't update user state: %w", err)
 	}
 
-	return s.sendMenu(ctx, user, "🏠 Back to main menu. Choose an option:")
+	return s.sendMenu(ctx, user, i18n.GetString(user.Language, i18n.MenuBackToMain))
 }

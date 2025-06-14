@@ -9,6 +9,7 @@ import (
 
 	"github.com/vladimish/talk/internal/domain"
 	"github.com/vladimish/talk/internal/port/storage"
+	"github.com/vladimish/talk/pkg/i18n"
 )
 
 // Conversation list handlers.
@@ -21,6 +22,13 @@ func (s *UpdateService) transitionToConversationList(ctx context.Context, user *
 		return fmt.Errorf("can't update user state: %w", err)
 	}
 
+	// Reset pagination offset when entering conversation list
+	user.ConversationListOffset = 0
+	err = s.storage.UpdateUserConversationListOffset(ctx, user.ID, 0)
+	if err != nil {
+		return fmt.Errorf("can't update conversation list offset: %w", err)
+	}
+
 	return s.showConversationList(ctx, user)
 }
 
@@ -30,13 +38,21 @@ func (s *UpdateService) handleConversationListState(
 	update domain.Update,
 ) error {
 	// Check if user sent "back to menu" text
-	if update.MessageText == domain.ButtonBackToMenu {
+	if update.MessageText == i18n.GetString(user.Language, i18n.ButtonBackToMenu) {
 		return s.transitionToMenu(ctx, user)
 	}
 
 	// Check if user sent "new conversation" text
-	if update.MessageText == domain.ButtonNewConversation {
+	if update.MessageText == i18n.GetString(user.Language, i18n.ButtonNewConversation) {
 		return s.createNewConversation(ctx, user)
+	}
+
+	// Check navigation buttons
+	if update.MessageText == i18n.GetString(user.Language, i18n.ButtonNextPage) {
+		return s.handleNextPage(ctx, user)
+	}
+	if update.MessageText == i18n.GetString(user.Language, i18n.ButtonPrevPage) {
+		return s.handlePrevPage(ctx, user)
 	}
 
 	// Check if user selected an existing conversation
@@ -61,28 +77,72 @@ func (s *UpdateService) showConversationList(ctx context.Context, user *domain.U
 		return fmt.Errorf("can't get conversations: %w", err)
 	}
 
+	const pageSize = 5
+	totalConversations := len(conversations)
+	offset := user.ConversationListOffset
+
+	// Validate and adjust offset
+	if offset < 0 {
+		offset = 0
+	}
+	if offset >= totalConversations && totalConversations > 0 {
+		offset = ((totalConversations - 1) / pageSize) * pageSize
+	}
+
 	var buttons [][]domain.KeyboardButton
 
 	// Add "New Conversation" button at the top
 	buttons = append(buttons, []domain.KeyboardButton{
-		{Text: domain.ButtonNewConversation},
+		{Text: i18n.GetString(user.Language, i18n.ButtonNewConversation)},
 	})
 
-	// Add existing conversations
-	for _, conversation := range conversations {
+	// Add conversations for current page
+	start := offset
+	end := offset + pageSize
+	if end > totalConversations {
+		end = totalConversations
+	}
+
+	for i := start; i < end; i++ {
+		conversation := conversations[i]
 		buttons = append(buttons, []domain.KeyboardButton{
 			{Text: fmt.Sprintf("💬 %s", conversation.Name)},
 		})
 	}
 
+	// Add navigation buttons if needed
+	if totalConversations > pageSize {
+		var navButtons []domain.KeyboardButton
+
+		// Add previous button if not on first page
+		if offset > 0 {
+			prevText := i18n.GetString(user.Language, i18n.ButtonPrevPage)
+			navButtons = append(navButtons, domain.KeyboardButton{Text: prevText})
+		}
+
+		// Add next button if not on last page
+		if end < totalConversations {
+			nextText := i18n.GetString(user.Language, i18n.ButtonNextPage)
+			navButtons = append(navButtons, domain.KeyboardButton{Text: nextText})
+		}
+
+		if len(navButtons) > 0 {
+			buttons = append(buttons, navButtons)
+		}
+	}
+
 	// Add back button
 	buttons = append(buttons, []domain.KeyboardButton{
-		{Text: domain.ButtonBackToMenu},
+		{Text: i18n.GetString(user.Language, i18n.ButtonBackToMenu)},
 	})
 
-	text := "💬 Select a conversation:"
-	if len(conversations) == 0 {
-		text = "💬 No previous conversations. Start a new one:"
+	text := i18n.GetString(user.Language, i18n.ConversationListSelect)
+	if totalConversations == 0 {
+		text = i18n.GetString(user.Language, i18n.ConversationListEmpty)
+	} else if totalConversations > pageSize {
+		currentPage := (offset / pageSize) + 1
+		totalPages := ((totalConversations - 1) / pageSize) + 1
+		text = fmt.Sprintf(i18n.GetString(user.Language, i18n.ConversationListPageInfo), currentPage, totalPages)
 	}
 
 	content := domain.MessageContent{
@@ -153,4 +213,46 @@ func (s *UpdateService) selectConversation(ctx context.Context, user *domain.Use
 
 	// Transition to conversation state
 	return s.transitionToConversation(ctx, user, replyToMessageID)
+}
+
+func (s *UpdateService) handleNextPage(ctx context.Context, user *domain.User) error {
+	conversations, err := s.storage.GetConversationsByUserID(ctx, user.ID)
+	if err != nil {
+		return fmt.Errorf("can't get conversations: %w", err)
+	}
+
+	const pageSize = 5
+	totalConversations := len(conversations)
+	newOffset := user.ConversationListOffset + pageSize
+
+	// Don't go past the last page
+	if newOffset >= totalConversations {
+		return s.showConversationList(ctx, user)
+	}
+
+	user.ConversationListOffset = newOffset
+	err = s.storage.UpdateUserConversationListOffset(ctx, user.ID, newOffset)
+	if err != nil {
+		return fmt.Errorf("can't update conversation list offset: %w", err)
+	}
+
+	return s.showConversationList(ctx, user)
+}
+
+func (s *UpdateService) handlePrevPage(ctx context.Context, user *domain.User) error {
+	const pageSize = 5
+	newOffset := user.ConversationListOffset - pageSize
+
+	// Don't go before the first page
+	if newOffset < 0 {
+		newOffset = 0
+	}
+
+	user.ConversationListOffset = newOffset
+	err := s.storage.UpdateUserConversationListOffset(ctx, user.ID, newOffset)
+	if err != nil {
+		return fmt.Errorf("can't update conversation list offset: %w", err)
+	}
+
+	return s.showConversationList(ctx, user)
 }

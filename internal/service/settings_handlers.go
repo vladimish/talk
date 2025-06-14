@@ -5,37 +5,38 @@ import (
 	"fmt"
 
 	"github.com/vladimish/talk/internal/domain"
+	"github.com/vladimish/talk/pkg/i18n"
 )
 
 // Settings state handlers.
 func (s *UpdateService) handleSettingsState(ctx context.Context, user *domain.User, update domain.Update) error {
 	// Check if user sent "back to menu" text
-	if update.MessageText == domain.ButtonBackToMenu {
+	if update.MessageText == i18n.GetString(user.Language, i18n.ButtonBackToMenu) {
 		return s.transitionToMenu(ctx, user)
 	}
 
 	// Check if user sent "language" text
-	if update.MessageText == domain.ButtonLanguage {
+	if update.MessageText == i18n.GetString(user.Language, i18n.ButtonLanguage) {
 		return s.transitionToLanguageSelect(ctx, user)
 	}
 
 	// Send settings with keyboard
-	return s.sendSettings(ctx, user, "⚙️ Settings. Choose an option:")
+	return s.sendSettings(ctx, user, i18n.GetString(user.Language, i18n.SettingsTitle))
 }
 
 func (s *UpdateService) handleLanguageSelectState(ctx context.Context, user *domain.User, update domain.Update) error {
 	// Check if user sent "back to menu" text
-	if update.MessageText == domain.ButtonBackToMenu {
+	if update.MessageText == i18n.GetString(user.Language, i18n.ButtonBackToMenu) {
 		return s.transitionToSettings(ctx, user)
 	}
 
 	// Check if user selected a language
-	if languageCode, exists := domain.SupportedLanguages[update.MessageText]; exists {
+	if languageCode, exists := i18n.LanguageCodes[update.MessageText]; exists {
 		return s.updateUserLanguage(ctx, user, languageCode)
 	}
 
 	// Send language selection with keyboard
-	return s.sendLanguageSelection(ctx, user, "🌐 Select your language:")
+	return s.sendLanguageSelection(ctx, user, i18n.GetString(user.Language, i18n.LanguageSelectTitle))
 }
 
 func (s *UpdateService) sendSettings(ctx context.Context, user *domain.User, text string) error {
@@ -45,12 +46,12 @@ func (s *UpdateService) sendSettings(ctx context.Context, user *domain.User, tex
 			Buttons: [][]domain.KeyboardButton{
 				{
 					{
-						Text: domain.ButtonLanguage,
+						Text: i18n.GetString(user.Language, i18n.ButtonLanguage),
 					},
 				},
 				{
 					{
-						Text: domain.ButtonBackToMenu,
+						Text: i18n.GetString(user.Language, i18n.ButtonBackToMenu),
 					},
 				},
 			},
@@ -64,30 +65,39 @@ func (s *UpdateService) sendSettings(ctx context.Context, user *domain.User, tex
 }
 
 func (s *UpdateService) sendLanguageSelection(ctx context.Context, user *domain.User, text string) error {
-	// Create buttons in 3 rows: English & Russian first, then others
+	// Create buttons in 5 rows: English, Russian, Spanish, Hindi in first row, then others
 	buttons := [][]domain.KeyboardButton{
-		// First row: English and Russian
+		// First row: English, Russian, Spanish, Hindi
 		{
-			{Text: "🇺🇸 English"},
-			{Text: "🇷🇺 Русский"},
+			{Text: i18n.GetLanguageDisplayName(user.Language, i18n.LangEnglish)},
+			{Text: i18n.GetLanguageDisplayName(user.Language, i18n.LangRussian)},
+			{Text: i18n.GetLanguageDisplayName(user.Language, i18n.LangSpanish)},
+			{Text: i18n.GetLanguageDisplayName(user.Language, i18n.LangHindi)},
 		},
 		// Second row: European languages
 		{
-			{Text: "🇪🇸 Español"},
-			{Text: "🇫🇷 Français"},
-			{Text: "🇩🇪 Deutsch"},
-			{Text: "🇮🇹 Italiano"},
+			{Text: i18n.GetLanguageDisplayName(user.Language, i18n.LangFrench)},
+			{Text: i18n.GetLanguageDisplayName(user.Language, i18n.LangGerman)},
+			{Text: i18n.GetLanguageDisplayName(user.Language, i18n.LangItalian)},
+			{Text: i18n.GetLanguageDisplayName(user.Language, i18n.LangPortuguese)},
 		},
-		// Third row: Asian languages and Portuguese
+		// Third row: Asian languages
 		{
-			{Text: "🇨🇳 中文"},
-			{Text: "🇯🇵 日本語"},
-			{Text: "🇰🇷 한국어"},
-			{Text: "🇵🇹 Português"},
+			{Text: i18n.GetLanguageDisplayName(user.Language, i18n.LangChinese)},
+			{Text: i18n.GetLanguageDisplayName(user.Language, i18n.LangJapanese)},
+			{Text: i18n.GetLanguageDisplayName(user.Language, i18n.LangKorean)},
+			{Text: i18n.GetLanguageDisplayName(user.Language, i18n.LangArabic)},
+		},
+		// Fourth row: Additional languages
+		{
+			{Text: i18n.GetLanguageDisplayName(user.Language, i18n.LangArmenian)},
+			{Text: i18n.GetLanguageDisplayName(user.Language, i18n.LangUkrainian)},
+			{Text: i18n.GetLanguageDisplayName(user.Language, i18n.LangKazakh)},
+			{Text: i18n.GetLanguageDisplayName(user.Language, i18n.LangKyrgyz)},
 		},
 		// Back button
 		{
-			{Text: domain.ButtonBackToMenu},
+			{Text: i18n.GetString(user.Language, i18n.ButtonBackToMenu)},
 		},
 	}
 
@@ -113,7 +123,7 @@ func (s *UpdateService) transitionToSettings(ctx context.Context, user *domain.U
 		return fmt.Errorf("can't update user state: %w", err)
 	}
 
-	return s.sendSettings(ctx, user, "⚙️ Settings. Choose an option:")
+	return s.sendSettings(ctx, user, i18n.GetString(user.Language, i18n.SettingsTitle))
 }
 
 func (s *UpdateService) transitionToLanguageSelect(ctx context.Context, user *domain.User) error {
@@ -125,7 +135,7 @@ func (s *UpdateService) transitionToLanguageSelect(ctx context.Context, user *do
 		return fmt.Errorf("can't update user state: %w", err)
 	}
 
-	return s.sendLanguageSelection(ctx, user, "🌐 Select your language:")
+	return s.sendLanguageSelection(ctx, user, i18n.GetString(user.Language, i18n.LanguageSelectTitle))
 }
 
 func (s *UpdateService) updateUserLanguage(ctx context.Context, user *domain.User, languageCode string) error {
@@ -139,7 +149,7 @@ func (s *UpdateService) updateUserLanguage(ctx context.Context, user *domain.Use
 	user.Language = languageCode
 
 	// Send confirmation and return to settings
-	confirmationText := "✅ Language updated successfully!"
+	confirmationText := i18n.GetString(user.Language, i18n.LanguageUpdateSuccess)
 	_, err = s.sender.SendMessage(ctx, user.ExternalID, confirmationText)
 	if err != nil {
 		return err

@@ -80,12 +80,13 @@ type Message struct {
 }
 
 type User struct {
-	ID                  int64
-	ForeignID           int64
-	Language            string
-	CreatedAt           time.Time
-	UpdatedAt           time.Time
-	CurrentStep         string
-	SelectedModel       string
-	CurrentConversation sql.NullInt64
+	ID                     int64
+	ForeignID              int64
+	Language               string
+	CreatedAt              time.Time
+	UpdatedAt              time.Time
+	CurrentStep            string
+	SelectedModel          string
+	CurrentConversation    sql.NullInt64
+	ConversationListOffset int32
 }

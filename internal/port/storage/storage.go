@@ -13,6 +13,7 @@ type Storage interface {
 	UpdateUserCurrentStep(ctx context.Context, userID int64, currentStep string) error
 	UpdateUserSelectedModel(ctx context.Context, userID int64, selectedModel string) error
 	UpdateUserLanguage(ctx context.Context, userID int64, language string) error
+	UpdateUserConversationListOffset(ctx context.Context, userID int64, offset int) error
 
 	CreateMessage(ctx context.Context, message *domain.Message) (*domain.Message, error)
 	GetMessagesByUserID(ctx context.Context, userID int64) ([]*domain.Message, error)

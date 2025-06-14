@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/vladimish/talk/internal/domain"
+	"github.com/vladimish/talk/pkg/i18n"
 )
 
 // Model selection handlers.
@@ -22,7 +23,7 @@ func (s *UpdateService) transitionToModelSelect(ctx context.Context, user *domai
 
 func (s *UpdateService) handleModelSelectState(ctx context.Context, user *domain.User, update domain.Update) error {
 	// Check if user sent "back to menu" text
-	if update.MessageText == domain.ButtonBackToMenu {
+	if update.MessageText == i18n.GetString(user.Language, i18n.ButtonBackToMenu) {
 		return s.transitionToMenu(ctx, user)
 	}
 
@@ -48,11 +49,12 @@ func (s *UpdateService) showModelSelection(ctx context.Context, user *domain.Use
 
 	// Add back button
 	modelButtons = append(modelButtons, []domain.KeyboardButton{
-		{Text: domain.ButtonBackToMenu},
+		{Text: i18n.GetString(user.Language, i18n.ButtonBackToMenu)},
 	})
 
+	titleText := i18n.GetString(user.Language, i18n.ModelSelectTitle)
 	content := domain.MessageContent{
-		Text: fmt.Sprintf("🤖 Select AI Model\n\nCurrent model: %s\n\nChoose a model:", user.SelectedModel),
+		Text: fmt.Sprintf("%s\n\nCurrent model: %s\n\nChoose a model:", titleText, user.SelectedModel),
 		ReplyKeyboard: &domain.ReplyKeyboard{
 			Buttons: modelButtons,
 			Resize:  true,
@@ -83,5 +85,6 @@ func (s *UpdateService) selectModel(ctx context.Context, user *domain.User, mode
 		return fmt.Errorf("can't update user state: %w", err)
 	}
 
-	return s.sendMenu(ctx, user, fmt.Sprintf("✅ Model updated to: %s\n\n🏠 Back to main menu. Choose an option:", model))
+	successMessage := fmt.Sprintf("%s %s", i18n.GetString(user.Language, i18n.ModelUpdateSuccess), model)
+	return s.sendMenu(ctx, user, successMessage+"\n\n"+i18n.GetString(user.Language, i18n.MenuBackToMain))
 }

@@ -12,18 +12,19 @@ import (
 )
 
 const createUser = `-- name: CreateUser :one
-INSERT INTO users (foreign_id, language, current_step, selected_model, created_at, updated_at)
-VALUES ($1, $2, $3, $4, $5, $6)
-RETURNING id, foreign_id, language, created_at, updated_at, current_step, selected_model, current_conversation
+INSERT INTO users (foreign_id, language, current_step, selected_model, conversation_list_offset, created_at, updated_at)
+VALUES ($1, $2, $3, $4, $5, $6, $7)
+RETURNING id, foreign_id, language, created_at, updated_at, current_step, selected_model, current_conversation, conversation_list_offset
 `
 
 type CreateUserParams struct {
-	ForeignID     int64
-	Language      string
-	CurrentStep   string
-	SelectedModel string
-	CreatedAt     time.Time
-	UpdatedAt     time.Time
+	ForeignID              int64
+	Language               string
+	CurrentStep            string
+	SelectedModel          string
+	ConversationListOffset int32
+	CreatedAt              time.Time
+	UpdatedAt              time.Time
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
@@ -32,6 +33,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		arg.Language,
 		arg.CurrentStep,
 		arg.SelectedModel,
+		arg.ConversationListOffset,
 		arg.CreatedAt,
 		arg.UpdatedAt,
 	)
@@ -45,12 +47,13 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		&i.CurrentStep,
 		&i.SelectedModel,
 		&i.CurrentConversation,
+		&i.ConversationListOffset,
 	)
 	return i, err
 }
 
 const getUserByForeignID = `-- name: GetUserByForeignID :one
-SELECT id, foreign_id, language, created_at, updated_at, current_step, selected_model, current_conversation
+SELECT id, foreign_id, language, created_at, updated_at, current_step, selected_model, current_conversation, conversation_list_offset
 FROM users
 WHERE foreign_id = $1
 LIMIT 1
@@ -68,8 +71,25 @@ func (q *Queries) GetUserByForeignID(ctx context.Context, foreignID int64) (User
 		&i.CurrentStep,
 		&i.SelectedModel,
 		&i.CurrentConversation,
+		&i.ConversationListOffset,
 	)
 	return i, err
+}
+
+const updateUserConversationListOffset = `-- name: UpdateUserConversationListOffset :exec
+UPDATE users
+SET conversation_list_offset = $2, updated_at = NOW()
+WHERE id = $1
+`
+
+type UpdateUserConversationListOffsetParams struct {
+	ID                     int64
+	ConversationListOffset int32
+}
+
+func (q *Queries) UpdateUserConversationListOffset(ctx context.Context, arg UpdateUserConversationListOffsetParams) error {
+	_, err := q.db.ExecContext(ctx, updateUserConversationListOffset, arg.ID, arg.ConversationListOffset)
+	return err
 }
 
 const updateUserCurrentConversationID = `-- name: UpdateUserCurrentConversationID :exec

@@ -12,6 +12,7 @@ import (
 	"github.com/vladimish/talk/internal/port/queue"
 	"github.com/vladimish/talk/internal/port/sender"
 	"github.com/vladimish/talk/internal/port/storage"
+	"github.com/vladimish/talk/pkg/i18n"
 )
 
 type UpdateService struct {
@@ -90,12 +91,13 @@ func (s *UpdateService) getOrCreateUser(ctx context.Context, update domain.Updat
 			language := update.UserLanguage
 			now := time.Now()
 			newUser := &domain.User{
-				ExternalID:    update.ExternalUserID,
-				Language:      language,
-				CurrentStep:   domain.UserStateMenu,
-				SelectedModel: "google/gemini-2.5-flash-preview-05-20",
-				CreatedAt:     now,
-				UpdatedAt:     now,
+				ExternalID:             update.ExternalUserID,
+				Language:               language,
+				CurrentStep:            domain.UserStateMenu,
+				SelectedModel:          "google/gemini-2.5-flash-preview-05-20",
+				ConversationListOffset: 0,
+				CreatedAt:              now,
+				UpdatedAt:              now,
 			}
 
 			user, err = s.storage.CreateUser(ctx, newUser)
@@ -114,23 +116,23 @@ func (s *UpdateService) getOrCreateUser(ctx context.Context, update domain.Updat
 
 func (s *UpdateService) handleConversationState(ctx context.Context, user *domain.User, update domain.Update) error {
 	// Check if user sent "back to menu" text
-	if update.MessageText == domain.ButtonBackToMenu {
+	if update.MessageText == i18n.GetString(user.Language, i18n.ButtonBackToMenu) {
 		return s.transitionToMenu(ctx, user)
 	}
 
 	// Handle regular conversation message
-	if update.MessageText != "" && update.MessageText != domain.ButtonBackToMenu {
+	if update.MessageText != "" && update.MessageText != i18n.GetString(user.Language, i18n.ButtonBackToMenu) {
 		return s.handleConversationMessage(ctx, user, update)
 	}
 
 	// Send back to menu button if no message text
 	content := domain.MessageContent{
-		Text: "You're in conversation mode. Send a message to chat, or go back to menu:",
+		Text: i18n.GetString(user.Language, i18n.ConversationModePrompt),
 		ReplyKeyboard: &domain.ReplyKeyboard{
 			Buttons: [][]domain.KeyboardButton{
 				{
 					{
-						Text: domain.ButtonBackToMenu,
+						Text: i18n.GetString(user.Language, i18n.ButtonBackToMenu),
 					},
 				},
 			},
@@ -146,7 +148,7 @@ func (s *UpdateService) handleConversationState(ctx context.Context, user *domai
 func (s *UpdateService) shouldQueueMessage(user *domain.User, update domain.Update) bool {
 	return user.CurrentStep == domain.UserStateConversation &&
 		update.MessageText != "" &&
-		update.MessageText != domain.ButtonBackToMenu
+		update.MessageText != i18n.GetString(user.Language, i18n.ButtonBackToMenu)
 }
 
 func (s *UpdateService) handleMessageQueueing(
@@ -170,7 +172,7 @@ func (s *UpdateService) handleMessageQueueing(
 	// Notify user that message is queued
 	queueLength, _ := s.queue.GetQueueLength(ctx, user.ExternalID)
 	queueMessage := fmt.Sprintf(
-		"⏳ Your message has been queued (position: %d). I'll process it after finishing the current response.",
+		i18n.GetString(user.Language, i18n.QueueMessageQueued),
 		queueLength+1,
 	)
 	notificationID, sendErr := s.sender.SendMessage(ctx, user.ExternalID, queueMessage)

@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math"
 	"strconv"
 
 	"github.com/vladimish/talk/db/generated"
@@ -42,14 +43,15 @@ func (p *PG) GetUserByExternalUserID(ctx context.Context, id string) (*domain.Us
 	}
 
 	return &domain.User{
-		ID:                    u.ID,
-		ExternalID:            strconv.FormatInt(u.ForeignID, 10),
-		Language:              u.Language,
-		CurrentStep:           u.CurrentStep,
-		SelectedModel:         u.SelectedModel,
-		CurrentConversationID: conversationID,
-		CreatedAt:             u.CreatedAt,
-		UpdatedAt:             u.UpdatedAt,
+		ID:                     u.ID,
+		ExternalID:             strconv.FormatInt(u.ForeignID, 10),
+		Language:               u.Language,
+		CurrentStep:            u.CurrentStep,
+		SelectedModel:          u.SelectedModel,
+		CurrentConversationID:  conversationID,
+		ConversationListOffset: int(u.ConversationListOffset),
+		CreatedAt:              u.CreatedAt,
+		UpdatedAt:              u.UpdatedAt,
 	}, nil
 }
 
@@ -71,6 +73,21 @@ func (p *PG) UpdateUserLanguage(ctx context.Context, userID int64, language stri
 	return p.q.UpdateUserLanguage(ctx, generated.UpdateUserLanguageParams{
 		ID:       userID,
 		Language: language,
+	})
+}
+
+func (p *PG) UpdateUserConversationListOffset(ctx context.Context, userID int64, offset int) error {
+	// Clamp offset to int32 range to prevent overflow
+	if offset > math.MaxInt32 {
+		offset = math.MaxInt32
+	}
+	if offset < math.MinInt32 {
+		offset = math.MinInt32
+	}
+
+	return p.q.UpdateUserConversationListOffset(ctx, generated.UpdateUserConversationListOffsetParams{
+		ID:                     userID,
+		ConversationListOffset: int32(offset), //nolint:gosec
 	})
 }
 
@@ -293,13 +310,22 @@ func (p *PG) CreateUser(ctx context.Context, user *domain.User) (*domain.User, e
 		return nil, fmt.Errorf("can't convert external id to int: %w", err)
 	}
 
+	// Clamp offset to int32 range to prevent overflow
+	offset := user.ConversationListOffset
+	if offset > math.MaxInt32 {
+		offset = math.MaxInt32
+	}
+	if offset < math.MinInt32 {
+		offset = math.MinInt32
+	}
 	u, err := p.q.CreateUser(ctx, generated.CreateUserParams{
-		ForeignID:     foreignID,
-		Language:      user.Language,
-		CurrentStep:   user.CurrentStep,
-		SelectedModel: user.SelectedModel,
-		CreatedAt:     user.CreatedAt,
-		UpdatedAt:     user.UpdatedAt,
+		ForeignID:              foreignID,
+		Language:               user.Language,
+		CurrentStep:            user.CurrentStep,
+		SelectedModel:          user.SelectedModel,
+		ConversationListOffset: int32(offset), //nolint:gosec
+		CreatedAt:              user.CreatedAt,
+		UpdatedAt:              user.UpdatedAt,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("can't create user: %w", err)
@@ -311,14 +337,15 @@ func (p *PG) CreateUser(ctx context.Context, user *domain.User) (*domain.User, e
 	}
 
 	return &domain.User{
-		ID:                    u.ID,
-		ExternalID:            strconv.FormatInt(u.ForeignID, 10),
-		Language:              u.Language,
-		CurrentStep:           u.CurrentStep,
-		SelectedModel:         u.SelectedModel,
-		CurrentConversationID: currentConversationID,
-		CreatedAt:             u.CreatedAt,
-		UpdatedAt:             u.UpdatedAt,
+		ID:                     u.ID,
+		ExternalID:             strconv.FormatInt(u.ForeignID, 10),
+		Language:               u.Language,
+		CurrentStep:            u.CurrentStep,
+		SelectedModel:          u.SelectedModel,
+		CurrentConversationID:  currentConversationID,
+		ConversationListOffset: int(u.ConversationListOffset),
+		CreatedAt:              u.CreatedAt,
+		UpdatedAt:              u.UpdatedAt,
 	}, nil
 }
 
