@@ -82,8 +82,8 @@ func main() {
 		os.Exit(1)
 	}
 	defer func() {
-		if err := redisQueue.Close(); err != nil {
-			log.Error("failed to close Redis connection", "error", err)
+		if closeErr := redisQueue.Close(); closeErr != nil {
+			log.Error("failed to close Redis connection", "error", closeErr)
 		}
 	}()
 

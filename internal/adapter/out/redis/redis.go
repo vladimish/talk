@@ -3,6 +3,7 @@ package redis
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"time"
 
@@ -11,11 +12,16 @@ import (
 	"github.com/vladimish/talk/internal/port/queue"
 )
 
-type RedisQueue struct {
+const (
+	connectionTimeout = 5 * time.Second
+	queueExpiration   = 24 * time.Hour
+)
+
+type Queue struct {
 	client *redis.Client
 }
 
-func NewRedisQueue(redisURL string) (*RedisQueue, error) {
+func NewRedisQueue(redisURL string) (*Queue, error) {
 	opt, err := redis.ParseURL(redisURL)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse redis URL: %w", err)
@@ -24,19 +30,24 @@ func NewRedisQueue(redisURL string) (*RedisQueue, error) {
 	client := redis.NewClient(opt)
 
 	// Test connection
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), connectionTimeout)
 	defer cancel()
 
-	if err := client.Ping(ctx).Err(); err != nil {
-		return nil, fmt.Errorf("failed to connect to redis: %w", err)
+	if pingErr := client.Ping(ctx).Err(); pingErr != nil {
+		return nil, fmt.Errorf("failed to connect to redis: %w", pingErr)
 	}
 
-	return &RedisQueue{
+	return &Queue{
 		client: client,
 	}, nil
 }
 
-func (r *RedisQueue) EnqueueWithNotification(ctx context.Context, userID string, update domain.Update, notificationID string) error {
+func (r *Queue) EnqueueWithNotification(
+	ctx context.Context,
+	userID string,
+	update domain.Update,
+	notificationID string,
+) error {
 	item := queue.QueuedItem{
 		Update:              update,
 		QueueNotificationID: notificationID,
@@ -48,36 +59,36 @@ func (r *RedisQueue) EnqueueWithNotification(ctx context.Context, userID string,
 	}
 
 	queueKey := r.queueKey(userID)
-	if err := r.client.RPush(ctx, queueKey, data).Err(); err != nil {
-		return fmt.Errorf("failed to enqueue item: %w", err)
+	if pushErr := r.client.RPush(ctx, queueKey, data).Err(); pushErr != nil {
+		return fmt.Errorf("failed to enqueue item: %w", pushErr)
 	}
 
 	// Set expiration for the queue to prevent memory leaks (24 hours)
-	r.client.Expire(ctx, queueKey, 24*time.Hour)
+	r.client.Expire(ctx, queueKey, queueExpiration)
 
 	return nil
 }
 
-func (r *RedisQueue) DequeueWithMetadata(ctx context.Context, userID string) (*queue.QueuedItem, error) {
+func (r *Queue) DequeueWithMetadata(ctx context.Context, userID string) (*queue.QueuedItem, error) {
 	queueKey := r.queueKey(userID)
 
 	data, err := r.client.LPop(ctx, queueKey).Bytes()
 	if err != nil {
-		if err == redis.Nil {
-			return nil, nil // Empty queue
+		if errors.Is(err, redis.Nil) {
+			return nil, queue.ErrEmptyQueue
 		}
 		return nil, fmt.Errorf("failed to dequeue item: %w", err)
 	}
 
 	var item queue.QueuedItem
-	if err := json.Unmarshal(data, &item); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal queued item: %w", err)
+	if unmarshalErr := json.Unmarshal(data, &item); unmarshalErr != nil {
+		return nil, fmt.Errorf("failed to unmarshal queued item: %w", unmarshalErr)
 	}
 
 	return &item, nil
 }
 
-func (r *RedisQueue) SetProcessing(ctx context.Context, userID string, ttl time.Duration) error {
+func (r *Queue) SetProcessing(ctx context.Context, userID string, ttl time.Duration) error {
 	lockKey := r.lockKey(userID)
 
 	// Use SET with NX (only set if not exists) and EX (expiration)
@@ -93,7 +104,7 @@ func (r *RedisQueue) SetProcessing(ctx context.Context, userID string, ttl time.
 	return nil
 }
 
-func (r *RedisQueue) IsProcessing(ctx context.Context, userID string) (bool, error) {
+func (r *Queue) IsProcessing(ctx context.Context, userID string) (bool, error) {
 	lockKey := r.lockKey(userID)
 
 	exists, err := r.client.Exists(ctx, lockKey).Result()
@@ -104,7 +115,7 @@ func (r *RedisQueue) IsProcessing(ctx context.Context, userID string) (bool, err
 	return exists > 0, nil
 }
 
-func (r *RedisQueue) ClearProcessing(ctx context.Context, userID string) error {
+func (r *Queue) ClearProcessing(ctx context.Context, userID string) error {
 	lockKey := r.lockKey(userID)
 
 	if err := r.client.Del(ctx, lockKey).Err(); err != nil {
@@ -114,7 +125,7 @@ func (r *RedisQueue) ClearProcessing(ctx context.Context, userID string) error {
 	return nil
 }
 
-func (r *RedisQueue) GetQueueLength(ctx context.Context, userID string) (int, error) {
+func (r *Queue) GetQueueLength(ctx context.Context, userID string) (int, error) {
 	queueKey := r.queueKey(userID)
 
 	length, err := r.client.LLen(ctx, queueKey).Result()
@@ -125,15 +136,15 @@ func (r *RedisQueue) GetQueueLength(ctx context.Context, userID string) (int, er
 	return int(length), nil
 }
 
-func (r *RedisQueue) Close() error {
+func (r *Queue) Close() error {
 	return r.client.Close()
 }
 
-// Helper methods for key generation
-func (r *RedisQueue) queueKey(userID string) string {
+// Helper methods for key generation.
+func (r *Queue) queueKey(userID string) string {
 	return fmt.Sprintf("queue:user:%s", userID)
 }
 
-func (r *RedisQueue) lockKey(userID string) string {
+func (r *Queue) lockKey(userID string) string {
 	return fmt.Sprintf("lock:user:%s", userID)
 }

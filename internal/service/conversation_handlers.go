@@ -13,10 +13,17 @@ import (
 	"github.com/vladimish/talk/internal/port/queue"
 )
 
+const (
+	processingLockTimeout     = 5 * time.Minute
+	maxConversationNameLength = 50
+	minConversationNameLength = 2
+	queueProcessingDelay      = 100 * time.Millisecond
+)
+
 // Conversation handlers.
 func (s *UpdateService) handleConversationMessage(ctx context.Context, user *domain.User, update domain.Update) error {
 	// Set processing lock with 5 minute timeout
-	if err := s.queue.SetProcessing(ctx, user.ExternalID, 5*time.Minute); err != nil {
+	if err := s.queue.SetProcessing(ctx, user.ExternalID, processingLockTimeout); err != nil {
 		if errors.Is(err, queue.ErrAlreadyProcessing) {
 			// This shouldn't happen as we check before, but handle it gracefully
 			return s.queue.EnqueueWithNotification(ctx, user.ExternalID, update, "")
@@ -226,7 +233,11 @@ func (s *UpdateService) handleConversationMessage(ctx context.Context, user *dom
 	return nil
 }
 
-func (s *UpdateService) generateAndUpdateConversationName(ctx context.Context, conversationID int64, firstMessage string) {
+func (s *UpdateService) generateAndUpdateConversationName(
+	ctx context.Context,
+	conversationID int64,
+	firstMessage string,
+) {
 	const systemPrompt = `Generate a short, descriptive name for a chat conversation based on the user's first message. 
 The name should be 2-5 words max and capture the main topic or intent.
 Return ONLY the conversation name, nothing else.
@@ -243,7 +254,12 @@ Examples:
 	}
 
 	// Use Gemini model for generating conversation name
-	tokenStream, err := s.completion.CompleteStream(ctx, "google/gemini-2.5-flash-preview-05-20", systemPrompt, messages)
+	tokenStream, err := s.completion.CompleteStream(
+		ctx,
+		"google/gemini-2.5-flash-preview-05-20",
+		systemPrompt,
+		messages,
+	)
 	if err != nil {
 		s.logger.WarnContext(ctx, "failed to generate conversation name with LLM, using fallback",
 			slog.String("error", err.Error()))
@@ -274,19 +290,19 @@ Examples:
 
 	generatedName := strings.TrimSpace(nameBuilder.String())
 	// Ensure the name is not too long
-	if len(generatedName) > 50 {
-		generatedName = generatedName[:47] + "..."
+	if len(generatedName) > maxConversationNameLength {
+		generatedName = generatedName[:maxConversationNameLength-3] + "..."
 	}
 
 	// If generated name is empty or too short, use fallback
-	if len(generatedName) < 2 {
+	if len(generatedName) < minConversationNameLength {
 		generatedName = fmt.Sprintf("Conversation %s", time.Now().Format("Jan 2 15:04"))
 	}
 
 	// Update the conversation name
-	if err := s.storage.UpdateConversationName(ctx, conversationID, generatedName); err != nil {
+	if updateErr := s.storage.UpdateConversationName(ctx, conversationID, generatedName); updateErr != nil {
 		s.logger.ErrorContext(ctx, "failed to update conversation name",
-			slog.String("error", err.Error()))
+			slog.String("error", updateErr.Error()))
 	} else {
 		s.logger.InfoContext(ctx, "conversation name generated successfully",
 			slog.String("name", generatedName))
@@ -298,22 +314,21 @@ func (s *UpdateService) processQueuedMessages(ctx context.Context, user *domain.
 		// Get next queued update
 		queuedItem, err := s.queue.DequeueWithMetadata(ctx, user.ExternalID)
 		if err != nil {
+			if errors.Is(err, queue.ErrEmptyQueue) {
+				// No more queued messages
+				return
+			}
 			s.logger.ErrorContext(ctx, "failed to dequeue update",
 				slog.String("error", err.Error()))
 			return
 		}
 
-		// No more queued messages
-		if queuedItem == nil {
-			return
-		}
-
 		// Delete the queue notification message if exists
 		if queuedItem.QueueNotificationID != "" {
-			if err := s.sender.DeleteMessage(ctx, user.ExternalID, queuedItem.QueueNotificationID); err != nil {
+			if deleteErr := s.sender.DeleteMessage(ctx, user.ExternalID, queuedItem.QueueNotificationID); deleteErr != nil {
 				s.logger.WarnContext(ctx, "failed to delete queue notification",
 					slog.String("message_id", queuedItem.QueueNotificationID),
-					slog.String("error", err.Error()))
+					slog.String("error", deleteErr.Error()))
 			}
 		}
 
@@ -332,12 +347,12 @@ func (s *UpdateService) processQueuedMessages(ctx context.Context, user *domain.
 
 		// Process the update - it will reply to the original message automatically
 		// since the update contains the original message ID
-		if err := s.processUpdate(ctx, freshUser, queuedItem.Update); err != nil {
+		if processErr := s.processUpdate(ctx, freshUser, queuedItem.Update); processErr != nil {
 			s.logger.ErrorContext(ctx, "failed to process queued update",
-				slog.String("error", err.Error()))
+				slog.String("error", processErr.Error()))
 		}
 
 		// Small delay between processing queued messages
-		time.Sleep(100 * time.Millisecond)
+		time.Sleep(queueProcessingDelay)
 	}
 }

@@ -46,33 +46,12 @@ func (s *UpdateService) HandleUpdate(ctx context.Context, update domain.Update) 
 	}
 
 	// Only queue messages in conversation state
-	if user.CurrentStep == domain.UserStateConversation && update.MessageText != "" &&
-		update.MessageText != domain.ButtonBackToMenu {
-
-		// Check if user is currently processing
-		processing, err := s.queue.IsProcessing(ctx, user.ExternalID)
-		if err != nil {
-			s.logger.WarnContext(ctx, "failed to check processing status",
-				slog.String("error", err.Error()))
-			// Continue without queueing on error
-		} else if processing {
-			// Notify user that message is queued
-			queueLength, _ := s.queue.GetQueueLength(ctx, user.ExternalID)
-			notificationID, err := s.sender.SendMessage(ctx, user.ExternalID,
-				fmt.Sprintf("⏳ Your message has been queued (position: %d). I'll process it after finishing the current response.", queueLength+1))
-			if err != nil {
-				s.logger.WarnContext(ctx, "failed to send queue notification",
-					slog.String("error", err.Error()))
-				notificationID = "" // Continue without notification ID
-			}
-
-			// User is processing, queue the update with notification ID
-			if err := s.queue.EnqueueWithNotification(ctx, user.ExternalID, update, notificationID); err != nil {
-				s.logger.ErrorContext(ctx, "failed to enqueue update",
-					slog.String("error", err.Error()))
-				return fmt.Errorf("failed to queue message: %w", err)
-			}
-
+	if s.shouldQueueMessage(user, update) {
+		queued, queueErr := s.handleMessageQueueing(ctx, user, update)
+		if queueErr != nil {
+			return queueErr
+		}
+		if queued {
 			return nil
 		}
 	}
@@ -158,4 +137,51 @@ func (s *UpdateService) handleConversationState(ctx context.Context, user *domai
 
 	_, err := s.sender.SendMessageWithContent(ctx, user.ExternalID, content)
 	return err
+}
+
+func (s *UpdateService) shouldQueueMessage(user *domain.User, update domain.Update) bool {
+	return user.CurrentStep == domain.UserStateConversation &&
+		update.MessageText != "" &&
+		update.MessageText != domain.ButtonBackToMenu
+}
+
+func (s *UpdateService) handleMessageQueueing(
+	ctx context.Context,
+	user *domain.User,
+	update domain.Update,
+) (bool, error) {
+	// Check if user is currently processing
+	processing, processingErr := s.queue.IsProcessing(ctx, user.ExternalID)
+	if processingErr != nil {
+		s.logger.WarnContext(ctx, "failed to check processing status",
+			slog.String("error", processingErr.Error()))
+		// Continue without queueing on error
+		return false, nil
+	}
+
+	if !processing {
+		return false, nil
+	}
+
+	// Notify user that message is queued
+	queueLength, _ := s.queue.GetQueueLength(ctx, user.ExternalID)
+	queueMessage := fmt.Sprintf(
+		"⏳ Your message has been queued (position: %d). I'll process it after finishing the current response.",
+		queueLength+1,
+	)
+	notificationID, sendErr := s.sender.SendMessage(ctx, user.ExternalID, queueMessage)
+	if sendErr != nil {
+		s.logger.WarnContext(ctx, "failed to send queue notification",
+			slog.String("error", sendErr.Error()))
+		notificationID = "" // Continue without notification ID
+	}
+
+	// User is processing, queue the update with notification ID
+	if enqueueErr := s.queue.EnqueueWithNotification(ctx, user.ExternalID, update, notificationID); enqueueErr != nil {
+		s.logger.ErrorContext(ctx, "failed to enqueue update",
+			slog.String("error", enqueueErr.Error()))
+		return false, fmt.Errorf("failed to queue message: %w", enqueueErr)
+	}
+
+	return true, nil
 }

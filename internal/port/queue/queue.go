@@ -8,15 +8,18 @@ import (
 	"github.com/vladimish/talk/internal/domain"
 )
 
-var ErrAlreadyProcessing = errors.New("user is already processing a request")
+var (
+	ErrAlreadyProcessing = errors.New("user is already processing a request")
+	ErrEmptyQueue        = errors.New("queue is empty")
+)
 
-// QueuedItem represents an update with metadata
+// QueuedItem represents an update with metadata.
 type QueuedItem struct {
-	Update              domain.Update
-	QueueNotificationID string // Message ID of the "queued" notification to delete
+	Update              domain.Update `json:"update"`
+	QueueNotificationID string        `json:"notification_id"` // Message ID of the "queued" notification to delete
 }
 
-// Queue interface for managing user request queues
+// Queue interface for managing user request queues.
 type Queue interface {
 	// EnqueueWithNotification adds an update to a user's queue with notification message ID
 	EnqueueWithNotification(ctx context.Context, userID string, update domain.Update, notificationID string) error
