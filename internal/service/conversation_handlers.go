@@ -13,6 +13,16 @@ import (
 
 // Conversation handlers.
 func (s *UpdateService) handleConversationMessage(ctx context.Context, user *domain.User, update domain.Update) error {
+	// Check if this is the first message in a new conversation
+	var isFirstMessage bool
+	if user.CurrentConversationID != nil {
+		messages, err := s.storage.GetMessagesByConversationID(ctx, *user.CurrentConversationID)
+		if err != nil {
+			return fmt.Errorf("can't check existing messages: %w", err)
+		}
+		isFirstMessage = len(messages) == 0
+	}
+
 	// Save incoming message from user
 	userMessage, err := s.storage.CreateMessage(ctx, &domain.Message{
 		UserID: user.ID,
@@ -26,6 +36,11 @@ func (s *UpdateService) handleConversationMessage(ctx context.Context, user *dom
 	})
 	if err != nil {
 		return fmt.Errorf("can't save user message: %w", err)
+	}
+
+	// Generate conversation name if this is the first message
+	if isFirstMessage && user.CurrentConversationID != nil {
+		go s.generateAndUpdateConversationName(context.Background(), *user.CurrentConversationID, update.MessageText)
 	}
 
 	if update.ExternalMessageID > 0 {
@@ -175,4 +190,71 @@ func (s *UpdateService) handleConversationMessage(ctx context.Context, user *dom
 	}
 
 	return nil
+}
+
+func (s *UpdateService) generateAndUpdateConversationName(ctx context.Context, conversationID int64, firstMessage string) {
+	const systemPrompt = `Generate a short, descriptive name for a chat conversation based on the user's first message. 
+The name should be 2-5 words max and capture the main topic or intent.
+Return ONLY the conversation name, nothing else.
+Examples:
+- User: "How do I cook pasta?" -> "Cooking Pasta Guide"
+- User: "Tell me about quantum physics" -> "Quantum Physics Discussion"
+- User: "I need help with Python code" -> "Python Code Help"`
+
+	messages := []*domain.Message{
+		{
+			MessageType: domain.MessageType{Text: firstMessage},
+			SentBy:      domain.MessageSenderUser,
+		},
+	}
+
+	// Use Gemini model for generating conversation name
+	tokenStream, err := s.completion.CompleteStream(ctx, "google/gemini-2.5-flash-preview-05-20", systemPrompt, messages)
+	if err != nil {
+		s.logger.WarnContext(ctx, "failed to generate conversation name with LLM, using fallback",
+			slog.String("error", err.Error()))
+		// Fallback to date-based naming
+		fallbackName := fmt.Sprintf("Conversation %s", time.Now().Format("Jan 2 15:04"))
+		if updateErr := s.storage.UpdateConversationName(ctx, conversationID, fallbackName); updateErr != nil {
+			s.logger.ErrorContext(ctx, "failed to update conversation name with fallback",
+				slog.String("error", updateErr.Error()))
+		}
+		return
+	}
+
+	var nameBuilder strings.Builder
+	for token := range tokenStream {
+		if token.Error != nil {
+			s.logger.WarnContext(ctx, "error in conversation name generation stream",
+				slog.String("error", token.Error.Error()))
+			// Fallback to date-based naming
+			fallbackName := fmt.Sprintf("Conversation %s", time.Now().Format("Jan 2 15:04"))
+			if updateErr := s.storage.UpdateConversationName(ctx, conversationID, fallbackName); updateErr != nil {
+				s.logger.ErrorContext(ctx, "failed to update conversation name with fallback",
+					slog.String("error", updateErr.Error()))
+			}
+			return
+		}
+		nameBuilder.WriteString(token.Content)
+	}
+
+	generatedName := strings.TrimSpace(nameBuilder.String())
+	// Ensure the name is not too long
+	if len(generatedName) > 50 {
+		generatedName = generatedName[:47] + "..."
+	}
+
+	// If generated name is empty or too short, use fallback
+	if len(generatedName) < 2 {
+		generatedName = fmt.Sprintf("Conversation %s", time.Now().Format("Jan 2 15:04"))
+	}
+
+	// Update the conversation name
+	if err := s.storage.UpdateConversationName(ctx, conversationID, generatedName); err != nil {
+		s.logger.ErrorContext(ctx, "failed to update conversation name",
+			slog.String("error", err.Error()))
+	} else {
+		s.logger.InfoContext(ctx, "conversation name generated successfully",
+			slog.String("name", generatedName))
+	}
 }

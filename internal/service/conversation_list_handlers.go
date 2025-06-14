@@ -99,8 +99,8 @@ func (s *UpdateService) showConversationList(ctx context.Context, user *domain.U
 }
 
 func (s *UpdateService) createNewConversation(ctx context.Context, user *domain.User) error {
-	// Create new conversation
-	conversationName := fmt.Sprintf("Conversation %s", time.Now().Format("Jan 2 15:04"))
+	// Create new conversation with temporary name
+	conversationName := "New conversation"
 	conversation, err := s.storage.CreateConversation(ctx, &domain.Conversation{
 		Name:      conversationName,
 		UserID:    user.ID,
