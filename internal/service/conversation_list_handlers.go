@@ -2,10 +2,13 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"log/slog"
 	"time"
 
 	"github.com/vladimish/talk/internal/domain"
+	"github.com/vladimish/talk/internal/port/storage"
 )
 
 // Conversation list handlers.
@@ -115,8 +118,8 @@ func (s *UpdateService) createNewConversation(ctx context.Context, user *domain.
 		return fmt.Errorf("can't update user conversation: %w", err)
 	}
 
-	// Transition to conversation state
-	return s.transitionToConversation(ctx, user)
+	// Transition to conversation state (no reply since it's a new conversation)
+	return s.transitionToConversation(ctx, user, nil)
 }
 
 func (s *UpdateService) selectConversation(ctx context.Context, user *domain.User, conversationID int64) error {
@@ -127,6 +130,27 @@ func (s *UpdateService) selectConversation(ctx context.Context, user *domain.Use
 		return fmt.Errorf("can't update user conversation: %w", err)
 	}
 
+	// Get the latest message from the conversation to reply to
+	var replyToMessageID *int64
+	latestMessage, err := s.storage.GetLatestMessageByConversationID(ctx, conversationID)
+	if err != nil && !errors.Is(err, storage.ErrNotFound) {
+		return fmt.Errorf("can't get latest message: %w", err)
+	}
+	if latestMessage != nil && latestMessage.ID <= int64(^uint32(0)>>1) {
+		// Get the foreign (Telegram) message ID
+		var foreignMessageID int32
+		foreignMessageID, err = s.storage.GetForeignMessageByMessageID(ctx, int32(latestMessage.ID)) //nolint:gosec
+		if err != nil && !errors.Is(err, storage.ErrNotFound) {
+			s.logger.WarnContext(ctx, "failed to get foreign message ID",
+				slog.Int64("message_id", latestMessage.ID),
+				slog.String("error", err.Error()))
+		} else if err == nil {
+			// Convert int32 to int64 for the reply
+			foreignID := int64(foreignMessageID)
+			replyToMessageID = &foreignID
+		}
+	}
+
 	// Transition to conversation state
-	return s.transitionToConversation(ctx, user)
+	return s.transitionToConversation(ctx, user, replyToMessageID)
 }

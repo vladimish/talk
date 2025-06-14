@@ -12,6 +12,7 @@ type ReplyKeyboard struct {
 }
 
 type MessageContent struct {
-	Text          string
-	ReplyKeyboard *ReplyKeyboard
+	Text             string
+	ReplyKeyboard    *ReplyKeyboard
+	ReplyToMessageID *int64
 }

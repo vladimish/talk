@@ -173,6 +173,36 @@ func (p *PG) GetMessagesByConversationID(ctx context.Context, conversationID int
 	return result, nil
 }
 
+func (p *PG) GetLatestMessageByConversationID(ctx context.Context, conversationID int64) (*domain.Message, error) {
+	m, err := p.q.GetLatestMessageByConversationID(ctx, sql.NullInt64{Int64: conversationID, Valid: true})
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, storage.ErrNotFound
+		}
+		return nil, fmt.Errorf("can't get latest message: %w", err)
+	}
+
+	var msgType domain.MessageType
+	if unmarshalErr := json.Unmarshal(m.MessageType, &msgType); unmarshalErr != nil {
+		return nil, fmt.Errorf("can't unmarshal message type: %w", unmarshalErr)
+	}
+
+	var messageConversationID *int64
+	if m.ConversationID.Valid {
+		messageConversationID = &m.ConversationID.Int64
+	}
+
+	return &domain.Message{
+		ID:             m.ID,
+		UserID:         m.UserID,
+		MessageType:    msgType,
+		SentBy:         domain.MessageSender(m.SentBy),
+		ConversationID: messageConversationID,
+		CreatedAt:      m.CreatedAt.Time,
+		UpdatedAt:      m.UpdatedAt.Time,
+	}, nil
+}
+
 func (p *PG) CreateConversation(ctx context.Context, conversation *domain.Conversation) (*domain.Conversation, error) {
 	c, err := p.q.CreateConversation(ctx, generated.CreateConversationParams{
 		Name:      conversation.Name,
@@ -298,4 +328,16 @@ func (p *PG) CreateForeignMessage(ctx context.Context, messageID int32, foreignM
 		return fmt.Errorf("can't create foreign message: %w", err)
 	}
 	return nil
+}
+
+func (p *PG) GetForeignMessageByMessageID(ctx context.Context, messageID int32) (int32, error) {
+	fm, err := p.q.GetForeignMessageByMessageID(ctx, messageID)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return 0, storage.ErrNotFound
+		}
+		return 0, fmt.Errorf("can't get foreign message: %w", err)
+	}
+
+	return fm.ForeignMessageID, nil
 }

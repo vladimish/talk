@@ -48,7 +48,11 @@ func (s *UpdateService) sendMenu(ctx context.Context, user *domain.User, text st
 	return err
 }
 
-func (s *UpdateService) transitionToConversation(ctx context.Context, user *domain.User) error {
+func (s *UpdateService) transitionToConversation(
+	ctx context.Context,
+	user *domain.User,
+	replyToMessageID *int64,
+) error {
 	conversationState := domain.UserStateConversation
 	user.CurrentStep = conversationState
 
@@ -57,8 +61,14 @@ func (s *UpdateService) transitionToConversation(ctx context.Context, user *doma
 		return fmt.Errorf("can't update user state: %w", err)
 	}
 
+	text := "🗣️ Conversation started! Send me a message and I'll respond. You can always go back to the menu."
+	if replyToMessageID != nil {
+		text = "🗣️ Conversation resumed! Send me a message and I'll respond. You can always go back to the menu."
+	}
+
 	content := domain.MessageContent{
-		Text: "🗣️ Conversation started! Send me a message and I'll respond. You can always go back to the menu.",
+		Text:             text,
+		ReplyToMessageID: replyToMessageID,
 		ReplyKeyboard: &domain.ReplyKeyboard{
 			Buttons: [][]domain.KeyboardButton{
 				{

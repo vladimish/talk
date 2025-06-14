@@ -50,6 +50,28 @@ func (q *Queries) CreateMessage(ctx context.Context, arg CreateMessageParams) (M
 	return i, err
 }
 
+const getLatestMessageByConversationID = `-- name: GetLatestMessageByConversationID :one
+SELECT id, message_type, user_id, sent_by, created_at, updated_at, conversation_id FROM messages
+WHERE conversation_id = $1
+ORDER BY created_at DESC
+LIMIT 1
+`
+
+func (q *Queries) GetLatestMessageByConversationID(ctx context.Context, conversationID sql.NullInt64) (Message, error) {
+	row := q.db.QueryRowContext(ctx, getLatestMessageByConversationID, conversationID)
+	var i Message
+	err := row.Scan(
+		&i.ID,
+		&i.MessageType,
+		&i.UserID,
+		&i.SentBy,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.ConversationID,
+	)
+	return i, err
+}
+
 const getMessagesByConversationID = `-- name: GetMessagesByConversationID :many
 SELECT id, message_type, user_id, sent_by, created_at, updated_at, conversation_id FROM messages
 WHERE conversation_id = $1

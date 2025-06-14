@@ -18,3 +18,9 @@ ORDER BY created_at ASC;
 SELECT * FROM messages
 WHERE conversation_id = $1
 ORDER BY created_at ASC;
+
+-- name: GetLatestMessageByConversationID :one
+SELECT * FROM messages
+WHERE conversation_id = $1
+ORDER BY created_at DESC
+LIMIT 1;

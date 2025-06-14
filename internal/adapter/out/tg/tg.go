@@ -65,6 +65,15 @@ func (u *Sender) SendMessageWithContent(
 		ParseMode: models.ParseModeMarkdown,
 	}
 
+	// Add reply to message ID if present
+	if content.ReplyToMessageID != nil {
+		// Convert int64 to int for Telegram API
+		replyID := int(*content.ReplyToMessageID)
+		params.ReplyParameters = &models.ReplyParameters{
+			MessageID: replyID,
+		}
+	}
+
 	// Add reply keyboard if present
 	if content.ReplyKeyboard != nil {
 		keyboard := u.buildReplyKeyboard(content.ReplyKeyboard)

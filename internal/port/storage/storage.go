@@ -16,6 +16,7 @@ type Storage interface {
 	CreateMessage(ctx context.Context, message *domain.Message) (*domain.Message, error)
 	GetMessagesByUserID(ctx context.Context, userID int64) ([]*domain.Message, error)
 	GetMessagesByConversationID(ctx context.Context, conversationID int64) ([]*domain.Message, error)
+	GetLatestMessageByConversationID(ctx context.Context, conversationID int64) (*domain.Message, error)
 
 	CreateConversation(ctx context.Context, conversation *domain.Conversation) (*domain.Conversation, error)
 	GetConversationsByUserID(ctx context.Context, userID int64) ([]*domain.Conversation, error)
@@ -24,6 +25,7 @@ type Storage interface {
 
 	UpdateUserCurrentConversationID(ctx context.Context, userID int64, conversationID *int64) error
 	CreateForeignMessage(ctx context.Context, messageID int32, foreignMessageID int32) error
+	GetForeignMessageByMessageID(ctx context.Context, messageID int32) (int32, error)
 }
 
 var ErrNotFound = errors.New("not found")
