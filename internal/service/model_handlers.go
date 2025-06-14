@@ -29,8 +29,8 @@ func (s *UpdateService) handleModelSelectState(ctx context.Context, user *domain
 
 	// Check if user selected a model
 	for _, model := range domain.AvailableModels {
-		if update.MessageText == model {
-			return s.selectModel(ctx, user, model)
+		if update.MessageText == model.DisplayName {
+			return s.selectModel(ctx, user, model.ID)
 		}
 	}
 
@@ -43,7 +43,7 @@ func (s *UpdateService) showModelSelection(ctx context.Context, user *domain.Use
 	var modelButtons [][]domain.KeyboardButton
 	for _, model := range domain.AvailableModels {
 		modelButtons = append(modelButtons, []domain.KeyboardButton{
-			{Text: model},
+			{Text: model.DisplayName},
 		})
 	}
 
@@ -53,8 +53,15 @@ func (s *UpdateService) showModelSelection(ctx context.Context, user *domain.Use
 	})
 
 	titleText := i18n.GetString(user.Language, i18n.ModelSelectTitle)
+
+	// Get current model display name
+	currentModelDisplay := user.SelectedModel
+	if currentModel := domain.GetModelByID(user.SelectedModel); currentModel != nil {
+		currentModelDisplay = currentModel.DisplayName
+	}
+
 	content := domain.MessageContent{
-		Text:         fmt.Sprintf("%s\n\nCurrent model: %s\n\nChoose a model:", titleText, user.SelectedModel),
+		Text:         fmt.Sprintf("%s\n\nCurrent model: %s\n\nChoose a model:", titleText, currentModelDisplay),
 		IsPersistent: true,
 		ReplyKeyboard: &domain.ReplyKeyboard{
 			Buttons: modelButtons,
@@ -86,6 +93,12 @@ func (s *UpdateService) selectModel(ctx context.Context, user *domain.User, mode
 		return fmt.Errorf("can't update user state: %w", err)
 	}
 
-	successMessage := fmt.Sprintf("%s %s", i18n.GetString(user.Language, i18n.ModelUpdateSuccess), model)
+	// Get model display name for success message
+	modelDisplayName := model
+	if selectedModel := domain.GetModelByID(model); selectedModel != nil {
+		modelDisplayName = selectedModel.DisplayName
+	}
+
+	successMessage := fmt.Sprintf("%s %s", i18n.GetString(user.Language, i18n.ModelUpdateSuccess), modelDisplayName)
 	return s.sendMenu(ctx, user, successMessage+"\n\n"+i18n.GetString(user.Language, i18n.MenuBackToMain))
 }

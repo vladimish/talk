@@ -38,11 +38,12 @@ type TokenBalance struct {
 	RegularBalance int64 `json:"regular_balance"`
 }
 
-// ModelCost represents the cost configuration for AI models.
-type ModelCost struct {
-	ModelName string    `json:"model_name"`
-	Cost      int64     `json:"cost"`
-	TokenType TokenType `json:"token_type"`
+// ModelInfo represents the complete information for an AI model.
+type ModelInfo struct {
+	ID          string    `json:"id"`           // Internal model identifier
+	DisplayName string    `json:"display_name"` // User-friendly name for buttons
+	Cost        int64     `json:"cost"`         // Token cost per message
+	TokenType   TokenType `json:"token_type"`   // Type of tokens required
 }
 
 // Token cost constants.
@@ -52,7 +53,51 @@ const (
 	TokenCostHigh   int64 = 5
 )
 
-// ModelCosts defines the token costs for each AI model.
+// AvailableModels defines all available AI models with their complete information.
+var AvailableModels = []ModelInfo{
+	{
+		ID:          "google/gemini-2.5-flash-preview-05-20",
+		DisplayName: "🚀 Gemini 2.5 Flash (Fast)",
+		Cost:        TokenCostLow,
+		TokenType:   TokenTypeRegular,
+	},
+	{
+		ID:          "openai/gpt-4o",
+		DisplayName: "🧠 GPT-4o (Most Capable)",
+		Cost:        TokenCostHigh,
+		TokenType:   TokenTypePremium,
+	},
+	{
+		ID:          "openai/gpt-4o-mini",
+		DisplayName: "⚡ GPT-4o Mini (Balanced)",
+		Cost:        TokenCostLow,
+		TokenType:   TokenTypeRegular,
+	},
+	{
+		ID:          "anthropic/claude-4-sonnet-20250522",
+		DisplayName: "🎭 Claude 4 Sonnet (Creative)",
+		Cost:        TokenCostMedium,
+		TokenType:   TokenTypePremium,
+	},
+	{
+		ID:          "google/gemini-2.5-pro-preview",
+		DisplayName: "🌸 Gemini 2.5 Pro (Long context)",
+		Cost:        TokenCostLow,
+		TokenType:   TokenTypeRegular,
+	},
+}
+
+// GetModelByID returns the model info for a given model ID.
+func GetModelByID(modelID string) *ModelInfo {
+	for _, model := range AvailableModels {
+		if model.ID == modelID {
+			return &model
+		}
+	}
+	return nil
+}
+
+// ModelCosts defines the token costs for each AI model (for backward compatibility).
 var ModelCosts = map[string]ModelCost{
 	"google/gemini-2.5-flash-preview-05-20": {
 		ModelName: "google/gemini-2.5-flash-preview-05-20",
@@ -79,4 +124,11 @@ var ModelCosts = map[string]ModelCost{
 		Cost:      TokenCostLow,
 		TokenType: TokenTypeRegular,
 	},
+}
+
+// ModelCost represents the cost configuration for AI models (for backward compatibility).
+type ModelCost struct {
+	ModelName string    `json:"model_name"`
+	Cost      int64     `json:"cost"`
+	TokenType TokenType `json:"token_type"`
 }

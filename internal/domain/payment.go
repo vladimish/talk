@@ -41,7 +41,7 @@ type Payment struct {
 const (
 	MonthlyRegularTokenReward int64 = 1500
 	MonthlyPremiumTokenReward int64 = 100
-	MonthlySubscriptionAmount int64 = 1
+	MonthlySubscriptionAmount int64 = 600
 	SubscriptionCurrencyStars       = "XTR"
 	MonthlySubscriptionPeriod int   = 2592000 // 30 days in seconds
 )

@@ -167,8 +167,8 @@ var Strings = map[string]map[string]string{
 
 		// Subscription
 		SubscriptionTitle:        "💳 Subscription",
-		SubscriptionMonthlyOffer: "🌟 Monthly Premium Subscription\n\n✨ Get 1500 regular tokens + 100 premium tokens every month!\n\nPrice: ⭐ 1 Telegram Stars per month",
-		SubscriptionBuyButton:    "💰 Subscribe for ⭐ 1 Stars",
+		SubscriptionMonthlyOffer: "🌟 Monthly Premium Subscription\n\n✨ Get 1500 regular tokens + 100 premium tokens every month!\n\nPrice: ⭐ 600 Telegram Stars per month",
+		SubscriptionBuyButton:    "💰 Subscribe for ⭐ 600 Stars",
 		SubscriptionSuccess:      "🎉 Subscription activated! You've received 1500 regular tokens and 100 premium tokens.",
 		SubscriptionFailed:       "❌ Subscription failed. Please try again.",
 		SubscriptionActiveInfo:   "✅ You have an active subscription! %d days remaining.",
@@ -241,8 +241,8 @@ var Strings = map[string]map[string]string{
 
 		// Subscription
 		SubscriptionTitle:        "💳 Suscripción",
-		SubscriptionMonthlyOffer: "🌟 Suscripción Premium Mensual\n\n✨ ¡Obtén 1500 tokens regulares + 100 tokens premium cada mes!\n\nPrecio: ⭐ 2 Estrellas de Telegram por mes",
-		SubscriptionBuyButton:    "💰 Suscribirse por ⭐ 2 Estrellas",
+		SubscriptionMonthlyOffer: "🌟 Suscripción Premium Mensual\n\n✨ ¡Obtén 1500 tokens regulares + 100 tokens premium cada mes!\n\nPrecio: ⭐ 600 Estrellas de Telegram por mes",
+		SubscriptionBuyButton:    "💰 Suscribirse por ⭐ 600 Estrellas",
 		SubscriptionSuccess:      "🎉 ¡Suscripción activada! Has recibido 1500 tokens regulares y 100 tokens premium.",
 		SubscriptionFailed:       "❌ La suscripción falló. Por favor, inténtalo de nuevo.",
 		SubscriptionActiveInfo:   "✅ ¡Tienes una suscripción activa! %d días restantes.",
@@ -315,8 +315,8 @@ var Strings = map[string]map[string]string{
 
 		// Subscription
 		SubscriptionTitle:        "💳 Подписка",
-		SubscriptionMonthlyOffer: "🌟 Ежемесячная Премиум Подписка\n\n✨ Получайте 1500 обычных токенов + 100 премиум токенов каждый месяц!\n\nЦена: ⭐ 2 Звезды Telegram в месяц",
-		SubscriptionBuyButton:    "💰 Подписаться за ⭐ 2 Звезды",
+		SubscriptionMonthlyOffer: "🌟 Ежемесячная Премиум Подписка\n\n✨ Получайте 1500 обычных токенов + 100 премиум токенов каждый месяц!\n\nЦена: ⭐ 600 Звезды Telegram в месяц",
+		SubscriptionBuyButton:    "💰 Подписаться за ⭐ 600 Звезды",
 		SubscriptionSuccess:      "🎉 Подписка активирована! Вы получили 1500 обычных токенов и 100 премиум токенов.",
 		SubscriptionFailed:       "❌ Подписка не удалась. Пожалуйста, попробуйте снова.",
 		SubscriptionActiveInfo:   "✅ У вас активная подписка! Осталось %d дней.",
@@ -389,8 +389,8 @@ var Strings = map[string]map[string]string{
 
 		// Subscription
 		SubscriptionTitle:        "💳 Abonnement",
-		SubscriptionMonthlyOffer: "🌟 Abonnement Premium Mensuel\n\n✨ Obtenez 1500 jetons réguliers + 100 jetons premium chaque mois !\n\nPrix : ⭐ 2 Étoiles Telegram par mois",
-		SubscriptionBuyButton:    "💰 S'abonner pour ⭐ 2 Étoiles",
+		SubscriptionMonthlyOffer: "🌟 Abonnement Premium Mensuel\n\n✨ Obtenez 1500 jetons réguliers + 100 jetons premium chaque mois !\n\nPrix : ⭐ 600 Étoiles Telegram par mois",
+		SubscriptionBuyButton:    "💰 S'abonner pour ⭐ 600 Étoiles",
 		SubscriptionSuccess:      "🎉 Abonnement activé ! Vous avez reçu 1500 jetons réguliers et 100 jetons premium.",
 		SubscriptionFailed:       "❌ L'abonnement a échoué. Veuillez réessayer.",
 		SubscriptionActiveInfo:   "✅ Vous avez un abonnement actif ! %d jours restants.",
@@ -463,8 +463,8 @@ var Strings = map[string]map[string]string{
 
 		// Subscription
 		SubscriptionTitle:        "💳 Abonnement",
-		SubscriptionMonthlyOffer: "🌟 Monatliches Premium-Abonnement\n\n✨ Erhalten Sie jeden Monat 1500 reguläre Token + 100 Premium-Token!\n\nPreis: ⭐ 1 Telegram-Sterne pro Monat",
-		SubscriptionBuyButton:    "💰 Abonnieren für ⭐ 2 Sterne",
+		SubscriptionMonthlyOffer: "🌟 Monatliches Premium-Abonnement\n\n✨ Erhalten Sie jeden Monat 1500 reguläre Token + 100 Premium-Token!\n\nPreis: ⭐ 600 Telegram-Sterne pro Monat",
+		SubscriptionBuyButton:    "💰 Abonnieren für ⭐ 600 Sterne",
 		SubscriptionSuccess:      "🎉 Abonnement aktiviert! Sie haben 1500 reguläre Token und 100 Premium-Token erhalten.",
 		SubscriptionFailed:       "❌ Abonnement fehlgeschlagen. Bitte versuchen Sie es erneut.",
 		SubscriptionActiveInfo:   "✅ Sie haben ein aktives Abonnement! %d Tage verbleibend.",
@@ -537,8 +537,8 @@ var Strings = map[string]map[string]string{
 
 		// Subscription
 		SubscriptionTitle:        "💳 Abbonamento",
-		SubscriptionMonthlyOffer: "🌟 Abbonamento Premium Mensile\n\n✨ Ottieni 1500 token regolari + 100 token premium ogni mese!\n\nPrezzo: ⭐ 2 Stelle Telegram al mese",
-		SubscriptionBuyButton:    "💰 Abbonati per ⭐ 2 Stelle",
+		SubscriptionMonthlyOffer: "🌟 Abbonamento Premium Mensile\n\n✨ Ottieni 1500 token regolari + 100 token premium ogni mese!\n\nPrezzo: ⭐ 600 Stelle Telegram al mese",
+		SubscriptionBuyButton:    "💰 Abbonati per ⭐ 600 Stelle",
 		SubscriptionSuccess:      "🎉 Abbonamento attivato! Hai ricevuto 1500 token regolari e 100 token premium.",
 		SubscriptionFailed:       "❌ Abbonamento fallito. Per favore riprova.",
 		SubscriptionActiveInfo:   "✅ Hai un abbonamento attivo! %d giorni rimanenti.",
@@ -611,8 +611,8 @@ var Strings = map[string]map[string]string{
 
 		// Subscription
 		SubscriptionTitle:        "💳 订阅",
-		SubscriptionMonthlyOffer: "🌟 月度高级订阅\n\n✨ 每月获得 1500 个普通代币 + 100 个高级代币！\n\n价格：⭐ 每月 2 个 Telegram 星星",
-		SubscriptionBuyButton:    "💰 订阅 ⭐ 2 星星",
+		SubscriptionMonthlyOffer: "🌟 月度高级订阅\n\n✨ 每月获得 1500 个普通代币 + 100 个高级代币！\n\n价格：⭐ 每月 600 个 Telegram 星星",
+		SubscriptionBuyButton:    "💰 订阅 ⭐ 600 星星",
 		SubscriptionSuccess:      "🎉 订阅已激活！您已收到 1500 个普通代币和 100 个高级代币。",
 		SubscriptionFailed:       "❌ 订阅失败。请重试。",
 		SubscriptionActiveInfo:   "✅ 您有有效订阅！剩余 %d 天。",
@@ -685,8 +685,8 @@ var Strings = map[string]map[string]string{
 
 		// Subscription
 		SubscriptionTitle:        "💳 サブスクリプション",
-		SubscriptionMonthlyOffer: "🌟 月額プレミアムサブスクリプション\n\n✨ 毎月1500個の通常トークン + 100個のプレミアムトークンを取得！\n\n料金：⭐ 月額2テレグラムスター",
-		SubscriptionBuyButton:    "💰 ⭐ 2スターで購読",
+		SubscriptionMonthlyOffer: "🌟 月額プレミアムサブスクリプション\n\n✨ 毎月1500個の通常トークン + 100個のプレミアムトークンを取得！\n\n料金：⭐ 月額600テレグラムスター",
+		SubscriptionBuyButton:    "💰 ⭐ 600スターで購読",
 		SubscriptionSuccess:      "🎉 サブスクリプションが有効になりました！1500個の通常トークンと100個のプレミアムトークンを受け取りました。",
 		SubscriptionFailed:       "❌ サブスクリプションに失敗しました。もう一度お試しください。",
 		SubscriptionActiveInfo:   "✅ 有効なサブスクリプションがあります！残り %d 日。",
@@ -759,8 +759,8 @@ var Strings = map[string]map[string]string{
 
 		// Subscription
 		SubscriptionTitle:        "💳 구독",
-		SubscriptionMonthlyOffer: "🌟 월간 프리미엄 구독\n\n✨ 매달 1500개의 일반 토큰 + 100개의 프리미엄 토큰을 받으세요!\n\n가격: ⭐ 월 2 텔레그램 스타",
-		SubscriptionBuyButton:    "💰 ⭐ 2 스타로 구독",
+		SubscriptionMonthlyOffer: "🌟 월간 프리미엄 구독\n\n✨ 매달 1500개의 일반 토큰 + 100개의 프리미엄 토큰을 받으세요!\n\n가격: ⭐ 월 600 텔레그램 스타",
+		SubscriptionBuyButton:    "💰 ⭐ 600 스타로 구독",
 		SubscriptionSuccess:      "🎉 구독이 활성화되었습니다! 1500개의 일반 토큰과 100개의 프리미엄 토큰을 받았습니다.",
 		SubscriptionFailed:       "❌ 구독 실패. 다시 시도해주세요.",
 		SubscriptionActiveInfo:   "✅ 활성 구독이 있습니다! %d일 남음.",
@@ -833,8 +833,8 @@ var Strings = map[string]map[string]string{
 
 		// Subscription
 		SubscriptionTitle:        "💳 Assinatura",
-		SubscriptionMonthlyOffer: "🌟 Assinatura Premium Mensal\n\n✨ Receba 1500 tokens regulares + 100 tokens premium todos os meses!\n\nPreço: ⭐ 2 Estrelas do Telegram por mês",
-		SubscriptionBuyButton:    "💰 Assinar por ⭐ 2 Estrelas",
+		SubscriptionMonthlyOffer: "🌟 Assinatura Premium Mensal\n\n✨ Receba 1500 tokens regulares + 100 tokens premium todos os meses!\n\nPreço: ⭐ 600 Estrelas do Telegram por mês",
+		SubscriptionBuyButton:    "💰 Assinar por ⭐ 600 Estrelas",
 		SubscriptionSuccess:      "🎉 Assinatura ativada! Você recebeu 1500 tokens regulares e 100 tokens premium.",
 		SubscriptionFailed:       "❌ A assinatura falhou. Por favor, tente novamente.",
 		SubscriptionActiveInfo:   "✅ Você tem uma assinatura ativa! %d dias restantes.",
@@ -907,8 +907,8 @@ var Strings = map[string]map[string]string{
 
 		// Subscription
 		SubscriptionTitle:        "💳 Բաժանորդագրություն",
-		SubscriptionMonthlyOffer: "🌟 Ամսական Պրեմիում Բաժանորդագրություն\n\n✨ Ստացեք 1500 սովորական տոկեն + 100 պրեմիում տոկեն ամեն ամիս!\n\nԳինը՝ ⭐ 1 Telegram աստղ ամսական",
-		SubscriptionBuyButton:    "💰 Բաժանորդագրվել ⭐ 2 աստղով",
+		SubscriptionMonthlyOffer: "🌟 Ամսական Պրեմիում Բաժանորդագրություն\n\n✨ Ստացեք 1500 սովորական տոկեն + 100 պրեմիում տոկեն ամեն ամիս!\n\nԳինը՝ ⭐ 600 Telegram աստղ ամսական",
+		SubscriptionBuyButton:    "💰 Բաժանորդագրվել ⭐ 600 աստղով",
 		SubscriptionSuccess:      "🎉 Բաժանորդագրությունն ակտիվացված է! Դուք ստացել եք 1500 սովորական տոկեն և 100 պրեմիում տոկեն:",
 		SubscriptionFailed:       "❌ Բաժանորդագրությունը ձախողվեց: Խնդրում ենք փորձել կրկին:",
 		SubscriptionActiveInfo:   "✅ Դուք ունեք ակտիվ բաժանորդագրություն! %d օր մնացել է:",
@@ -981,8 +981,8 @@ var Strings = map[string]map[string]string{
 
 		// Subscription
 		SubscriptionTitle:        "💳 Підписка",
-		SubscriptionMonthlyOffer: "🌟 Щомісячна Преміум Підписка\n\n✨ Отримуйте 1500 звичайних токенів + 100 преміум токенів щомісяця!\n\nЦіна: ⭐ 2 Зірки Telegram на місяць",
-		SubscriptionBuyButton:    "💰 Підписатися за ⭐ 2 Зірки",
+		SubscriptionMonthlyOffer: "🌟 Щомісячна Преміум Підписка\n\n✨ Отримуйте 1500 звичайних токенів + 100 преміум токенів щомісяця!\n\nЦіна: ⭐ 600 Зірки Telegram на місяць",
+		SubscriptionBuyButton:    "💰 Підписатися за ⭐ 600 Зірки",
 		SubscriptionSuccess:      "🎉 Підписку активовано! Ви отримали 1500 звичайних токенів та 100 преміум токенів.",
 		SubscriptionFailed:       "❌ Підписка не вдалася. Будь ласка, спробуйте знову.",
 		SubscriptionActiveInfo:   "✅ У вас є активна підписка! Залишилося %d днів.",
@@ -1055,8 +1055,8 @@ var Strings = map[string]map[string]string{
 
 		// Subscription
 		SubscriptionTitle:        "💳 Жазылым",
-		SubscriptionMonthlyOffer: "🌟 Айлық Премиум Жазылым\n\n✨ Ай сайын 1500 қарапайым токен + 100 премиум токен алыңыз!\n\nБағасы: ⭐ Айына 1 Telegram жұлдызы",
-		SubscriptionBuyButton:    "💰 ⭐ 2 жұлдызға жазылу",
+		SubscriptionMonthlyOffer: "🌟 Айлық Премиум Жазылым\n\n✨ Ай сайын 1500 қарапайым токен + 100 премиум токен алыңыз!\n\nБағасы: ⭐ Айына 600 Telegram жұлдызы",
+		SubscriptionBuyButton:    "💰 ⭐ 600 жұлдызға жазылу",
 		SubscriptionSuccess:      "🎉 Жазылым белсендірілді! Сіз 1500 қарапайым токен және 100 премиум токен алдыңыз.",
 		SubscriptionFailed:       "❌ Жазылым сәтсіз болды. Қайта көріңіз.",
 		SubscriptionActiveInfo:   "✅ Сізде белсенді жазылым бар! %d күн қалды.",
@@ -1129,8 +1129,8 @@ var Strings = map[string]map[string]string{
 
 		// Subscription
 		SubscriptionTitle:        "💳 Жазылуу",
-		SubscriptionMonthlyOffer: "🌟 Айлык Премиум Жазылуу\\n\\n✨ Ар айда 1500 кадимки токен + 100 премиум токен алыңыз!\\n\\nБааси: ⭐ Айына 1 Telegram жылдызы",
-		SubscriptionBuyButton:    "💰 ⭐ 2 жылдызга жазылуу",
+		SubscriptionMonthlyOffer: "🌟 Айлык Премиум Жазылуу\\n\\n✨ Ар айда 1500 кадимки токен + 100 премиум токен алыңыз!\\n\\nБааси: ⭐ Айына 600 Telegram жылдызы",
+		SubscriptionBuyButton:    "💰 ⭐ 600 жылдызга жазылуу",
 		SubscriptionSuccess:      "🎉 Жазылуу иштетилди! Сиз 1500 кадимки токен жана 100 премиум токен алдыңыз.",
 		SubscriptionFailed:       "❌ Жазылуу ийгиликсиз болду. Кайра аракет кылыңыз.",
 		SubscriptionActiveInfo:   "✅ Сизде активдүү жазылуу бар! %d күн калды.",
@@ -1203,8 +1203,8 @@ var Strings = map[string]map[string]string{
 
 		// Subscription
 		SubscriptionTitle:        "💳 الاشتراك",
-		SubscriptionMonthlyOffer: "🌟 الاشتراك الشهري المميز\\n\\n✨ احصل على 1500 رمز عادي + 100 رمز مميز كل شهر!\\n\\nالسعر: ⭐ نجمتان تليجرام شهرياً",
-		SubscriptionBuyButton:    "💰 اشترك مقابل ⭐ نجمتين",
+		SubscriptionMonthlyOffer: "🌟 الاشتراك الشهري المميز\\n\\n✨ احصل على 1500 رمز عادي + 100 رمز مميز كل شهر!\\n\\nالسعر: ⭐ 600 نجمة تليجرام شهرياً",
+		SubscriptionBuyButton:    "💰 اشترك مقابل ⭐ 600 نجمة",
 		SubscriptionSuccess:      "🎉 تم تفعيل الاشتراك! لقد حصلت على 1500 رمز عادي و 100 رمز مميز.",
 		SubscriptionFailed:       "❌ فشل الاشتراك. يرجى المحاولة مرة أخرى.",
 		SubscriptionActiveInfo:   "✅ لديك اشتراك نشط! %d يوم متبقية.",
@@ -1277,8 +1277,8 @@ var Strings = map[string]map[string]string{
 
 		// Subscription
 		SubscriptionTitle:        "💳 सब्सक्रिप्शन",
-		SubscriptionMonthlyOffer: "🌟 मासिक प्रीमियम सब्सक्रिप्शन\\n\\n✨ हर महीने 1500 नियमित टोकन + 100 प्रीमियम टोकन पाएं!\\n\\nकीमत: ⭐ मासिक 2 टेलीग्राम स्टार",
-		SubscriptionBuyButton:    "💰 ⭐ 2 स्टार के लिए सब्सक्राइब करें",
+		SubscriptionMonthlyOffer: "🌟 मासिक प्रीमियम सब्सक्रिप्शन\\n\\n✨ हर महीने 1500 नियमित टोकन + 100 प्रीमियम टोकन पाएं!\\n\\nकीमत: ⭐ मासिक 600 टेलीग्राम स्टार",
+		SubscriptionBuyButton:    "💰 ⭐ 600 स्टार के लिए सब्सक्राइब करें",
 		SubscriptionSuccess:      "🎉 सब्सक्रिप्शन सक्रिय! आपको 1500 नियमित टोकन और 100 प्रीमियम टोकन मिले हैं।",
 		SubscriptionFailed:       "❌ सब्सक्रिप्शन असफल। कृपया पुनः प्रयास करें।",
 		SubscriptionActiveInfo:   "✅ आपके पास सक्रिय सब्सक्रिप्शन है! %d दिन शेष।",
