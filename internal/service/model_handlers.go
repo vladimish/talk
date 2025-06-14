@@ -54,7 +54,8 @@ func (s *UpdateService) showModelSelection(ctx context.Context, user *domain.Use
 
 	titleText := i18n.GetString(user.Language, i18n.ModelSelectTitle)
 	content := domain.MessageContent{
-		Text: fmt.Sprintf("%s\n\nCurrent model: %s\n\nChoose a model:", titleText, user.SelectedModel),
+		Text:         fmt.Sprintf("%s\n\nCurrent model: %s\n\nChoose a model:", titleText, user.SelectedModel),
+		IsPersistent: true,
 		ReplyKeyboard: &domain.ReplyKeyboard{
 			Buttons: modelButtons,
 			Resize:  true,

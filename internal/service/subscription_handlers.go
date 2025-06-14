@@ -113,6 +113,33 @@ func (s *UpdateService) sendSubscriptionInfo(
 	content := domain.MessageContent{
 		Text:         message,
 		IsPersistent: true,
+		ReplyKeyboard: &domain.ReplyKeyboard{
+			Buttons: [][]domain.KeyboardButton{
+				{
+					{
+						Text: i18n.GetString(user.Language, i18n.ButtonStartConversation),
+					},
+				},
+				{
+					{
+						Text: i18n.GetString(user.Language, i18n.ButtonModelSelect),
+					},
+					{
+						Text: i18n.GetString(user.Language, i18n.ButtonProfile),
+					},
+				},
+				{
+					{
+						Text: i18n.GetString(user.Language, i18n.ButtonSubscription),
+					},
+					{
+						Text: i18n.GetString(user.Language, i18n.ButtonSettings),
+					},
+				},
+			},
+			Resize:  true,
+			OneTime: true,
+		},
 	}
 
 	_, err := s.sender.SendMessageWithContent(ctx, user.ExternalID, content)

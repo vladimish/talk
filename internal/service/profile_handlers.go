@@ -47,7 +47,8 @@ func (s *UpdateService) showProfile(ctx context.Context, user *domain.User) erro
 	profileText := fmt.Sprintf("%s\n\n%s\n%s\n%s", title, tokenBalanceText, premiumText, regularText)
 
 	content := domain.MessageContent{
-		Text: profileText,
+		Text:         profileText,
+		IsPersistent: true,
 		ReplyKeyboard: &domain.ReplyKeyboard{
 			Buttons: [][]domain.KeyboardButton{
 				{

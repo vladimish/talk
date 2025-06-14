@@ -15,6 +15,8 @@ import (
 	"github.com/vladimish/talk/pkg/i18n"
 )
 
+const initialTokenGrant = 20
+
 type UpdateService struct {
 	logger     *slog.Logger
 	storage    storage.Storage
@@ -90,29 +92,52 @@ func (s *UpdateService) getOrCreateUser(ctx context.Context, update domain.Updat
 	user, err := s.storage.GetUserByExternalUserID(ctx, update.ExternalUserID)
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
-			language := update.UserLanguage
-			now := time.Now()
-			newUser := &domain.User{
-				ExternalID:             update.ExternalUserID,
-				Language:               language,
-				CurrentStep:            domain.UserStateMenu,
-				SelectedModel:          "google/gemini-2.5-flash-preview-05-20",
-				ConversationListOffset: 0,
-				CreatedAt:              now,
-				UpdatedAt:              now,
-			}
-
-			user, err = s.storage.CreateUser(ctx, newUser)
-			if err != nil {
-				return nil, fmt.Errorf("can't create user: %w", err)
-			}
-
-			s.logger.InfoContext(ctx, "created new user",
-				slog.String("external_id", user.ExternalID))
-		} else {
-			return nil, fmt.Errorf("can't get user: %w", err)
+			return s.createNewUserWithTokens(ctx, update)
 		}
+		return nil, fmt.Errorf("can't get user: %w", err)
 	}
+	return user, nil
+}
+
+func (s *UpdateService) createNewUserWithTokens(ctx context.Context, update domain.Update) (*domain.User, error) {
+	language := update.UserLanguage
+	now := time.Now()
+	newUser := &domain.User{
+		ExternalID:             update.ExternalUserID,
+		Language:               language,
+		CurrentStep:            domain.UserStateMenu,
+		SelectedModel:          "google/gemini-2.5-flash-preview-05-20",
+		ConversationListOffset: 0,
+		CreatedAt:              now,
+		UpdatedAt:              now,
+	}
+
+	user, err := s.storage.CreateUser(ctx, newUser)
+	if err != nil {
+		return nil, fmt.Errorf("can't create user: %w", err)
+	}
+
+	// Grant initial regular tokens to new user
+	initialTransaction := &domain.Transaction{
+		UserID:          user.ID,
+		TokenType:       domain.TokenTypeRegular,
+		Amount:          initialTokenGrant,
+		TransactionType: domain.TransactionTypeInitialCredit,
+		Description:     stringPtr("Initial welcome tokens"),
+		CreatedAt:       now,
+	}
+
+	_, err = s.storage.CreateTransaction(ctx, initialTransaction)
+	if err != nil {
+		s.logger.WarnContext(ctx, "failed to grant initial tokens to new user",
+			slog.String("external_id", user.ExternalID),
+			slog.String("error", err.Error()))
+	}
+
+	s.logger.InfoContext(ctx, "created new user with initial tokens",
+		slog.String("external_id", user.ExternalID),
+		slog.Int64("initial_tokens", initialTokenGrant))
+
 	return user, nil
 }
 
@@ -195,10 +220,16 @@ func (s *UpdateService) handleMessageQueueing(
 }
 
 func (s *UpdateService) HandleCallbackQuery(ctx context.Context, callbackQuery domain.CallbackQuery) error {
-	// Get user for callback
-	user, err := s.getOrCreateCallbackUser(ctx, callbackQuery)
+	// Get user for callback (don't create if not exists)
+	user, err := s.storage.GetUserByExternalUserID(ctx, callbackQuery.ExternalUserID)
 	if err != nil {
-		return err
+		if errors.Is(err, storage.ErrNotFound) {
+			s.logger.ErrorContext(ctx, "user not found for callback query",
+				slog.String("external_user_id", callbackQuery.ExternalUserID),
+				slog.String("callback_data", callbackQuery.Data))
+			return nil
+		}
+		return fmt.Errorf("can't get user for callback: %w", err)
 	}
 
 	// Handle callback based on data
@@ -211,44 +242,6 @@ func (s *UpdateService) HandleCallbackQuery(ctx context.Context, callbackQuery d
 		s.logger.WarnContext(ctx, "unknown callback data", slog.String("data", callbackQuery.Data))
 		return nil
 	}
-}
-
-func (s *UpdateService) getOrCreateCallbackUser(
-	ctx context.Context,
-	callbackQuery domain.CallbackQuery,
-) (*domain.User, error) {
-	user, err := s.storage.GetUserByExternalUserID(ctx, callbackQuery.ExternalUserID)
-	if err == nil {
-		return user, nil
-	}
-
-	if !errors.Is(err, storage.ErrNotFound) {
-		return nil, fmt.Errorf("can't get user for callback: %w", err)
-	}
-
-	// Create new user for callback
-	language := callbackQuery.UserLanguage
-	if language == "" {
-		language = "en"
-	}
-
-	now := time.Now()
-	newUser := &domain.User{
-		ExternalID:             callbackQuery.ExternalUserID,
-		Language:               language,
-		CurrentStep:            domain.UserStateMenu,
-		SelectedModel:          "google/gemini-2.5-flash-preview-05-20",
-		ConversationListOffset: 0,
-		CreatedAt:              now,
-		UpdatedAt:              now,
-	}
-
-	user, err = s.storage.CreateUser(ctx, newUser)
-	if err != nil {
-		return nil, fmt.Errorf("can't create user for callback: %w", err)
-	}
-
-	return user, nil
 }
 
 func (s *UpdateService) HandlePreCheckoutQuery(ctx context.Context, query domain.PreCheckoutQuery) error {

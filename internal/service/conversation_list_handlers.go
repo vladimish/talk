@@ -146,7 +146,8 @@ func (s *UpdateService) showConversationList(ctx context.Context, user *domain.U
 	}
 
 	content := domain.MessageContent{
-		Text: text,
+		Text:         text,
+		IsPersistent: true,
 		ReplyKeyboard: &domain.ReplyKeyboard{
 			Buttons: buttons,
 			Resize:  true,

@@ -41,7 +41,8 @@ func (s *UpdateService) handleMenuState(ctx context.Context, user *domain.User, 
 
 func (s *UpdateService) sendMenu(ctx context.Context, user *domain.User, text string) error {
 	content := domain.MessageContent{
-		Text: text,
+		Text:         text,
+		IsPersistent: true,
 		ReplyKeyboard: &domain.ReplyKeyboard{
 			Buttons: [][]domain.KeyboardButton{
 				{

@@ -41,7 +41,8 @@ func (s *UpdateService) handleLanguageSelectState(ctx context.Context, user *dom
 
 func (s *UpdateService) sendSettings(ctx context.Context, user *domain.User, text string) error {
 	content := domain.MessageContent{
-		Text: text,
+		Text:         text,
+		IsPersistent: true,
 		ReplyKeyboard: &domain.ReplyKeyboard{
 			Buttons: [][]domain.KeyboardButton{
 				{
@@ -102,7 +103,8 @@ func (s *UpdateService) sendLanguageSelection(ctx context.Context, user *domain.
 	}
 
 	content := domain.MessageContent{
-		Text: text,
+		Text:         text,
+		IsPersistent: true,
 		ReplyKeyboard: &domain.ReplyKeyboard{
 			Buttons: buttons,
 			Resize:  true,

@@ -726,7 +726,7 @@ func (p *PG) GetActiveSubscriptionByUserID(ctx context.Context, userID int64) (*
 	}, nil
 }
 
-// convertToInt64 converts various numeric types to int64
+// convertToInt64 converts various numeric types to int64.
 func (p *PG) convertToInt64(value interface{}) int64 {
 	switch v := value.(type) {
 	case int64:
