@@ -25,7 +25,7 @@ type Transaction struct {
 	ID              int64           `json:"id"`
 	UserID          int64           `json:"user_id"`
 	TokenType       TokenType       `json:"token_type"`
-	Amount          int32           `json:"amount"` // positive for credits, negative for debits
+	Amount          int64           `json:"amount"` // positive for credits, negative for debits
 	TransactionType TransactionType `json:"transaction_type"`
 	ModelUsed       *string         `json:"model_used,omitempty"`
 	Description     *string         `json:"description,omitempty"`
@@ -34,22 +34,22 @@ type Transaction struct {
 
 // TokenBalance represents user token balances.
 type TokenBalance struct {
-	PremiumBalance int32 `json:"premium_balance"`
-	RegularBalance int32 `json:"regular_balance"`
+	PremiumBalance int64 `json:"premium_balance"`
+	RegularBalance int64 `json:"regular_balance"`
 }
 
 // ModelCost represents the cost configuration for AI models.
 type ModelCost struct {
 	ModelName string    `json:"model_name"`
-	Cost      int32     `json:"cost"`
+	Cost      int64     `json:"cost"`
 	TokenType TokenType `json:"token_type"`
 }
 
 // Token cost constants.
 const (
-	TokenCostLow    int32 = 1
-	TokenCostMedium int32 = 3
-	TokenCostHigh   int32 = 5
+	TokenCostLow    int64 = 1
+	TokenCostMedium int64 = 3
+	TokenCostHigh   int64 = 5
 )
 
 // ModelCosts defines the token costs for each AI model.

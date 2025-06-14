@@ -19,6 +19,7 @@ import (
 	"github.com/vladimish/talk/pkg/slogctx"
 
 	"github.com/go-telegram/bot"
+	"github.com/go-telegram/bot/models"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/jmoiron/sqlx"
 	"github.com/pressly/goose/v3"
@@ -92,6 +93,16 @@ func main() {
 	botAdapter := tg.NewBot(log, updateService)
 
 	b.RegisterHandler(bot.HandlerTypeMessageText, "", bot.MatchTypeContains, botAdapter.Handle)
+	b.RegisterHandler(bot.HandlerTypeCallbackQueryData, "", bot.MatchTypePrefix, botAdapter.HandleCallback)
+
+	// Use a general update handler for payment events
+	b.RegisterHandlerMatchFunc(func(update *models.Update) bool {
+		return update.PreCheckoutQuery != nil
+	}, botAdapter.HandlePreCheckoutQuery)
+
+	b.RegisterHandlerMatchFunc(func(update *models.Update) bool {
+		return update.Message != nil && update.Message.SuccessfulPayment != nil
+	}, botAdapter.HandleSuccessfulPayment)
 
 	go b.Start(ctx)
 

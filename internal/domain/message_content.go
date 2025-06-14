@@ -11,8 +11,19 @@ type ReplyKeyboard struct {
 	Placeholder string
 }
 
+type InlineKeyboardButton struct {
+	Text         string
+	URL          string
+	CallbackData string
+}
+
+type InlineKeyboard struct {
+	Buttons [][]InlineKeyboardButton
+}
+
 type MessageContent struct {
 	Text             string
 	ReplyKeyboard    *ReplyKeyboard
+	InlineKeyboard   *InlineKeyboard
 	ReplyToMessageID *int64
 }

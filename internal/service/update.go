@@ -193,3 +193,127 @@ func (s *UpdateService) handleMessageQueueing(
 
 	return true, nil
 }
+
+func (s *UpdateService) HandleCallbackQuery(ctx context.Context, callbackQuery domain.CallbackQuery) error {
+	// Get user for callback
+	user, err := s.getOrCreateCallbackUser(ctx, callbackQuery)
+	if err != nil {
+		return err
+	}
+
+	// Handle callback based on data
+	switch callbackQuery.Data {
+	case "subscription_buy_monthly":
+		return s.handleSubscriptionBuyCallback(ctx, user)
+	case "back_to_menu":
+		return s.transitionToMenu(ctx, user)
+	default:
+		s.logger.WarnContext(ctx, "unknown callback data", slog.String("data", callbackQuery.Data))
+		return nil
+	}
+}
+
+func (s *UpdateService) getOrCreateCallbackUser(
+	ctx context.Context,
+	callbackQuery domain.CallbackQuery,
+) (*domain.User, error) {
+	user, err := s.storage.GetUserByExternalUserID(ctx, callbackQuery.ExternalUserID)
+	if err == nil {
+		return user, nil
+	}
+
+	if !errors.Is(err, storage.ErrNotFound) {
+		return nil, fmt.Errorf("can't get user for callback: %w", err)
+	}
+
+	// Create new user for callback
+	language := callbackQuery.UserLanguage
+	if language == "" {
+		language = "en"
+	}
+
+	now := time.Now()
+	newUser := &domain.User{
+		ExternalID:             callbackQuery.ExternalUserID,
+		Language:               language,
+		CurrentStep:            domain.UserStateMenu,
+		SelectedModel:          "google/gemini-2.5-flash-preview-05-20",
+		ConversationListOffset: 0,
+		CreatedAt:              now,
+		UpdatedAt:              now,
+	}
+
+	user, err = s.storage.CreateUser(ctx, newUser)
+	if err != nil {
+		return nil, fmt.Errorf("can't create user for callback: %w", err)
+	}
+
+	return user, nil
+}
+
+func (s *UpdateService) HandlePreCheckoutQuery(ctx context.Context, query domain.PreCheckoutQuery) error {
+	// Get payment record by invoice payload
+	dbPayment, err := s.storage.GetPaymentByInvoicePayload(ctx, query.InvoicePayload)
+	if err != nil {
+		s.logger.ErrorContext(ctx, "failed to find payment for pre-checkout",
+			slog.String("invoice_payload", query.InvoicePayload),
+			slog.String("error", err.Error()))
+		return s.sender.AnswerPreCheckoutQuery(ctx, query.ID, false, "Payment not found")
+	}
+
+	// Update payment status to pre_checkout
+	_, err = s.storage.UpdatePaymentStatus(ctx, dbPayment.ID, domain.PaymentStatusPreCheckout, nil, nil)
+	if err != nil {
+		s.logger.ErrorContext(ctx, "failed to update payment status to pre_checkout",
+			slog.Int64("payment_id", dbPayment.ID),
+			slog.String("error", err.Error()))
+	}
+
+	// Always approve the pre-checkout
+	s.logger.InfoContext(ctx, "pre-checkout query approved",
+		slog.Int64("payment_id", dbPayment.ID),
+		slog.String("user_id", query.ExternalUserID))
+
+	return s.sender.AnswerPreCheckoutQuery(ctx, query.ID, true, "")
+}
+
+func (s *UpdateService) HandleSuccessfulPayment(ctx context.Context, payment domain.SuccessfulPayment) error {
+	// Get user
+	user, err := s.storage.GetUserByExternalUserID(ctx, payment.ExternalUserID)
+	if err != nil {
+		return fmt.Errorf("can't get user for payment: %w", err)
+	}
+
+	// Get payment record by invoice payload
+	dbPayment, err := s.storage.GetPaymentByInvoicePayload(ctx, payment.InvoicePayload)
+	if err != nil {
+		return fmt.Errorf("can't find payment with invoice payload %s: %w", payment.InvoicePayload, err)
+	}
+
+	// Update payment status to paid with Telegram charge IDs
+	_, err = s.storage.UpdatePaymentStatus(
+		ctx,
+		dbPayment.ID,
+		domain.PaymentStatusPaid,
+		&payment.TelegramChargeID,
+		&payment.ProviderChargeID,
+	)
+	if err != nil {
+		return fmt.Errorf("can't update payment status: %w", err)
+	}
+
+	// Grant tokens for subscription
+	err = s.grantSubscriptionTokens(ctx, dbPayment)
+	if err != nil {
+		return fmt.Errorf("can't grant subscription tokens: %w", err)
+	}
+
+	// Send success message
+	successMsg := i18n.GetString(user.Language, i18n.SubscriptionSuccess)
+	_, err = s.sender.SendMessage(ctx, user.ExternalID, successMsg)
+	if err != nil {
+		s.logger.WarnContext(ctx, "failed to send payment success message", slog.String("error", err.Error()))
+	}
+
+	return nil
+}

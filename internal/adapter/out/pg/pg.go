@@ -428,7 +428,7 @@ func (p *PG) GetUserTokenBalance(ctx context.Context, userID int64) (*domain.Tok
 		return nil, fmt.Errorf("can't get user token balance: %w", err)
 	}
 
-	// Convert interface{} to int32
+	// Convert interface{} to int64
 	premiumBalance, ok := balance.PremiumBalance.(int64)
 	if !ok {
 		premiumBalance = 0
@@ -439,26 +439,13 @@ func (p *PG) GetUserTokenBalance(ctx context.Context, userID int64) (*domain.Tok
 		regularBalance = 0
 	}
 
-	// Check for overflow before conversion
-	if premiumBalance > math.MaxInt32 {
-		premiumBalance = math.MaxInt32
-	} else if premiumBalance < math.MinInt32 {
-		premiumBalance = math.MinInt32
-	}
-
-	if regularBalance > math.MaxInt32 {
-		regularBalance = math.MaxInt32
-	} else if regularBalance < math.MinInt32 {
-		regularBalance = math.MinInt32
-	}
-
 	return &domain.TokenBalance{
-		PremiumBalance: int32(premiumBalance), //nolint:gosec
-		RegularBalance: int32(regularBalance), //nolint:gosec
+		PremiumBalance: premiumBalance,
+		RegularBalance: regularBalance,
 	}, nil
 }
 
-func (p *PG) GetUserTokenBalanceByType(ctx context.Context, userID int64, tokenType domain.TokenType) (int32, error) {
+func (p *PG) GetUserTokenBalanceByType(ctx context.Context, userID int64, tokenType domain.TokenType) (int64, error) {
 	balance, err := p.q.GetUserTokenBalanceByType(ctx, generated.GetUserTokenBalanceByTypeParams{
 		UserID:    userID,
 		TokenType: string(tokenType),
@@ -467,18 +454,234 @@ func (p *PG) GetUserTokenBalanceByType(ctx context.Context, userID int64, tokenT
 		return 0, fmt.Errorf("can't get user token balance by type: %w", err)
 	}
 
-	// Convert interface{} to int32
+	// Convert interface{} to int64
 	balanceValue, ok := balance.(int64)
 	if !ok {
 		balanceValue = 0
 	}
 
-	// Check for overflow before conversion
-	if balanceValue > math.MaxInt32 {
-		balanceValue = math.MaxInt32
-	} else if balanceValue < math.MinInt32 {
-		balanceValue = math.MinInt32
+	return balanceValue, nil
+}
+
+// CreatePayment creates a new payment record in the database.
+func (p *PG) CreatePayment(ctx context.Context, payment *domain.Payment) (*domain.Payment, error) {
+	var invoicePayloadNullable sql.NullString
+	if payment.InvoicePayload != nil {
+		invoicePayloadNullable = sql.NullString{String: *payment.InvoicePayload, Valid: true}
 	}
 
-	return int32(balanceValue), nil //nolint:gosec
+	dbPayment, err := p.q.CreatePayment(ctx, generated.CreatePaymentParams{
+		UserID:           payment.UserID,
+		InvoiceLink:      payment.InvoiceLink,
+		Currency:         payment.Currency,
+		Amount:           payment.Amount,
+		SubscriptionType: string(payment.SubscriptionType),
+		InvoicePayload:   invoicePayloadNullable,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("can't create payment: %w", err)
+	}
+
+	// Convert CreatePaymentRow to domain.Payment
+	var telegramChargeID *string
+	if dbPayment.TelegramPaymentChargeID.Valid {
+		telegramChargeID = &dbPayment.TelegramPaymentChargeID.String
+	}
+
+	var providerChargeID *string
+	if dbPayment.ProviderPaymentChargeID.Valid {
+		providerChargeID = &dbPayment.ProviderPaymentChargeID.String
+	}
+
+	var invoicePayload *string
+	if dbPayment.InvoicePayload.Valid {
+		invoicePayload = &dbPayment.InvoicePayload.String
+	}
+
+	var messageID *string
+	if dbPayment.MessageID.Valid {
+		messageID = &dbPayment.MessageID.String
+	}
+
+	return &domain.Payment{
+		ID:                      dbPayment.ID,
+		UserID:                  dbPayment.UserID,
+		InvoiceLink:             dbPayment.InvoiceLink,
+		TelegramPaymentChargeID: telegramChargeID,
+		ProviderPaymentChargeID: providerChargeID,
+		Currency:                dbPayment.Currency,
+		Amount:                  dbPayment.Amount,
+		Status:                  domain.PaymentStatus(dbPayment.Status),
+		SubscriptionType:        domain.SubscriptionType(dbPayment.SubscriptionType),
+		InvoicePayload:          invoicePayload,
+		MessageID:               messageID,
+		CreatedAt:               dbPayment.CreatedAt,
+		UpdatedAt:               dbPayment.UpdatedAt,
+	}, nil
+}
+
+// UpdatePaymentStatus updates the payment status and charge IDs.
+func (p *PG) UpdatePaymentStatus(
+	ctx context.Context,
+	paymentID int64,
+	status domain.PaymentStatus,
+	telegramChargeID, providerChargeID *string,
+) (*domain.Payment, error) {
+	var tgChargeID sql.NullString
+	if telegramChargeID != nil {
+		tgChargeID = sql.NullString{String: *telegramChargeID, Valid: true}
+	}
+
+	var providerChargeIDParam sql.NullString
+	if providerChargeID != nil {
+		providerChargeIDParam = sql.NullString{String: *providerChargeID, Valid: true}
+	}
+
+	dbPayment, err := p.q.UpdatePaymentStatus(ctx, generated.UpdatePaymentStatusParams{
+		ID:                      paymentID,
+		Status:                  string(status),
+		TelegramPaymentChargeID: tgChargeID,
+		ProviderPaymentChargeID: providerChargeIDParam,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("can't update payment status: %w", err)
+	}
+
+	var resultTelegramChargeID *string
+	if dbPayment.TelegramPaymentChargeID.Valid {
+		resultTelegramChargeID = &dbPayment.TelegramPaymentChargeID.String
+	}
+
+	var resultProviderChargeID *string
+	if dbPayment.ProviderPaymentChargeID.Valid {
+		resultProviderChargeID = &dbPayment.ProviderPaymentChargeID.String
+	}
+
+	var invoicePayload *string
+	if dbPayment.InvoicePayload.Valid {
+		invoicePayload = &dbPayment.InvoicePayload.String
+	}
+
+	var messageID *string
+	if dbPayment.MessageID.Valid {
+		messageID = &dbPayment.MessageID.String
+	}
+
+	return &domain.Payment{
+		ID:                      dbPayment.ID,
+		UserID:                  dbPayment.UserID,
+		InvoiceLink:             dbPayment.InvoiceLink,
+		TelegramPaymentChargeID: resultTelegramChargeID,
+		ProviderPaymentChargeID: resultProviderChargeID,
+		Currency:                dbPayment.Currency,
+		Amount:                  dbPayment.Amount,
+		Status:                  domain.PaymentStatus(dbPayment.Status),
+		SubscriptionType:        domain.SubscriptionType(dbPayment.SubscriptionType),
+		InvoicePayload:          invoicePayload,
+		MessageID:               messageID,
+		CreatedAt:               dbPayment.CreatedAt,
+		UpdatedAt:               dbPayment.UpdatedAt,
+	}, nil
+}
+
+// GetPaymentByInvoicePayload retrieves a payment by its invoice payload.
+func (p *PG) GetPaymentByInvoicePayload(ctx context.Context, invoicePayload string) (*domain.Payment, error) {
+	dbPayment, err := p.q.GetPaymentByInvoicePayload(ctx, sql.NullString{String: invoicePayload, Valid: true})
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, storage.ErrNotFound
+		}
+		return nil, fmt.Errorf("can't get payment by invoice payload: %w", err)
+	}
+
+	// Convert GetPaymentByInvoicePayloadRow to domain.Payment
+	var telegramChargeID *string
+	if dbPayment.TelegramPaymentChargeID.Valid {
+		telegramChargeID = &dbPayment.TelegramPaymentChargeID.String
+	}
+
+	var providerChargeID *string
+	if dbPayment.ProviderPaymentChargeID.Valid {
+		providerChargeID = &dbPayment.ProviderPaymentChargeID.String
+	}
+
+	var invoicePayloadPtr *string
+	if dbPayment.InvoicePayload.Valid {
+		invoicePayloadPtr = &dbPayment.InvoicePayload.String
+	}
+
+	var messageIDPtr *string
+	if dbPayment.MessageID.Valid {
+		messageIDPtr = &dbPayment.MessageID.String
+	}
+
+	return &domain.Payment{
+		ID:                      dbPayment.ID,
+		UserID:                  dbPayment.UserID,
+		InvoiceLink:             dbPayment.InvoiceLink,
+		TelegramPaymentChargeID: telegramChargeID,
+		ProviderPaymentChargeID: providerChargeID,
+		Currency:                dbPayment.Currency,
+		Amount:                  dbPayment.Amount,
+		Status:                  domain.PaymentStatus(dbPayment.Status),
+		SubscriptionType:        domain.SubscriptionType(dbPayment.SubscriptionType),
+		InvoicePayload:          invoicePayloadPtr,
+		MessageID:               messageIDPtr,
+		CreatedAt:               dbPayment.CreatedAt,
+		UpdatedAt:               dbPayment.UpdatedAt,
+	}, nil
+}
+
+// UpdatePaymentWithInvoice updates a payment with invoice information.
+func (p *PG) UpdatePaymentWithInvoice(
+	ctx context.Context,
+	paymentID int64,
+	invoiceLink, invoicePayload, messageID string,
+) (*domain.Payment, error) {
+	dbPayment, err := p.q.UpdatePaymentWithInvoice(ctx, generated.UpdatePaymentWithInvoiceParams{
+		ID:             paymentID,
+		InvoiceLink:    invoiceLink,
+		InvoicePayload: sql.NullString{String: invoicePayload, Valid: true},
+		MessageID:      sql.NullString{String: messageID, Valid: true},
+	})
+	if err != nil {
+		return nil, fmt.Errorf("can't update payment with invoice: %w", err)
+	}
+
+	// Convert to domain payment
+	var telegramChargeID *string
+	if dbPayment.TelegramPaymentChargeID.Valid {
+		telegramChargeID = &dbPayment.TelegramPaymentChargeID.String
+	}
+
+	var providerChargeID *string
+	if dbPayment.ProviderPaymentChargeID.Valid {
+		providerChargeID = &dbPayment.ProviderPaymentChargeID.String
+	}
+
+	var invoicePayloadPtr *string
+	if dbPayment.InvoicePayload.Valid {
+		invoicePayloadPtr = &dbPayment.InvoicePayload.String
+	}
+
+	var messageIDPtr *string
+	if dbPayment.MessageID.Valid {
+		messageIDPtr = &dbPayment.MessageID.String
+	}
+
+	return &domain.Payment{
+		ID:                      dbPayment.ID,
+		UserID:                  dbPayment.UserID,
+		InvoiceLink:             dbPayment.InvoiceLink,
+		TelegramPaymentChargeID: telegramChargeID,
+		ProviderPaymentChargeID: providerChargeID,
+		Currency:                dbPayment.Currency,
+		Amount:                  dbPayment.Amount,
+		Status:                  domain.PaymentStatus(dbPayment.Status),
+		SubscriptionType:        domain.SubscriptionType(dbPayment.SubscriptionType),
+		InvoicePayload:          invoicePayloadPtr,
+		MessageID:               messageIDPtr,
+		CreatedAt:               dbPayment.CreatedAt,
+		UpdatedAt:               dbPayment.UpdatedAt,
+	}, nil
 }

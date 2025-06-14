@@ -32,7 +32,22 @@ type Storage interface {
 	// Transaction methods
 	CreateTransaction(ctx context.Context, transaction *domain.Transaction) (*domain.Transaction, error)
 	GetUserTokenBalance(ctx context.Context, userID int64) (*domain.TokenBalance, error)
-	GetUserTokenBalanceByType(ctx context.Context, userID int64, tokenType domain.TokenType) (int32, error)
+	GetUserTokenBalanceByType(ctx context.Context, userID int64, tokenType domain.TokenType) (int64, error)
+
+	// Payment methods
+	CreatePayment(ctx context.Context, payment *domain.Payment) (*domain.Payment, error)
+	GetPaymentByInvoicePayload(ctx context.Context, invoicePayload string) (*domain.Payment, error)
+	UpdatePaymentStatus(
+		ctx context.Context,
+		paymentID int64,
+		status domain.PaymentStatus,
+		telegramChargeID, providerChargeID *string,
+	) (*domain.Payment, error)
+	UpdatePaymentWithInvoice(
+		ctx context.Context,
+		paymentID int64,
+		invoiceLink, invoicePayload, messageID string,
+	) (*domain.Payment, error)
 }
 
 var ErrNotFound = errors.New("not found")

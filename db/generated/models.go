@@ -79,11 +79,27 @@ type Message struct {
 	ConversationID sql.NullInt64
 }
 
+type Payment struct {
+	ID                      int64
+	UserID                  int64
+	InvoiceLink             string
+	TelegramPaymentChargeID sql.NullString
+	ProviderPaymentChargeID sql.NullString
+	Currency                string
+	Amount                  int64
+	Status                  string
+	SubscriptionType        string
+	CreatedAt               time.Time
+	UpdatedAt               time.Time
+	InvoicePayload          sql.NullString
+	MessageID               sql.NullString
+}
+
 type Transaction struct {
 	ID              int64
 	UserID          int64
 	TokenType       string
-	Amount          int32
+	Amount          int64
 	TransactionType string
 	ModelUsed       sql.NullString
 	Description     sql.NullString

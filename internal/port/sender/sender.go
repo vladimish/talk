@@ -18,4 +18,6 @@ type Sender interface {
 	) ([]string, error)
 	SendTyping(ctx context.Context, externalUserID string) error
 	DeleteMessage(ctx context.Context, externalUserID string, messageID string) error
+	CreateInvoiceLink(ctx context.Context, params domain.CreateInvoiceLinkParams) (string, error)
+	AnswerPreCheckoutQuery(ctx context.Context, preCheckoutQueryID string, ok bool, errorMessage string) error
 }

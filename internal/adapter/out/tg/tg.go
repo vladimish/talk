@@ -80,6 +80,12 @@ func (u *Sender) SendMessageWithContent(
 		params.ReplyMarkup = keyboard
 	}
 
+	// Add inline keyboard if present
+	if content.InlineKeyboard != nil {
+		keyboard := u.buildInlineKeyboard(content.InlineKeyboard)
+		params.ReplyMarkup = keyboard
+	}
+
 	msg, err := u.bot.SendMessage(ctx, params)
 	if err != nil {
 		return "", fmt.Errorf("can't send message: %w", err)
@@ -107,6 +113,34 @@ func (u *Sender) buildReplyKeyboard(keyboard *domain.ReplyKeyboard) *models.Repl
 		ResizeKeyboard:        keyboard.Resize,
 		OneTimeKeyboard:       keyboard.OneTime,
 		InputFieldPlaceholder: keyboard.Placeholder,
+	}
+}
+
+func (u *Sender) buildInlineKeyboard(keyboard *domain.InlineKeyboard) *models.InlineKeyboardMarkup {
+	var rows [][]models.InlineKeyboardButton
+
+	for _, buttonRow := range keyboard.Buttons {
+		var tgRow []models.InlineKeyboardButton
+		for _, button := range buttonRow {
+			tgButton := models.InlineKeyboardButton{
+				Text: button.Text,
+			}
+
+			if button.URL != "" {
+				tgButton.URL = button.URL
+			}
+
+			if button.CallbackData != "" {
+				tgButton.CallbackData = button.CallbackData
+			}
+
+			tgRow = append(tgRow, tgButton)
+		}
+		rows = append(rows, tgRow)
+	}
+
+	return &models.InlineKeyboardMarkup{
+		InlineKeyboard: rows,
 	}
 }
 
@@ -570,4 +604,53 @@ func (u *Sender) SendTyping(ctx context.Context, externalUserID string) error {
 		Action: models.ChatActionTyping,
 	})
 	return err
+}
+
+func (u *Sender) CreateInvoiceLink(ctx context.Context, params domain.CreateInvoiceLinkParams) (string, error) {
+	// Convert domain prices to Telegram bot library prices
+	var prices []models.LabeledPrice
+	for _, price := range params.Prices {
+		prices = append(prices, models.LabeledPrice{
+			Label:  price.Label,
+			Amount: int(price.Amount),
+		})
+	}
+
+	response, err := u.bot.CreateInvoiceLink(ctx, &bot.CreateInvoiceLinkParams{
+		Title:                     params.Title,
+		Description:               params.Description,
+		Payload:                   params.Payload,
+		Currency:                  params.Currency,
+		Prices:                    prices,
+		SubscriptionPeriod:        params.SubscriptionPeriod,
+		IsFlexible:                params.IsFlexible,
+		NeedName:                  params.NeedName,
+		NeedPhoneNumber:           params.NeedPhoneNumber,
+		NeedEmail:                 params.NeedEmail,
+		NeedShippingAddress:       params.NeedShippingAddress,
+		SendPhoneNumberToProvider: params.SendPhoneNumberToProvider,
+		SendEmailToProvider:       params.SendEmailToProvider,
+	})
+	if err != nil {
+		return "", fmt.Errorf("failed to create invoice link: %w", err)
+	}
+
+	return response, nil
+}
+
+func (u *Sender) AnswerPreCheckoutQuery(
+	ctx context.Context,
+	preCheckoutQueryID string,
+	ok bool,
+	errorMessage string,
+) error {
+	_, err := u.bot.AnswerPreCheckoutQuery(ctx, &bot.AnswerPreCheckoutQueryParams{
+		PreCheckoutQueryID: preCheckoutQueryID,
+		OK:                 ok,
+		ErrorMessage:       errorMessage,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to answer pre-checkout query: %w", err)
+	}
+	return nil
 }

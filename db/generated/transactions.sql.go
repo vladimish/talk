@@ -19,7 +19,7 @@ RETURNING id, user_id, token_type, amount, transaction_type, model_used, descrip
 type CreateTransactionParams struct {
 	UserID          int64
 	TokenType       string
-	Amount          int32
+	Amount          int64
 	TransactionType string
 	ModelUsed       sql.NullString
 	Description     sql.NullString

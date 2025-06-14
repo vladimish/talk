@@ -30,6 +30,11 @@ func (s *UpdateService) handleMenuState(ctx context.Context, user *domain.User, 
 		return s.transitionToProfile(ctx, user)
 	}
 
+	// Check if user sent "subscription" text
+	if update.MessageText == i18n.GetString(user.Language, i18n.ButtonSubscription) {
+		return s.handleSubscriptionBuyCallback(ctx, user)
+	}
+
 	// Send menu with keyboard
 	return s.sendMenu(ctx, user, i18n.GetString(user.Language, i18n.MenuWelcome))
 }
@@ -53,6 +58,9 @@ func (s *UpdateService) sendMenu(ctx context.Context, user *domain.User, text st
 					},
 				},
 				{
+					{
+						Text: i18n.GetString(user.Language, i18n.ButtonSubscription),
+					},
 					{
 						Text: i18n.GetString(user.Language, i18n.ButtonSettings),
 					},

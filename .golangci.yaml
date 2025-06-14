@@ -418,6 +418,8 @@ linters:
       - common-false-positives
     # Excluding configuration per-path, per-linter, per-text and per-source.
     rules:
+      - path: 'pkg/i18n'
+        linters: [ dupl ]
       - path: 'db/'
         text: '.*'
       - source: 'TODO'

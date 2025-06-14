@@ -10,6 +10,7 @@ const (
 	ButtonSettings          = "button.settings"
 	ButtonLanguage          = "button.language"
 	ButtonProfile           = "button.profile"
+	ButtonSubscription      = "button.subscription"
 	ButtonPrevPage          = "button.prev_page"
 	ButtonNextPage          = "button.next_page"
 
@@ -46,6 +47,13 @@ const (
 	ProfilePremiumTokens      = "profile.premium_tokens"
 	ProfileRegularTokens      = "profile.regular_tokens"
 	ProfileInsufficientTokens = "profile.insufficient_tokens" //nolint:gosec
+
+	// Subscription messages.
+	SubscriptionTitle        = "subscription.title"
+	SubscriptionMonthlyOffer = "subscription.monthly_offer"
+	SubscriptionBuyButton    = "subscription.buy_button"
+	SubscriptionSuccess      = "subscription.success"
+	SubscriptionFailed       = "subscription.failed"
 
 	// Language names (for language selection).
 	LangEnglish    = "lang.english"
@@ -117,6 +125,7 @@ var Strings = map[string]map[string]string{
 		ButtonSettings:          "⚙️ Settings",
 		ButtonLanguage:          "🌐 Language",
 		ButtonProfile:           "👤 Profile",
+		ButtonSubscription:      "💳 Subscription",
 		ButtonPrevPage:          "⬅️",
 		ButtonNextPage:          "➡️",
 
@@ -154,6 +163,13 @@ var Strings = map[string]map[string]string{
 		ProfileRegularTokens:      "🔵 Regular: %d tokens",
 		ProfileInsufficientTokens: "❌ Insufficient tokens. You need %d %s tokens to use this model.",
 
+		// Subscription
+		SubscriptionTitle:        "💳 Subscription",
+		SubscriptionMonthlyOffer: "🌟 Monthly Premium Subscription\n\n✨ Get 1500 regular tokens + 100 premium tokens every month!\n\nPrice: ⭐ 1 Telegram Stars per month",
+		SubscriptionBuyButton:    "💰 Subscribe for ⭐ 1 Stars",
+		SubscriptionSuccess:      "🎉 Subscription activated! You've received 1500 regular tokens and 100 premium tokens.",
+		SubscriptionFailed:       "❌ Subscription failed. Please try again.",
+
 		// Languages
 		LangEnglish:    "🇺🇸 English",
 		LangSpanish:    "🇪🇸 Español",
@@ -181,6 +197,7 @@ var Strings = map[string]map[string]string{
 		ButtonSettings:          "⚙️ Configuración",
 		ButtonLanguage:          "🌐 Idioma",
 		ButtonProfile:           "👤 Perfil",
+		ButtonSubscription:      "💳 Suscripción",
 		ButtonPrevPage:          "⬅️",
 		ButtonNextPage:          "➡️",
 
@@ -218,6 +235,13 @@ var Strings = map[string]map[string]string{
 		ProfileRegularTokens:      "🔵 Regular: %d tokens",
 		ProfileInsufficientTokens: "❌ Tokens insuficientes. Necesitas %d tokens %s para usar este modelo.",
 
+		// Subscription
+		SubscriptionTitle:        "💳 Suscripción",
+		SubscriptionMonthlyOffer: "🌟 Suscripción Premium Mensual\n\n✨ ¡Obtén 1500 tokens regulares + 100 tokens premium cada mes!\n\nPrecio: ⭐ 2 Estrellas de Telegram por mes",
+		SubscriptionBuyButton:    "💰 Suscribirse por ⭐ 2 Estrellas",
+		SubscriptionSuccess:      "🎉 ¡Suscripción activada! Has recibido 1500 tokens regulares y 100 tokens premium.",
+		SubscriptionFailed:       "❌ La suscripción falló. Por favor, inténtalo de nuevo.",
+
 		// Languages
 		LangEnglish:    "🇺🇸 English",
 		LangSpanish:    "🇪🇸 Español",
@@ -245,6 +269,7 @@ var Strings = map[string]map[string]string{
 		ButtonSettings:          "⚙️ Настройки",
 		ButtonLanguage:          "🌐 Язык",
 		ButtonProfile:           "👤 Профиль",
+		ButtonSubscription:      "💳 Подписка",
 		ButtonPrevPage:          "⬅️",
 		ButtonNextPage:          "➡️",
 
@@ -282,6 +307,13 @@ var Strings = map[string]map[string]string{
 		ProfileRegularTokens:      "🔵 Обычные: %d токенов",
 		ProfileInsufficientTokens: "❌ Недостаточно токенов. Вам нужно %d %s токенов для использования этой модели.",
 
+		// Subscription
+		SubscriptionTitle:        "💳 Подписка",
+		SubscriptionMonthlyOffer: "🌟 Ежемесячная Премиум Подписка\n\n✨ Получайте 1500 обычных токенов + 100 премиум токенов каждый месяц!\n\nЦена: ⭐ 2 Звезды Telegram в месяц",
+		SubscriptionBuyButton:    "💰 Подписаться за ⭐ 2 Звезды",
+		SubscriptionSuccess:      "🎉 Подписка активирована! Вы получили 1500 обычных токенов и 100 премиум токенов.",
+		SubscriptionFailed:       "❌ Подписка не удалась. Пожалуйста, попробуйте снова.",
+
 		// Languages
 		LangEnglish:    "🇺🇸 English",
 		LangSpanish:    "🇪🇸 Español",
@@ -309,6 +341,7 @@ var Strings = map[string]map[string]string{
 		ButtonSettings:          "⚙️ Paramètres",
 		ButtonLanguage:          "🌐 Langue",
 		ButtonProfile:           "👤 Profil",
+		ButtonSubscription:      "💳 Abonnement",
 		ButtonPrevPage:          "⬅️",
 		ButtonNextPage:          "➡️",
 
@@ -346,6 +379,13 @@ var Strings = map[string]map[string]string{
 		ProfileRegularTokens:      "🔵 Régulier : %d jetons",
 		ProfileInsufficientTokens: "❌ Jetons insuffisants. Vous avez besoin de %d jetons %s pour utiliser ce modèle.",
 
+		// Subscription
+		SubscriptionTitle:        "💳 Abonnement",
+		SubscriptionMonthlyOffer: "🌟 Abonnement Premium Mensuel\n\n✨ Obtenez 1500 jetons réguliers + 100 jetons premium chaque mois !\n\nPrix : ⭐ 2 Étoiles Telegram par mois",
+		SubscriptionBuyButton:    "💰 S'abonner pour ⭐ 2 Étoiles",
+		SubscriptionSuccess:      "🎉 Abonnement activé ! Vous avez reçu 1500 jetons réguliers et 100 jetons premium.",
+		SubscriptionFailed:       "❌ L'abonnement a échoué. Veuillez réessayer.",
+
 		// Languages
 		LangEnglish:    "🇺🇸 English",
 		LangSpanish:    "🇪🇸 Español",
@@ -373,6 +413,7 @@ var Strings = map[string]map[string]string{
 		ButtonSettings:          "⚙️ Einstellungen",
 		ButtonLanguage:          "🌐 Sprache",
 		ButtonProfile:           "👤 Profil",
+		ButtonSubscription:      "💳 Abonnement",
 		ButtonPrevPage:          "⬅️",
 		ButtonNextPage:          "➡️",
 
@@ -410,6 +451,13 @@ var Strings = map[string]map[string]string{
 		ProfileRegularTokens:      "🔵 Regulär: %d Token",
 		ProfileInsufficientTokens: "❌ Unzureichende Token. Sie benötigen %d %s Token, um dieses Modell zu verwenden.",
 
+		// Subscription
+		SubscriptionTitle:        "💳 Abonnement",
+		SubscriptionMonthlyOffer: "🌟 Monatliches Premium-Abonnement\n\n✨ Erhalten Sie jeden Monat 1500 reguläre Token + 100 Premium-Token!\n\nPreis: ⭐ 1 Telegram-Sterne pro Monat",
+		SubscriptionBuyButton:    "💰 Abonnieren für ⭐ 2 Sterne",
+		SubscriptionSuccess:      "🎉 Abonnement aktiviert! Sie haben 1500 reguläre Token und 100 Premium-Token erhalten.",
+		SubscriptionFailed:       "❌ Abonnement fehlgeschlagen. Bitte versuchen Sie es erneut.",
+
 		// Languages
 		LangEnglish:    "🇺🇸 English",
 		LangSpanish:    "🇪🇸 Español",
@@ -437,6 +485,7 @@ var Strings = map[string]map[string]string{
 		ButtonSettings:          "⚙️ Impostazioni",
 		ButtonLanguage:          "🌐 Lingua",
 		ButtonProfile:           "👤 Profilo",
+		ButtonSubscription:      "💳 Abbonamento",
 		ButtonPrevPage:          "⬅️",
 		ButtonNextPage:          "➡️",
 
@@ -474,6 +523,13 @@ var Strings = map[string]map[string]string{
 		ProfileRegularTokens:      "🔵 Regolare: %d token",
 		ProfileInsufficientTokens: "❌ Token insufficienti. Hai bisogno di %d token %s per usare questo modello.",
 
+		// Subscription
+		SubscriptionTitle:        "💳 Abbonamento",
+		SubscriptionMonthlyOffer: "🌟 Abbonamento Premium Mensile\n\n✨ Ottieni 1500 token regolari + 100 token premium ogni mese!\n\nPrezzo: ⭐ 2 Stelle Telegram al mese",
+		SubscriptionBuyButton:    "💰 Abbonati per ⭐ 2 Stelle",
+		SubscriptionSuccess:      "🎉 Abbonamento attivato! Hai ricevuto 1500 token regolari e 100 token premium.",
+		SubscriptionFailed:       "❌ Abbonamento fallito. Per favore riprova.",
+
 		// Languages
 		LangEnglish:    "🇺🇸 English",
 		LangSpanish:    "🇪🇸 Español",
@@ -501,6 +557,7 @@ var Strings = map[string]map[string]string{
 		ButtonSettings:          "⚙️ 设置",
 		ButtonLanguage:          "🌐 语言",
 		ButtonProfile:           "👤 个人资料",
+		ButtonSubscription:      "💳 订阅",
 		ButtonPrevPage:          "⬅️",
 		ButtonNextPage:          "➡️",
 
@@ -538,6 +595,13 @@ var Strings = map[string]map[string]string{
 		ProfileRegularTokens:      "🔵 普通：%d 代币",
 		ProfileInsufficientTokens: "❌ 代币不足。您需要 %d 个 %s 代币来使用此模型。",
 
+		// Subscription
+		SubscriptionTitle:        "💳 订阅",
+		SubscriptionMonthlyOffer: "🌟 月度高级订阅\n\n✨ 每月获得 1500 个普通代币 + 100 个高级代币！\n\n价格：⭐ 每月 2 个 Telegram 星星",
+		SubscriptionBuyButton:    "💰 订阅 ⭐ 2 星星",
+		SubscriptionSuccess:      "🎉 订阅已激活！您已收到 1500 个普通代币和 100 个高级代币。",
+		SubscriptionFailed:       "❌ 订阅失败。请重试。",
+
 		// Languages
 		LangEnglish:    "🇺🇸 English",
 		LangSpanish:    "🇪🇸 Español",
@@ -565,6 +629,7 @@ var Strings = map[string]map[string]string{
 		ButtonSettings:          "⚙️ 設定",
 		ButtonLanguage:          "🌐 言語",
 		ButtonProfile:           "👤 プロフィール",
+		ButtonSubscription:      "💳 サブスクリプション",
 		ButtonPrevPage:          "⬅️",
 		ButtonNextPage:          "➡️",
 
@@ -602,6 +667,13 @@ var Strings = map[string]map[string]string{
 		ProfileRegularTokens:      "🔵 通常：%d トークン",
 		ProfileInsufficientTokens: "❌ トークンが不足しています。このモデルを使用するには %d 個の %s トークンが必要です。",
 
+		// Subscription
+		SubscriptionTitle:        "💳 サブスクリプション",
+		SubscriptionMonthlyOffer: "🌟 月額プレミアムサブスクリプション\n\n✨ 毎月1500個の通常トークン + 100個のプレミアムトークンを取得！\n\n料金：⭐ 月額2テレグラムスター",
+		SubscriptionBuyButton:    "💰 ⭐ 2スターで購読",
+		SubscriptionSuccess:      "🎉 サブスクリプションが有効になりました！1500個の通常トークンと100個のプレミアムトークンを受け取りました。",
+		SubscriptionFailed:       "❌ サブスクリプションに失敗しました。もう一度お試しください。",
+
 		// Languages
 		LangEnglish:    "🇺🇸 English",
 		LangSpanish:    "🇪🇸 Español",
@@ -629,6 +701,7 @@ var Strings = map[string]map[string]string{
 		ButtonSettings:          "⚙️ 설정",
 		ButtonLanguage:          "🌐 언어",
 		ButtonProfile:           "👤 프로필",
+		ButtonSubscription:      "💳 구독",
 		ButtonPrevPage:          "⬅️",
 		ButtonNextPage:          "➡️",
 
@@ -666,6 +739,13 @@ var Strings = map[string]map[string]string{
 		ProfileRegularTokens:      "🔵 일반: %d 토큰",
 		ProfileInsufficientTokens: "❌ 토큰이 부족합니다. 이 모델을 사용하려면 %d개의 %s 토큰이 필요합니다.",
 
+		// Subscription
+		SubscriptionTitle:        "💳 구독",
+		SubscriptionMonthlyOffer: "🌟 월간 프리미엄 구독\n\n✨ 매달 1500개의 일반 토큰 + 100개의 프리미엄 토큰을 받으세요!\n\n가격: ⭐ 월 2 텔레그램 스타",
+		SubscriptionBuyButton:    "💰 ⭐ 2 스타로 구독",
+		SubscriptionSuccess:      "🎉 구독이 활성화되었습니다! 1500개의 일반 토큰과 100개의 프리미엄 토큰을 받았습니다.",
+		SubscriptionFailed:       "❌ 구독 실패. 다시 시도해주세요.",
+
 		// Languages
 		LangEnglish:    "🇺🇸 English",
 		LangSpanish:    "🇪🇸 Español",
@@ -693,6 +773,7 @@ var Strings = map[string]map[string]string{
 		ButtonSettings:          "⚙️ Configurações",
 		ButtonLanguage:          "🌐 Idioma",
 		ButtonProfile:           "👤 Perfil",
+		ButtonSubscription:      "💳 Assinatura",
 		ButtonPrevPage:          "⬅️",
 		ButtonNextPage:          "➡️",
 
@@ -730,6 +811,13 @@ var Strings = map[string]map[string]string{
 		ProfileRegularTokens:      "🔵 Regular: %d tokens",
 		ProfileInsufficientTokens: "❌ Tokens insuficientes. Você precisa de %d tokens %s para usar este modelo.",
 
+		// Subscription
+		SubscriptionTitle:        "💳 Assinatura",
+		SubscriptionMonthlyOffer: "🌟 Assinatura Premium Mensal\n\n✨ Receba 1500 tokens regulares + 100 tokens premium todos os meses!\n\nPreço: ⭐ 2 Estrelas do Telegram por mês",
+		SubscriptionBuyButton:    "💰 Assinar por ⭐ 2 Estrelas",
+		SubscriptionSuccess:      "🎉 Assinatura ativada! Você recebeu 1500 tokens regulares e 100 tokens premium.",
+		SubscriptionFailed:       "❌ A assinatura falhou. Por favor, tente novamente.",
+
 		// Languages
 		LangEnglish:    "🇺🇸 English",
 		LangSpanish:    "🇪🇸 Español",
@@ -757,6 +845,7 @@ var Strings = map[string]map[string]string{
 		ButtonSettings:          "⚙️ Կարգավորումներ",
 		ButtonLanguage:          "🌐 Լեզու",
 		ButtonProfile:           "👤 Պրոֆիլ",
+		ButtonSubscription:      "💳 Բաժանորդագրություն",
 		ButtonPrevPage:          "⬅️",
 		ButtonNextPage:          "➡️",
 
@@ -794,6 +883,13 @@ var Strings = map[string]map[string]string{
 		ProfileRegularTokens:      "🔵 Սովորական: %d տոկեն",
 		ProfileInsufficientTokens: "❌ Անբավարար տոկեններ: Այս մոդելն օգտագործելու համար ձեզ անհրաժեշտ է %d %s տոկեն:",
 
+		// Subscription
+		SubscriptionTitle:        "💳 Բաժանորդագրություն",
+		SubscriptionMonthlyOffer: "🌟 Ամսական Պրեմիում Բաժանորդագրություն\n\n✨ Ստացեք 1500 սովորական տոկեն + 100 պրեմիում տոկեն ամեն ամիս!\n\nԳինը՝ ⭐ 1 Telegram աստղ ամսական",
+		SubscriptionBuyButton:    "💰 Բաժանորդագրվել ⭐ 2 աստղով",
+		SubscriptionSuccess:      "🎉 Բաժանորդագրությունն ակտիվացված է! Դուք ստացել եք 1500 սովորական տոկեն և 100 պրեմիում տոկեն:",
+		SubscriptionFailed:       "❌ Բաժանորդագրությունը ձախողվեց: Խնդրում ենք փորձել կրկին:",
+
 		// Languages
 		LangEnglish:    "🇺🇸 English",
 		LangSpanish:    "🇪🇸 Español",
@@ -821,6 +917,7 @@ var Strings = map[string]map[string]string{
 		ButtonSettings:          "⚙️ Налаштування",
 		ButtonLanguage:          "🌐 Мова",
 		ButtonProfile:           "👤 Профіль",
+		ButtonSubscription:      "💳 Підписка",
 		ButtonPrevPage:          "⬅️",
 		ButtonNextPage:          "➡️",
 
@@ -858,6 +955,13 @@ var Strings = map[string]map[string]string{
 		ProfileRegularTokens:      "🔵 Звичайні: %d токенів",
 		ProfileInsufficientTokens: "❌ Недостатньо токенів. Вам потрібно %d %s токенів для використання цієї моделі.",
 
+		// Subscription
+		SubscriptionTitle:        "💳 Підписка",
+		SubscriptionMonthlyOffer: "🌟 Щомісячна Преміум Підписка\n\n✨ Отримуйте 1500 звичайних токенів + 100 преміум токенів щомісяця!\n\nЦіна: ⭐ 2 Зірки Telegram на місяць",
+		SubscriptionBuyButton:    "💰 Підписатися за ⭐ 2 Зірки",
+		SubscriptionSuccess:      "🎉 Підписку активовано! Ви отримали 1500 звичайних токенів та 100 преміум токенів.",
+		SubscriptionFailed:       "❌ Підписка не вдалася. Будь ласка, спробуйте знову.",
+
 		// Languages
 		LangEnglish:    "🇺🇸 English",
 		LangSpanish:    "🇪🇸 Español",
@@ -885,6 +989,7 @@ var Strings = map[string]map[string]string{
 		ButtonSettings:          "⚙️ Баптаулар",
 		ButtonLanguage:          "🌐 Тіл",
 		ButtonProfile:           "👤 Профиль",
+		ButtonSubscription:      "💳 Жазылым",
 		ButtonPrevPage:          "⬅️",
 		ButtonNextPage:          "➡️",
 
@@ -922,6 +1027,13 @@ var Strings = map[string]map[string]string{
 		ProfileRegularTokens:      "🔵 Кәдімгі: %d токен",
 		ProfileInsufficientTokens: "❌ Токендер жеткіліксіз. Осы модельді пайдалану үшін сізге %d %s токен қажет.",
 
+		// Subscription
+		SubscriptionTitle:        "💳 Жазылым",
+		SubscriptionMonthlyOffer: "🌟 Айлық Премиум Жазылым\n\n✨ Ай сайын 1500 қарапайым токен + 100 премиум токен алыңыз!\n\nБағасы: ⭐ Айына 1 Telegram жұлдызы",
+		SubscriptionBuyButton:    "💰 ⭐ 2 жұлдызға жазылу",
+		SubscriptionSuccess:      "🎉 Жазылым белсендірілді! Сіз 1500 қарапайым токен және 100 премиум токен алдыңыз.",
+		SubscriptionFailed:       "❌ Жазылым сәтсіз болды. Қайта көріңіз.",
+
 		// Languages
 		LangEnglish:    "🇺🇸 English",
 		LangSpanish:    "🇪🇸 Español",
@@ -949,6 +1061,7 @@ var Strings = map[string]map[string]string{
 		ButtonSettings:          "⚙️ Жөндөөлөр",
 		ButtonLanguage:          "🌐 Тил",
 		ButtonProfile:           "👤 Профиль",
+		ButtonSubscription:      "💳 Жазылуу",
 		ButtonPrevPage:          "⬅️",
 		ButtonNextPage:          "➡️",
 
@@ -986,6 +1099,13 @@ var Strings = map[string]map[string]string{
 		ProfileRegularTokens:      "🔵 Кадимки: %d токен",
 		ProfileInsufficientTokens: "❌ Токендер жетишсиз. Бул модель колдонуу үчүн сизге %d %s токен керек.",
 
+		// Subscription
+		SubscriptionTitle:        "💳 Жазылуу",
+		SubscriptionMonthlyOffer: "🌟 Айлык Премиум Жазылуу\\n\\n✨ Ар айда 1500 кадимки токен + 100 премиум токен алыңыз!\\n\\nБааси: ⭐ Айына 1 Telegram жылдызы",
+		SubscriptionBuyButton:    "💰 ⭐ 2 жылдызга жазылуу",
+		SubscriptionSuccess:      "🎉 Жазылуу иштетилди! Сиз 1500 кадимки токен жана 100 премиум токен алдыңыз.",
+		SubscriptionFailed:       "❌ Жазылуу ийгиликсиз болду. Кайра аракет кылыңыз.",
+
 		// Languages
 		LangEnglish:    "🇺🇸 English",
 		LangSpanish:    "🇪🇸 Español",
@@ -1013,6 +1133,7 @@ var Strings = map[string]map[string]string{
 		ButtonSettings:          "⚙️ الإعدادات",
 		ButtonLanguage:          "🌐 اللغة",
 		ButtonProfile:           "👤 الملف الشخصي",
+		ButtonSubscription:      "💳 الاشتراك",
 		ButtonPrevPage:          "⬅️",
 		ButtonNextPage:          "➡️",
 
@@ -1050,6 +1171,13 @@ var Strings = map[string]map[string]string{
 		ProfileRegularTokens:      "🔵 عادي: %d رمز",
 		ProfileInsufficientTokens: "❌ رموز غير كافية. تحتاج إلى %d رمز %s لاستخدام هذا النموذج.",
 
+		// Subscription
+		SubscriptionTitle:        "💳 الاشتراك",
+		SubscriptionMonthlyOffer: "🌟 الاشتراك الشهري المميز\\n\\n✨ احصل على 1500 رمز عادي + 100 رمز مميز كل شهر!\\n\\nالسعر: ⭐ نجمتان تليجرام شهرياً",
+		SubscriptionBuyButton:    "💰 اشترك مقابل ⭐ نجمتين",
+		SubscriptionSuccess:      "🎉 تم تفعيل الاشتراك! لقد حصلت على 1500 رمز عادي و 100 رمز مميز.",
+		SubscriptionFailed:       "❌ فشل الاشتراك. يرجى المحاولة مرة أخرى.",
+
 		// Languages
 		LangEnglish:    "🇺🇸 English",
 		LangSpanish:    "🇪🇸 Español",
@@ -1077,6 +1205,7 @@ var Strings = map[string]map[string]string{
 		ButtonSettings:          "⚙️ सेटिंग्स",
 		ButtonLanguage:          "🌐 भाषा",
 		ButtonProfile:           "👤 प्रोफाइल",
+		ButtonSubscription:      "💳 सब्सक्रिप्शन",
 		ButtonPrevPage:          "⬅️",
 		ButtonNextPage:          "➡️",
 
@@ -1113,6 +1242,13 @@ var Strings = map[string]map[string]string{
 		ProfilePremiumTokens:      "🟡 प्रीमियम: %d टोकन",
 		ProfileRegularTokens:      "🔵 नियमित: %d टोकन",
 		ProfileInsufficientTokens: "❌ अपर्याप्त टोकन। इस मॉडल का उपयोग करने के लिए आपको %d %s टोकन की आवश्यकता है।",
+
+		// Subscription
+		SubscriptionTitle:        "💳 सब्सक्रिप्शन",
+		SubscriptionMonthlyOffer: "🌟 मासिक प्रीमियम सब्सक्रिप्शन\\n\\n✨ हर महीने 1500 नियमित टोकन + 100 प्रीमियम टोकन पाएं!\\n\\nकीमत: ⭐ मासिक 2 टेलीग्राम स्टार",
+		SubscriptionBuyButton:    "💰 ⭐ 2 स्टार के लिए सब्सक्राइब करें",
+		SubscriptionSuccess:      "🎉 सब्सक्रिप्शन सक्रिय! आपको 1500 नियमित टोकन और 100 प्रीमियम टोकन मिले हैं।",
+		SubscriptionFailed:       "❌ सब्सक्रिप्शन असफल। कृपया पुनः प्रयास करें।",
 
 		// Languages
 		LangEnglish:    "🇺🇸 English",
