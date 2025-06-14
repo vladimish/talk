@@ -54,6 +54,8 @@ const (
 	SubscriptionBuyButton    = "subscription.buy_button"
 	SubscriptionSuccess      = "subscription.success"
 	SubscriptionFailed       = "subscription.failed"
+	SubscriptionActiveInfo   = "subscription.active_info"
+	SubscriptionExpired      = "subscription.expired"
 
 	// Language names (for language selection).
 	LangEnglish    = "lang.english"
@@ -169,6 +171,8 @@ var Strings = map[string]map[string]string{
 		SubscriptionBuyButton:    "💰 Subscribe for ⭐ 1 Stars",
 		SubscriptionSuccess:      "🎉 Subscription activated! You've received 1500 regular tokens and 100 premium tokens.",
 		SubscriptionFailed:       "❌ Subscription failed. Please try again.",
+		SubscriptionActiveInfo:   "✅ You have an active subscription! %d days remaining.",
+		SubscriptionExpired:      "❌ Your subscription has expired. Subscribe again to continue receiving tokens.",
 
 		// Languages
 		LangEnglish:    "🇺🇸 English",
@@ -241,6 +245,8 @@ var Strings = map[string]map[string]string{
 		SubscriptionBuyButton:    "💰 Suscribirse por ⭐ 2 Estrellas",
 		SubscriptionSuccess:      "🎉 ¡Suscripción activada! Has recibido 1500 tokens regulares y 100 tokens premium.",
 		SubscriptionFailed:       "❌ La suscripción falló. Por favor, inténtalo de nuevo.",
+		SubscriptionActiveInfo:   "✅ ¡Tienes una suscripción activa! %d días restantes.",
+		SubscriptionExpired:      "❌ Tu suscripción ha expirado. Suscríbete de nuevo para seguir recibiendo tokens.",
 
 		// Languages
 		LangEnglish:    "🇺🇸 English",
@@ -313,6 +319,8 @@ var Strings = map[string]map[string]string{
 		SubscriptionBuyButton:    "💰 Подписаться за ⭐ 2 Звезды",
 		SubscriptionSuccess:      "🎉 Подписка активирована! Вы получили 1500 обычных токенов и 100 премиум токенов.",
 		SubscriptionFailed:       "❌ Подписка не удалась. Пожалуйста, попробуйте снова.",
+		SubscriptionActiveInfo:   "✅ У вас активная подписка! Осталось %d дней.",
+		SubscriptionExpired:      "❌ Ваша подписка истекла. Подпишитесь снова, чтобы продолжить получать токены.",
 
 		// Languages
 		LangEnglish:    "🇺🇸 English",
@@ -385,6 +393,8 @@ var Strings = map[string]map[string]string{
 		SubscriptionBuyButton:    "💰 S'abonner pour ⭐ 2 Étoiles",
 		SubscriptionSuccess:      "🎉 Abonnement activé ! Vous avez reçu 1500 jetons réguliers et 100 jetons premium.",
 		SubscriptionFailed:       "❌ L'abonnement a échoué. Veuillez réessayer.",
+		SubscriptionActiveInfo:   "✅ Vous avez un abonnement actif ! %d jours restants.",
+		SubscriptionExpired:      "❌ Votre abonnement a expiré. Abonnez-vous à nouveau pour continuer à recevoir des jetons.",
 
 		// Languages
 		LangEnglish:    "🇺🇸 English",
@@ -457,6 +467,8 @@ var Strings = map[string]map[string]string{
 		SubscriptionBuyButton:    "💰 Abonnieren für ⭐ 2 Sterne",
 		SubscriptionSuccess:      "🎉 Abonnement aktiviert! Sie haben 1500 reguläre Token und 100 Premium-Token erhalten.",
 		SubscriptionFailed:       "❌ Abonnement fehlgeschlagen. Bitte versuchen Sie es erneut.",
+		SubscriptionActiveInfo:   "✅ Sie haben ein aktives Abonnement! %d Tage verbleibend.",
+		SubscriptionExpired:      "❌ Ihr Abonnement ist abgelaufen. Abonnieren Sie erneut, um weiterhin Token zu erhalten.",
 
 		// Languages
 		LangEnglish:    "🇺🇸 English",
@@ -529,6 +541,8 @@ var Strings = map[string]map[string]string{
 		SubscriptionBuyButton:    "💰 Abbonati per ⭐ 2 Stelle",
 		SubscriptionSuccess:      "🎉 Abbonamento attivato! Hai ricevuto 1500 token regolari e 100 token premium.",
 		SubscriptionFailed:       "❌ Abbonamento fallito. Per favore riprova.",
+		SubscriptionActiveInfo:   "✅ Hai un abbonamento attivo! %d giorni rimanenti.",
+		SubscriptionExpired:      "❌ Il tuo abbonamento è scaduto. Abbonati di nuovo per continuare a ricevere token.",
 
 		// Languages
 		LangEnglish:    "🇺🇸 English",
@@ -601,6 +615,8 @@ var Strings = map[string]map[string]string{
 		SubscriptionBuyButton:    "💰 订阅 ⭐ 2 星星",
 		SubscriptionSuccess:      "🎉 订阅已激活！您已收到 1500 个普通代币和 100 个高级代币。",
 		SubscriptionFailed:       "❌ 订阅失败。请重试。",
+		SubscriptionActiveInfo:   "✅ 您有有效订阅！剩余 %d 天。",
+		SubscriptionExpired:      "❌ 您的订阅已过期。请重新订阅以继续接收代币。",
 
 		// Languages
 		LangEnglish:    "🇺🇸 English",
@@ -673,6 +689,8 @@ var Strings = map[string]map[string]string{
 		SubscriptionBuyButton:    "💰 ⭐ 2スターで購読",
 		SubscriptionSuccess:      "🎉 サブスクリプションが有効になりました！1500個の通常トークンと100個のプレミアムトークンを受け取りました。",
 		SubscriptionFailed:       "❌ サブスクリプションに失敗しました。もう一度お試しください。",
+		SubscriptionActiveInfo:   "✅ 有効なサブスクリプションがあります！残り %d 日。",
+		SubscriptionExpired:      "❌ サブスクリプションの期限が切れました。トークンを受け取り続けるには、再度購読してください。",
 
 		// Languages
 		LangEnglish:    "🇺🇸 English",
@@ -745,6 +763,8 @@ var Strings = map[string]map[string]string{
 		SubscriptionBuyButton:    "💰 ⭐ 2 스타로 구독",
 		SubscriptionSuccess:      "🎉 구독이 활성화되었습니다! 1500개의 일반 토큰과 100개의 프리미엄 토큰을 받았습니다.",
 		SubscriptionFailed:       "❌ 구독 실패. 다시 시도해주세요.",
+		SubscriptionActiveInfo:   "✅ 활성 구독이 있습니다! %d일 남음.",
+		SubscriptionExpired:      "❌ 구독이 만료되었습니다. 토큰을 계속 받으려면 다시 구독하세요.",
 
 		// Languages
 		LangEnglish:    "🇺🇸 English",
@@ -817,6 +837,8 @@ var Strings = map[string]map[string]string{
 		SubscriptionBuyButton:    "💰 Assinar por ⭐ 2 Estrelas",
 		SubscriptionSuccess:      "🎉 Assinatura ativada! Você recebeu 1500 tokens regulares e 100 tokens premium.",
 		SubscriptionFailed:       "❌ A assinatura falhou. Por favor, tente novamente.",
+		SubscriptionActiveInfo:   "✅ Você tem uma assinatura ativa! %d dias restantes.",
+		SubscriptionExpired:      "❌ Sua assinatura expirou. Assine novamente para continuar recebendo tokens.",
 
 		// Languages
 		LangEnglish:    "🇺🇸 English",
@@ -889,6 +911,8 @@ var Strings = map[string]map[string]string{
 		SubscriptionBuyButton:    "💰 Բաժանորդագրվել ⭐ 2 աստղով",
 		SubscriptionSuccess:      "🎉 Բաժանորդագրությունն ակտիվացված է! Դուք ստացել եք 1500 սովորական տոկեն և 100 պրեմիում տոկեն:",
 		SubscriptionFailed:       "❌ Բաժանորդագրությունը ձախողվեց: Խնդրում ենք փորձել կրկին:",
+		SubscriptionActiveInfo:   "✅ Դուք ունեք ակտիվ բաժանորդագրություն! %d օր մնացել է:",
+		SubscriptionExpired:      "❌ Ձեր բաժանորդագրությունը գործողության ժամկետն ավարտվել է: Տոկեններ ստանալու համար նորից բաժանորդագրվեք:",
 
 		// Languages
 		LangEnglish:    "🇺🇸 English",
@@ -961,6 +985,8 @@ var Strings = map[string]map[string]string{
 		SubscriptionBuyButton:    "💰 Підписатися за ⭐ 2 Зірки",
 		SubscriptionSuccess:      "🎉 Підписку активовано! Ви отримали 1500 звичайних токенів та 100 преміум токенів.",
 		SubscriptionFailed:       "❌ Підписка не вдалася. Будь ласка, спробуйте знову.",
+		SubscriptionActiveInfo:   "✅ У вас є активна підписка! Залишилося %d днів.",
+		SubscriptionExpired:      "❌ Ваша підписка закінчилася. Підпишіться знову, щоб продовжити отримувати токени.",
 
 		// Languages
 		LangEnglish:    "🇺🇸 English",
@@ -1033,6 +1059,8 @@ var Strings = map[string]map[string]string{
 		SubscriptionBuyButton:    "💰 ⭐ 2 жұлдызға жазылу",
 		SubscriptionSuccess:      "🎉 Жазылым белсендірілді! Сіз 1500 қарапайым токен және 100 премиум токен алдыңыз.",
 		SubscriptionFailed:       "❌ Жазылым сәтсіз болды. Қайта көріңіз.",
+		SubscriptionActiveInfo:   "✅ Сізде белсенді жазылым бар! %d күн қалды.",
+		SubscriptionExpired:      "❌ Сіздің жазылымыңыз аяқталды. Токендерді алуды жалғастыру үшін қайта жазылыңыз.",
 
 		// Languages
 		LangEnglish:    "🇺🇸 English",
@@ -1105,6 +1133,8 @@ var Strings = map[string]map[string]string{
 		SubscriptionBuyButton:    "💰 ⭐ 2 жылдызга жазылуу",
 		SubscriptionSuccess:      "🎉 Жазылуу иштетилди! Сиз 1500 кадимки токен жана 100 премиум токен алдыңыз.",
 		SubscriptionFailed:       "❌ Жазылуу ийгиликсиз болду. Кайра аракет кылыңыз.",
+		SubscriptionActiveInfo:   "✅ Сизде активдүү жазылуу бар! %d күн калды.",
+		SubscriptionExpired:      "❌ Сиздин жазылууңуз бүттү. Токендерди алууну улантуу үчүн кайрадан жазылыңыз.",
 
 		// Languages
 		LangEnglish:    "🇺🇸 English",
@@ -1177,6 +1207,8 @@ var Strings = map[string]map[string]string{
 		SubscriptionBuyButton:    "💰 اشترك مقابل ⭐ نجمتين",
 		SubscriptionSuccess:      "🎉 تم تفعيل الاشتراك! لقد حصلت على 1500 رمز عادي و 100 رمز مميز.",
 		SubscriptionFailed:       "❌ فشل الاشتراك. يرجى المحاولة مرة أخرى.",
+		SubscriptionActiveInfo:   "✅ لديك اشتراك نشط! %d يوم متبقية.",
+		SubscriptionExpired:      "❌ انتهت صلاحية اشتراكك. اشترك مرة أخرى لمواصلة تلقي الرموز.",
 
 		// Languages
 		LangEnglish:    "🇺🇸 English",
@@ -1249,6 +1281,8 @@ var Strings = map[string]map[string]string{
 		SubscriptionBuyButton:    "💰 ⭐ 2 स्टार के लिए सब्सक्राइब करें",
 		SubscriptionSuccess:      "🎉 सब्सक्रिप्शन सक्रिय! आपको 1500 नियमित टोकन और 100 प्रीमियम टोकन मिले हैं।",
 		SubscriptionFailed:       "❌ सब्सक्रिप्शन असफल। कृपया पुनः प्रयास करें।",
+		SubscriptionActiveInfo:   "✅ आपके पास सक्रिय सब्सक्रिप्शन है! %d दिन शेष।",
+		SubscriptionExpired:      "❌ आपकी सब्सक्रिप्शन समाप्त हो गई है। टोकन प्राप्त करना जारी रखने के लिए पुनः सब्सक्राइब करें।",
 
 		// Languages
 		LangEnglish:    "🇺🇸 English",

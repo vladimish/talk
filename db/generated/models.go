@@ -95,6 +95,18 @@ type Payment struct {
 	MessageID               sql.NullString
 }
 
+type Subscription struct {
+	ID               int64
+	UserID           int64
+	PaymentID        int64
+	SubscriptionType string
+	ValidFrom        time.Time
+	ValidTo          time.Time
+	Status           string
+	CreatedAt        time.Time
+	UpdatedAt        time.Time
+}
+
 type Transaction struct {
 	ID              int64
 	UserID          int64

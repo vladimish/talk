@@ -48,6 +48,10 @@ type Storage interface {
 		paymentID int64,
 		invoiceLink, invoicePayload, messageID string,
 	) (*domain.Payment, error)
+
+	// Subscription methods
+	CreateSubscription(ctx context.Context, subscription *domain.Subscription) (*domain.Subscription, error)
+	GetActiveSubscriptionByUserID(ctx context.Context, userID int64) (*domain.Subscription, error)
 }
 
 var ErrNotFound = errors.New("not found")

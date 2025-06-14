@@ -261,6 +261,16 @@ func (s *UpdateService) HandlePreCheckoutQuery(ctx context.Context, query domain
 		return s.sender.AnswerPreCheckoutQuery(ctx, query.ID, false, "Payment not found")
 	}
 
+	// Check if user already has an active subscription
+	subscription, err := s.storage.GetActiveSubscriptionByUserID(ctx, dbPayment.UserID)
+	if err == nil && subscription.IsActive() {
+		s.logger.InfoContext(ctx, "user already has active subscription, declining pre-checkout",
+			slog.Int64("payment_id", dbPayment.ID),
+			slog.String("user_id", query.ExternalUserID),
+			slog.Int64("subscription_id", subscription.ID))
+		return s.sender.AnswerPreCheckoutQuery(ctx, query.ID, false, "You already have an active subscription")
+	}
+
 	// Update payment status to pre_checkout
 	_, err = s.storage.UpdatePaymentStatus(ctx, dbPayment.ID, domain.PaymentStatusPreCheckout, nil, nil)
 	if err != nil {
@@ -269,7 +279,7 @@ func (s *UpdateService) HandlePreCheckoutQuery(ctx context.Context, query domain
 			slog.String("error", err.Error()))
 	}
 
-	// Always approve the pre-checkout
+	// Always approve the pre-checkout if no active subscription
 	s.logger.InfoContext(ctx, "pre-checkout query approved",
 		slog.Int64("payment_id", dbPayment.ID),
 		slog.String("user_id", query.ExternalUserID))
@@ -306,6 +316,24 @@ func (s *UpdateService) HandleSuccessfulPayment(ctx context.Context, payment dom
 	err = s.grantSubscriptionTokens(ctx, dbPayment)
 	if err != nil {
 		return fmt.Errorf("can't grant subscription tokens: %w", err)
+	}
+
+	// Create subscription record
+	now := time.Now()
+	subscription := &domain.Subscription{
+		UserID:           dbPayment.UserID,
+		PaymentID:        dbPayment.ID,
+		SubscriptionType: dbPayment.SubscriptionType,
+		ValidFrom:        now,
+		ValidTo:          now.AddDate(0, 1, 0), // Add 1 month
+		Status:           domain.SubscriptionStatusActive,
+		CreatedAt:        now,
+		UpdatedAt:        now,
+	}
+
+	_, err = s.storage.CreateSubscription(ctx, subscription)
+	if err != nil {
+		return fmt.Errorf("can't create subscription record: %w", err)
 	}
 
 	// Send success message

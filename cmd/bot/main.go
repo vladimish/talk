@@ -92,6 +92,10 @@ func main() {
 	updateService := service.NewUpdateService(log, store, sender, completion, redisQueue)
 	botAdapter := tg.NewBot(log, updateService)
 
+	b.RegisterHandlerMatchFunc(func(update *models.Update) bool {
+		return update.Message != nil && update.Message.SuccessfulPayment != nil
+	}, botAdapter.HandleSuccessfulPayment)
+
 	b.RegisterHandler(bot.HandlerTypeMessageText, "", bot.MatchTypeContains, botAdapter.Handle)
 	b.RegisterHandler(bot.HandlerTypeCallbackQueryData, "", bot.MatchTypePrefix, botAdapter.HandleCallback)
 
@@ -99,10 +103,6 @@ func main() {
 	b.RegisterHandlerMatchFunc(func(update *models.Update) bool {
 		return update.PreCheckoutQuery != nil
 	}, botAdapter.HandlePreCheckoutQuery)
-
-	b.RegisterHandlerMatchFunc(func(update *models.Update) bool {
-		return update.Message != nil && update.Message.SuccessfulPayment != nil
-	}, botAdapter.HandleSuccessfulPayment)
 
 	go b.Start(ctx)
 

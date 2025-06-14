@@ -36,7 +36,8 @@ func (b *Bot) Handle(ctx context.Context, _ *bot.Bot, update *models.Update) {
 
 	// Handle successful payments first
 	if update.Message.SuccessfulPayment != nil && update.Message.From != nil {
-		b.HandleSuccessfulPayment(ctx, nil, update)
+		b.l.DebugContext(ctx, "user already has active subscription, declining pre-checkout")
+		// b.HandleSuccessfulPayment(ctx, nil, update)
 		return
 	}
 

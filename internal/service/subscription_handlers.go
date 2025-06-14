@@ -11,6 +11,13 @@ import (
 
 // handleSubscriptionBuyCallback handles the subscription buy callback from inline buttons.
 func (s *UpdateService) handleSubscriptionBuyCallback(ctx context.Context, user *domain.User) error {
+	// Check if user already has an active subscription
+	subscription, err := s.storage.GetActiveSubscriptionByUserID(ctx, user.ID)
+	if err == nil && subscription.IsActive() {
+		// User has active subscription, show subscription info
+		return s.sendSubscriptionInfo(ctx, user, subscription)
+	}
+	// If no active subscription found or error (including ErrNotFound), proceed with purchase
 	// Generate invoice payload
 	invoicePayload := fmt.Sprintf("sub_%d_%d", user.ID, time.Now().Unix())
 
@@ -83,4 +90,31 @@ func (s *UpdateService) handleSubscriptionBuyCallback(ctx context.Context, user 
 	}
 
 	return nil
+}
+
+// sendSubscriptionInfo sends information about the user's current subscription.
+func (s *UpdateService) sendSubscriptionInfo(
+	ctx context.Context,
+	user *domain.User,
+	subscription *domain.Subscription,
+) error {
+	daysRemaining := subscription.DaysRemaining()
+
+	var message string
+	if daysRemaining > 0 {
+		message = fmt.Sprintf(
+			i18n.GetString(user.Language, i18n.SubscriptionActiveInfo),
+			daysRemaining,
+		)
+	} else {
+		message = i18n.GetString(user.Language, i18n.SubscriptionExpired)
+	}
+
+	content := domain.MessageContent{
+		Text:         message,
+		IsPersistent: true,
+	}
+
+	_, err := s.sender.SendMessageWithContent(ctx, user.ExternalID, content)
+	return err
 }

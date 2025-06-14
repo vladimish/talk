@@ -77,6 +77,9 @@ func (u *Sender) SendMessageWithContent(
 	// Add reply keyboard if present
 	if content.ReplyKeyboard != nil {
 		keyboard := u.buildReplyKeyboard(content.ReplyKeyboard)
+		if content.IsPersistent {
+			keyboard.IsPersistent = true
+		}
 		params.ReplyMarkup = keyboard
 	}
 

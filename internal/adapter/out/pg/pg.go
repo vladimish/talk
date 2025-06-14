@@ -428,16 +428,9 @@ func (p *PG) GetUserTokenBalance(ctx context.Context, userID int64) (*domain.Tok
 		return nil, fmt.Errorf("can't get user token balance: %w", err)
 	}
 
-	// Convert interface{} to int64
-	premiumBalance, ok := balance.PremiumBalance.(int64)
-	if !ok {
-		premiumBalance = 0
-	}
-
-	regularBalance, ok := balance.RegularBalance.(int64)
-	if !ok {
-		regularBalance = 0
-	}
+	// Convert interface{} to int64 with proper type handling
+	premiumBalance := p.convertToInt64(balance.PremiumBalance)
+	regularBalance := p.convertToInt64(balance.RegularBalance)
 
 	return &domain.TokenBalance{
 		PremiumBalance: premiumBalance,
@@ -454,11 +447,8 @@ func (p *PG) GetUserTokenBalanceByType(ctx context.Context, userID int64, tokenT
 		return 0, fmt.Errorf("can't get user token balance by type: %w", err)
 	}
 
-	// Convert interface{} to int64
-	balanceValue, ok := balance.(int64)
-	if !ok {
-		balanceValue = 0
-	}
+	// Convert interface{} to int64 with proper type handling
+	balanceValue := p.convertToInt64(balance)
 
 	return balanceValue, nil
 }
@@ -684,4 +674,77 @@ func (p *PG) UpdatePaymentWithInvoice(
 		CreatedAt:               dbPayment.CreatedAt,
 		UpdatedAt:               dbPayment.UpdatedAt,
 	}, nil
+}
+
+// CreateSubscription creates a new subscription record in the database.
+func (p *PG) CreateSubscription(ctx context.Context, subscription *domain.Subscription) (*domain.Subscription, error) {
+	dbSubscription, err := p.q.CreateSubscription(ctx, generated.CreateSubscriptionParams{
+		UserID:           subscription.UserID,
+		PaymentID:        subscription.PaymentID,
+		SubscriptionType: string(subscription.SubscriptionType),
+		ValidFrom:        subscription.ValidFrom,
+		ValidTo:          subscription.ValidTo,
+		Status:           string(subscription.Status),
+	})
+	if err != nil {
+		return nil, fmt.Errorf("can't create subscription: %w", err)
+	}
+
+	return &domain.Subscription{
+		ID:               dbSubscription.ID,
+		UserID:           dbSubscription.UserID,
+		PaymentID:        dbSubscription.PaymentID,
+		SubscriptionType: domain.SubscriptionType(dbSubscription.SubscriptionType),
+		ValidFrom:        dbSubscription.ValidFrom,
+		ValidTo:          dbSubscription.ValidTo,
+		Status:           domain.SubscriptionStatus(dbSubscription.Status),
+		CreatedAt:        dbSubscription.CreatedAt,
+		UpdatedAt:        dbSubscription.UpdatedAt,
+	}, nil
+}
+
+// GetActiveSubscriptionByUserID retrieves the active subscription for a user.
+func (p *PG) GetActiveSubscriptionByUserID(ctx context.Context, userID int64) (*domain.Subscription, error) {
+	dbSubscription, err := p.q.GetActiveSubscriptionByUserID(ctx, userID)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, storage.ErrNotFound
+		}
+		return nil, fmt.Errorf("can't get active subscription: %w", err)
+	}
+
+	return &domain.Subscription{
+		ID:               dbSubscription.ID,
+		UserID:           dbSubscription.UserID,
+		PaymentID:        dbSubscription.PaymentID,
+		SubscriptionType: domain.SubscriptionType(dbSubscription.SubscriptionType),
+		ValidFrom:        dbSubscription.ValidFrom,
+		ValidTo:          dbSubscription.ValidTo,
+		Status:           domain.SubscriptionStatus(dbSubscription.Status),
+		CreatedAt:        dbSubscription.CreatedAt,
+		UpdatedAt:        dbSubscription.UpdatedAt,
+	}, nil
+}
+
+// convertToInt64 converts various numeric types to int64
+func (p *PG) convertToInt64(value interface{}) int64 {
+	switch v := value.(type) {
+	case int64:
+		return v
+	case int32:
+		return int64(v)
+	case int:
+		return int64(v)
+	case float64:
+		return int64(v)
+	case float32:
+		return int64(v)
+	case string:
+		if i, err := strconv.ParseInt(v, 10, 64); err == nil {
+			return i
+		}
+		return 0
+	default:
+		return 0
+	}
 }

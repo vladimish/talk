@@ -26,4 +26,5 @@ type MessageContent struct {
 	ReplyKeyboard    *ReplyKeyboard
 	InlineKeyboard   *InlineKeyboard
 	ReplyToMessageID *int64
+	IsPersistent     bool
 }
