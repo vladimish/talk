@@ -19,6 +19,11 @@ func (s *UpdateService) handleMenuState(ctx context.Context, user *domain.User, 
 		return s.transitionToModelSelect(ctx, user)
 	}
 
+	// Check if user sent "settings" text
+	if update.MessageText == domain.ButtonSettings {
+		return s.transitionToSettings(ctx, user)
+	}
+
 	// Send menu with keyboard
 	return s.sendMenu(ctx, user, "Welcome! Choose an option:")
 }
@@ -36,6 +41,11 @@ func (s *UpdateService) sendMenu(ctx context.Context, user *domain.User, text st
 				{
 					{
 						Text: domain.ButtonModelSelect,
+					},
+				},
+				{
+					{
+						Text: domain.ButtonSettings,
 					},
 				},
 			},

@@ -73,6 +73,10 @@ func (s *UpdateService) processUpdate(ctx context.Context, user *domain.User, up
 		return s.handleModelSelectState(ctx, user, update)
 	case domain.UserStateConversationList:
 		return s.handleConversationListState(ctx, user, update)
+	case domain.UserStateSettings:
+		return s.handleSettingsState(ctx, user, update)
+	case domain.UserStateLanguageSelect:
+		return s.handleLanguageSelectState(ctx, user, update)
 	default:
 		// Default to menu state for unknown states
 		return s.handleMenuState(ctx, user, update)

@@ -104,6 +104,22 @@ func (q *Queries) UpdateUserCurrentStep(ctx context.Context, arg UpdateUserCurre
 	return err
 }
 
+const updateUserLanguage = `-- name: UpdateUserLanguage :exec
+UPDATE users
+SET language = $2, updated_at = NOW()
+WHERE id = $1
+`
+
+type UpdateUserLanguageParams struct {
+	ID       int64
+	Language string
+}
+
+func (q *Queries) UpdateUserLanguage(ctx context.Context, arg UpdateUserLanguageParams) error {
+	_, err := q.db.ExecContext(ctx, updateUserLanguage, arg.ID, arg.Language)
+	return err
+}
+
 const updateUserSelectedModel = `-- name: UpdateUserSelectedModel :exec
 UPDATE users
 SET selected_model = $2, updated_at = NOW()

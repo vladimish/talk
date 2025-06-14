@@ -67,6 +67,13 @@ func (p *PG) UpdateUserSelectedModel(ctx context.Context, userID int64, selected
 	})
 }
 
+func (p *PG) UpdateUserLanguage(ctx context.Context, userID int64, language string) error {
+	return p.q.UpdateUserLanguage(ctx, generated.UpdateUserLanguageParams{
+		ID:       userID,
+		Language: language,
+	})
+}
+
 func (p *PG) CreateMessage(ctx context.Context, message *domain.Message) (*domain.Message, error) {
 	messageType, err := json.Marshal(message.MessageType)
 	if err != nil {
