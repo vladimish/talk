@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"strconv"
@@ -9,10 +10,32 @@ import (
 	"time"
 
 	"github.com/vladimish/talk/internal/domain"
+	"github.com/vladimish/talk/internal/port/queue"
 )
 
 // Conversation handlers.
 func (s *UpdateService) handleConversationMessage(ctx context.Context, user *domain.User, update domain.Update) error {
+	// Set processing lock with 5 minute timeout
+	if err := s.queue.SetProcessing(ctx, user.ExternalID, 5*time.Minute); err != nil {
+		if errors.Is(err, queue.ErrAlreadyProcessing) {
+			// This shouldn't happen as we check before, but handle it gracefully
+			return s.queue.EnqueueWithNotification(ctx, user.ExternalID, update, "")
+		}
+		s.logger.WarnContext(ctx, "failed to set processing lock",
+			slog.String("error", err.Error()))
+		// Continue without lock on error
+	}
+
+	// Ensure we clear the lock and process queued messages when done
+	defer func() {
+		if err := s.queue.ClearProcessing(ctx, user.ExternalID); err != nil {
+			s.logger.ErrorContext(ctx, "failed to clear processing lock",
+				slog.String("error", err.Error()))
+		}
+
+		// Process any queued messages
+		go s.processQueuedMessages(context.Background(), user)
+	}()
 	// Check if this is the first message in a new conversation
 	var isFirstMessage bool
 	if user.CurrentConversationID != nil {
@@ -76,7 +99,18 @@ func (s *UpdateService) handleConversationMessage(ctx context.Context, user *dom
 	}
 
 	// Send initial empty message to get message ID
-	messageID, err := s.sender.SendMessage(ctx, user.ExternalID, "\\.\\.\\.")
+	// If this is from a queued message, reply to the original
+	var replyToMessageID *int64
+	if update.ExternalMessageID > 0 {
+		msgID := int64(update.ExternalMessageID)
+		replyToMessageID = &msgID
+	}
+
+	initialContent := domain.MessageContent{
+		Text:             "\\.\\.\\.",
+		ReplyToMessageID: replyToMessageID,
+	}
+	messageID, err := s.sender.SendMessageWithContent(ctx, user.ExternalID, initialContent)
 	if err != nil {
 		return fmt.Errorf("can't send initial message: %w", err)
 	}
@@ -256,5 +290,54 @@ Examples:
 	} else {
 		s.logger.InfoContext(ctx, "conversation name generated successfully",
 			slog.String("name", generatedName))
+	}
+}
+
+func (s *UpdateService) processQueuedMessages(ctx context.Context, user *domain.User) {
+	for {
+		// Get next queued update
+		queuedItem, err := s.queue.DequeueWithMetadata(ctx, user.ExternalID)
+		if err != nil {
+			s.logger.ErrorContext(ctx, "failed to dequeue update",
+				slog.String("error", err.Error()))
+			return
+		}
+
+		// No more queued messages
+		if queuedItem == nil {
+			return
+		}
+
+		// Delete the queue notification message if exists
+		if queuedItem.QueueNotificationID != "" {
+			if err := s.sender.DeleteMessage(ctx, user.ExternalID, queuedItem.QueueNotificationID); err != nil {
+				s.logger.WarnContext(ctx, "failed to delete queue notification",
+					slog.String("message_id", queuedItem.QueueNotificationID),
+					slog.String("error", err.Error()))
+			}
+		}
+
+		// Process the queued update
+		s.logger.InfoContext(ctx, "processing queued message",
+			slog.String("user_id", user.ExternalID),
+			slog.String("message", queuedItem.Update.MessageText))
+
+		// Re-fetch user to ensure we have latest state
+		freshUser, err := s.storage.GetUserByExternalUserID(ctx, user.ExternalID)
+		if err != nil {
+			s.logger.ErrorContext(ctx, "failed to get user for queued message",
+				slog.String("error", err.Error()))
+			continue
+		}
+
+		// Process the update - it will reply to the original message automatically
+		// since the update contains the original message ID
+		if err := s.processUpdate(ctx, freshUser, queuedItem.Update); err != nil {
+			s.logger.ErrorContext(ctx, "failed to process queued update",
+				slog.String("error", err.Error()))
+		}
+
+		// Small delay between processing queued messages
+		time.Sleep(100 * time.Millisecond)
 	}
 }

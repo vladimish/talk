@@ -9,6 +9,7 @@ import (
 
 	"github.com/vladimish/talk/internal/domain"
 	"github.com/vladimish/talk/internal/port/completion"
+	"github.com/vladimish/talk/internal/port/queue"
 	"github.com/vladimish/talk/internal/port/sender"
 	"github.com/vladimish/talk/internal/port/storage"
 )
@@ -18,6 +19,7 @@ type UpdateService struct {
 	storage    storage.Storage
 	sender     sender.Sender
 	completion completion.Completion
+	queue      queue.Queue
 }
 
 func NewUpdateService(
@@ -25,21 +27,61 @@ func NewUpdateService(
 	storage storage.Storage,
 	sender sender.Sender,
 	completion completion.Completion,
+	queue queue.Queue,
 ) *UpdateService {
 	return &UpdateService{
 		logger:     logger,
 		storage:    storage,
 		sender:     sender,
 		completion: completion,
+		queue:      queue,
 	}
 }
 
 func (s *UpdateService) HandleUpdate(ctx context.Context, update domain.Update) error {
+	// Check if this user is in conversation state and might need queueing
 	user, err := s.getOrCreateUser(ctx, update)
 	if err != nil {
 		return err
 	}
 
+	// Only queue messages in conversation state
+	if user.CurrentStep == domain.UserStateConversation && update.MessageText != "" &&
+		update.MessageText != domain.ButtonBackToMenu {
+
+		// Check if user is currently processing
+		processing, err := s.queue.IsProcessing(ctx, user.ExternalID)
+		if err != nil {
+			s.logger.WarnContext(ctx, "failed to check processing status",
+				slog.String("error", err.Error()))
+			// Continue without queueing on error
+		} else if processing {
+			// Notify user that message is queued
+			queueLength, _ := s.queue.GetQueueLength(ctx, user.ExternalID)
+			notificationID, err := s.sender.SendMessage(ctx, user.ExternalID,
+				fmt.Sprintf("⏳ Your message has been queued (position: %d). I'll process it after finishing the current response.", queueLength+1))
+			if err != nil {
+				s.logger.WarnContext(ctx, "failed to send queue notification",
+					slog.String("error", err.Error()))
+				notificationID = "" // Continue without notification ID
+			}
+
+			// User is processing, queue the update with notification ID
+			if err := s.queue.EnqueueWithNotification(ctx, user.ExternalID, update, notificationID); err != nil {
+				s.logger.ErrorContext(ctx, "failed to enqueue update",
+					slog.String("error", err.Error()))
+				return fmt.Errorf("failed to queue message: %w", err)
+			}
+
+			return nil
+		}
+	}
+
+	// Process the update normally
+	return s.processUpdate(ctx, user, update)
+}
+
+func (s *UpdateService) processUpdate(ctx context.Context, user *domain.User, update domain.Update) error {
 	// Handle based on current user state
 	currentState := user.CurrentStep
 

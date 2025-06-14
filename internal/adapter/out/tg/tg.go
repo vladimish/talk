@@ -317,6 +317,25 @@ func (u *Sender) UpdateMessages(
 	return resultMessageIDs, nil
 }
 
+func (u *Sender) DeleteMessage(ctx context.Context, externalUserID string, messageID string) error {
+	msgID, err := strconv.Atoi(messageID)
+	if err != nil {
+		return fmt.Errorf("invalid message ID: %w", err)
+	}
+
+	params := &bot.DeleteMessageParams{
+		ChatID:    externalUserID,
+		MessageID: msgID,
+	}
+
+	_, err = u.bot.DeleteMessage(ctx, params)
+	if err != nil {
+		return fmt.Errorf("failed to delete message: %w", err)
+	}
+
+	return nil
+}
+
 func splitText(text string, maxLength int) []string {
 	if len(text) <= maxLength {
 		return []string{text}

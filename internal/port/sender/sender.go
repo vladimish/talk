@@ -17,4 +17,5 @@ type Sender interface {
 		previousText, currentText string,
 	) ([]string, error)
 	SendTyping(ctx context.Context, externalUserID string) error
+	DeleteMessage(ctx context.Context, externalUserID string, messageID string) error
 }

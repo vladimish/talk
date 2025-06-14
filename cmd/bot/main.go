@@ -12,6 +12,7 @@ import (
 	"github.com/vladimish/talk/internal/adapter/in/tg"
 	"github.com/vladimish/talk/internal/adapter/out/openai"
 	pgAdapter "github.com/vladimish/talk/internal/adapter/out/pg"
+	redisAdapter "github.com/vladimish/talk/internal/adapter/out/redis"
 	"github.com/vladimish/talk/internal/adapter/out/telegramify"
 	tgAdapter "github.com/vladimish/talk/internal/adapter/out/tg"
 	"github.com/vladimish/talk/internal/service"
@@ -68,8 +69,26 @@ func main() {
 	}
 	formatter := telegramify.New(telegramifyURL)
 
+	// Initialize Redis queue
+	redisURL := os.Getenv("REDIS_URL")
+	if redisURL == "" {
+		redisURL = "redis://localhost:6379"
+		log.Warn("REDIS_URL not set, using default", "url", redisURL)
+	}
+
+	redisQueue, err := redisAdapter.NewRedisQueue(redisURL)
+	if err != nil {
+		log.Error("failed to initialize Redis queue", "error", err)
+		os.Exit(1)
+	}
+	defer func() {
+		if err := redisQueue.Close(); err != nil {
+			log.Error("failed to close Redis connection", "error", err)
+		}
+	}()
+
 	sender := tgAdapter.NewSender(b, formatter, log)
-	updateService := service.NewUpdateService(log, store, sender, completion)
+	updateService := service.NewUpdateService(log, store, sender, completion, redisQueue)
 	botAdapter := tg.NewBot(log, updateService)
 
 	b.RegisterHandler(bot.HandlerTypeMessageText, "", bot.MatchTypeContains, botAdapter.Handle)
