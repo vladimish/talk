@@ -3,7 +3,9 @@ package tg
 import (
 	"context"
 	"fmt"
+	"io"
 	"log/slog"
+	"net/http"
 	"strconv"
 
 	"github.com/vladimish/talk/internal/domain"
@@ -15,14 +17,18 @@ import (
 )
 
 type Bot struct {
-	l *slog.Logger
-	s *service.UpdateService
+	l     *slog.Logger
+	s     *service.UpdateService
+	bot   *bot.Bot
+	token string
 }
 
-func NewBot(l *slog.Logger, s *service.UpdateService) *Bot {
+func NewBot(l *slog.Logger, s *service.UpdateService, telegramBot *bot.Bot, token string) *Bot {
 	return &Bot{
-		l: l,
-		s: s,
+		l:     l,
+		s:     s,
+		bot:   telegramBot,
+		token: token,
 	}
 }
 
@@ -46,11 +52,34 @@ func (b *Bot) Handle(ctx context.Context, _ *bot.Bot, update *models.Update) {
 		return
 	}
 
+	// Extract image data if present
+	var imageData []byte
+	var imageMimeType string
+	messageText := update.Message.Text
+
+	// Handle photo messages
+	if len(update.Message.Photo) > 0 {
+		largestPhoto := update.Message.Photo[len(update.Message.Photo)-1]
+		imageData, imageMimeType = b.downloadPhoto(ctx, largestPhoto)
+
+		// Use caption as message text if no text is provided
+		if messageText == "" && update.Message.Caption != "" {
+			messageText = update.Message.Caption
+		}
+
+		b.l.InfoContext(ctx, "Photo received",
+			slog.String("file_id", largestPhoto.FileID),
+			slog.Int("file_size", largestPhoto.FileSize),
+			slog.Int("downloaded_size", len(imageData)))
+	}
+
 	err := b.s.HandleUpdate(ctx, domain.Update{
 		ExternalID:        strconv.FormatInt(update.ID, 10),
 		ExternalUserID:    strconv.FormatInt(update.Message.From.ID, 10),
 		UserLanguage:      update.Message.From.LanguageCode,
-		MessageText:       update.Message.Text,
+		MessageText:       messageText,
+		ImageData:         imageData,
+		ImageMimeType:     imageMimeType,
 		ExternalMessageID: update.Message.ID,
 	})
 	if err != nil {
@@ -120,4 +149,53 @@ func (b *Bot) HandleSuccessfulPayment(ctx context.Context, _ *bot.Bot, update *m
 	if err != nil {
 		b.l.ErrorContext(ctx, fmt.Errorf("error while handling successful payment: %w", err).Error())
 	}
+}
+
+func (b *Bot) downloadPhoto(ctx context.Context, photo models.PhotoSize) ([]byte, string) {
+	// Download the photo using Telegram Bot API
+	file, err := b.bot.GetFile(ctx, &bot.GetFileParams{
+		FileID: photo.FileID,
+	})
+	if err != nil {
+		b.l.ErrorContext(ctx, "failed to get file info", slog.String("error", err.Error()))
+		return nil, ""
+	}
+
+	if file.FilePath == "" {
+		return nil, ""
+	}
+
+	// Download the actual file content
+	downloadURL := fmt.Sprintf("https://api.telegram.org/file/bot%s/%s", b.token, file.FilePath)
+
+	req, reqErr := http.NewRequestWithContext(ctx, http.MethodGet, downloadURL, nil)
+	if reqErr != nil {
+		b.l.ErrorContext(ctx, "failed to create request", slog.String("error", reqErr.Error()))
+		return nil, ""
+	}
+
+	httpResp, httpErr := http.DefaultClient.Do(req)
+	if httpErr != nil {
+		b.l.ErrorContext(ctx, "failed to download file", slog.String("error", httpErr.Error()))
+		return nil, ""
+	}
+	defer httpResp.Body.Close()
+
+	if httpResp.StatusCode != http.StatusOK {
+		b.l.ErrorContext(ctx, "failed to download file",
+			slog.Int("status_code", httpResp.StatusCode))
+		return nil, ""
+	}
+
+	// Read the file content
+	fileData, readErr := io.ReadAll(httpResp.Body)
+	if readErr != nil {
+		b.l.ErrorContext(ctx, "failed to read file content", slog.String("error", readErr.Error()))
+		return nil, ""
+	}
+
+	b.l.InfoContext(ctx, "Successfully downloaded image",
+		slog.Int("size", len(fileData)))
+
+	return fileData, "image/jpeg" // Telegram photos are always JPEG
 }

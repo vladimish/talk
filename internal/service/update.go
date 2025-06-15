@@ -9,6 +9,7 @@ import (
 
 	"github.com/vladimish/talk/internal/domain"
 	"github.com/vladimish/talk/internal/port/completion"
+	"github.com/vladimish/talk/internal/port/filestorage"
 	"github.com/vladimish/talk/internal/port/queue"
 	"github.com/vladimish/talk/internal/port/sender"
 	"github.com/vladimish/talk/internal/port/storage"
@@ -18,11 +19,12 @@ import (
 const initialTokenGrant = 20
 
 type UpdateService struct {
-	logger     *slog.Logger
-	storage    storage.Storage
-	sender     sender.Sender
-	completion completion.Completion
-	queue      queue.Queue
+	logger      *slog.Logger
+	storage     storage.Storage
+	sender      sender.Sender
+	completion  completion.Completion
+	queue       queue.Queue
+	fileStorage filestorage.FileStorage
 }
 
 func NewUpdateService(
@@ -31,13 +33,15 @@ func NewUpdateService(
 	sender sender.Sender,
 	completion completion.Completion,
 	queue queue.Queue,
+	fileStorage filestorage.FileStorage,
 ) *UpdateService {
 	return &UpdateService{
-		logger:     logger,
-		storage:    storage,
-		sender:     sender,
-		completion: completion,
-		queue:      queue,
+		logger:      logger,
+		storage:     storage,
+		sender:      sender,
+		completion:  completion,
+		queue:       queue,
+		fileStorage: fileStorage,
 	}
 }
 

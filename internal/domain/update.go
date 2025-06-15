@@ -31,7 +31,9 @@ type Update struct {
 	ExternalUserID    string             `json:"external_user_id"`
 	UserLanguage      string             `json:"user_language"`
 	MessageText       string             `json:"message_text"`
-	ExternalMessageID int                `json:"external_message_id"` // Telegram message ID
+	ImageData         []byte             `json:"image_data,omitempty"`      // Base64 encoded image data
+	ImageMimeType     string             `json:"image_mime_type,omitempty"` // MIME type of the image
+	ExternalMessageID int                `json:"external_message_id"`       // Telegram message ID
 	CallbackQuery     *CallbackQuery     `json:"callback_query,omitempty"`
 	PreCheckoutQuery  *PreCheckoutQuery  `json:"pre_checkout_query,omitempty"`
 	SuccessfulPayment *SuccessfulPayment `json:"successful_payment,omitempty"`

@@ -422,6 +422,8 @@ linters:
         linters: [ dupl ]
       - path: 'db/'
         text: '.*'
+      - text: 'G107: Potential HTTP request made with variable url'
+        linters: [ gosec ]
       - source: 'TODO'
         linters: [ godot ]
       - text: 'should have a package comment'

@@ -20,5 +20,7 @@ type Message struct {
 }
 
 type MessageType struct {
-	Text string `json:"text"`
+	Text          string `json:"text"`
+	ImageData     []byte `json:"image_data"`
+	ImageMimeType string `json:"image_mime_type"`
 }

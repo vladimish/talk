@@ -17,5 +17,6 @@ type Completion interface {
 		model string,
 		systemPrompt string,
 		messages []*domain.Message,
+		currentImageURL string, // Empty string if no image
 	) (<-chan StreamToken, error)
 }

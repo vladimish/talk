@@ -10,6 +10,7 @@ import (
 
 	"github.com/vladimish/talk/db/generated"
 	"github.com/vladimish/talk/internal/adapter/in/tg"
+	minioAdapter "github.com/vladimish/talk/internal/adapter/out/minio"
 	"github.com/vladimish/talk/internal/adapter/out/openai"
 	pgAdapter "github.com/vladimish/talk/internal/adapter/out/pg"
 	redisAdapter "github.com/vladimish/talk/internal/adapter/out/redis"
@@ -51,9 +52,27 @@ func main() {
 	queries := generated.New(pg)
 	store := pgAdapter.NewPg(queries)
 
-	b, err := bot.New(os.Getenv("TG_TOKEN"))
+	tgToken := os.Getenv("TG_TOKEN")
+	b, err := bot.New(tgToken)
 	if err != nil {
 		panic(err)
+	}
+
+	// Initialize MinIO/S3 storage
+	minioConfig := minioAdapter.Config{
+		Endpoint:        getEnvOrDefault("MINIO_ENDPOINT", "localhost:9000"),
+		AccessKeyID:     getEnvOrDefault("MINIO_ACCESS_KEY", "minioadmin"),
+		SecretAccessKey: getEnvOrDefault("MINIO_SECRET_KEY", "minioadmin"),
+		UseSSL:          getEnvOrDefault("MINIO_USE_SSL", "false") == "true",
+		BucketName:      getEnvOrDefault("MINIO_BUCKET", "telegram-images"),
+		PublicDomain:    getEnvOrDefault("MINIO_PUBLIC_DOMAIN", "s3.vladimish.com"),
+	}
+
+	fileStorage, err := minioAdapter.NewFileStorage(minioConfig)
+	if err != nil {
+		log.Error("failed to initialize MinIO storage", "error", err)
+		// For now, continue without file storage (images won't work)
+		fileStorage = nil
 	}
 
 	openAIKey := os.Getenv("OPENAI_API_KEY")
@@ -89,8 +108,8 @@ func main() {
 	}()
 
 	sender := tgAdapter.NewSender(b, formatter, log)
-	updateService := service.NewUpdateService(log, store, sender, completion, redisQueue)
-	botAdapter := tg.NewBot(log, updateService)
+	updateService := service.NewUpdateService(log, store, sender, completion, redisQueue, fileStorage)
+	botAdapter := tg.NewBot(log, updateService, b, tgToken)
 
 	b.RegisterHandlerMatchFunc(func(update *models.Update) bool {
 		return update.Message != nil && update.Message.SuccessfulPayment != nil
@@ -123,4 +142,12 @@ func runMigrations(ctx context.Context, log *slog.Logger, db *sql.DB) error {
 
 	log.InfoContext(ctx, "database migrations completed successfully")
 	return nil
+}
+
+// getEnvOrDefault returns the value of an environment variable or a default value if not set.
+func getEnvOrDefault(key, defaultValue string) string {
+	if value := os.Getenv(key); value != "" {
+		return value
+	}
+	return defaultValue
 }

@@ -23,6 +23,23 @@ const (
 
 // Conversation handlers.
 func (s *UpdateService) handleConversationMessage(ctx context.Context, user *domain.User, update domain.Update) error {
+	// Check if an image is provided and validate model support
+	if len(update.ImageData) > 0 || update.ImageMimeType != "" {
+		modelInfo := domain.GetModelByID(user.SelectedModel)
+		if modelInfo == nil || !modelInfo.ImageSupport {
+			errorMsg := i18n.GetString(user.Language, i18n.ModelImageNotSupported)
+			_, sendErr := s.sender.SendMessage(ctx, user.ExternalID, errorMsg)
+			if sendErr != nil {
+				s.logger.WarnContext(
+					ctx,
+					"failed to send image not supported message",
+					slog.String("error", sendErr.Error()),
+				)
+			}
+			return nil // Don't process the message further
+		}
+	}
+
 	// Check if user has sufficient tokens for the selected model
 	modelCost, exists := domain.ModelCosts[user.SelectedModel]
 	if !exists {
@@ -90,7 +107,9 @@ func (s *UpdateService) handleConversationMessage(ctx context.Context, user *dom
 	userMessage, err := s.storage.CreateMessage(ctx, &domain.Message{
 		UserID: user.ID,
 		MessageType: domain.MessageType{
-			Text: update.MessageText,
+			Text:          update.MessageText,
+			ImageData:     update.ImageData,
+			ImageMimeType: update.ImageMimeType,
 		},
 		SentBy:         domain.MessageSenderUser,
 		ConversationID: user.CurrentConversationID,
@@ -132,8 +151,11 @@ func (s *UpdateService) handleConversationMessage(ctx context.Context, user *dom
 		s.logger.WarnContext(ctx, "failed to send typing indicator", slog.String("error", err.Error()))
 	}
 
+	// Handle image upload if present
+	currentImageURL := s.handleImageUpload(ctx, update.ImageData, update.ImageMimeType)
+
 	systemPrompt := "You are a helpful assistant."
-	tokenStream, err := s.completion.CompleteStream(ctx, user.SelectedModel, systemPrompt, messages)
+	tokenStream, err := s.completion.CompleteStream(ctx, user.SelectedModel, systemPrompt, messages, currentImageURL)
 	if err != nil {
 		return fmt.Errorf("can't get completion: %w", err)
 	}
@@ -308,6 +330,7 @@ Examples:
 		"google/gemini-2.5-flash-preview-05-20",
 		systemPrompt,
 		messages,
+		"", // no image for conversation name generation
 	)
 	if err != nil {
 		s.logger.WarnContext(ctx, "failed to generate conversation name with LLM, using fallback",
@@ -404,4 +427,30 @@ func (s *UpdateService) processQueuedMessages(ctx context.Context, user *domain.
 		// Small delay between processing queued messages
 		time.Sleep(queueProcessingDelay)
 	}
+}
+
+func (s *UpdateService) handleImageUpload(ctx context.Context, imageData []byte, imageMimeType string) string {
+	if len(imageData) == 0 || imageMimeType == "" || s.fileStorage == nil {
+		return ""
+	}
+
+	// Upload image to S3 and get pre-signed URL
+	objectName, uploadErr := s.fileStorage.Upload(ctx, imageData, imageMimeType)
+	if uploadErr != nil {
+		s.logger.ErrorContext(ctx, "failed to upload image", slog.String("error", uploadErr.Error()))
+		return ""
+	}
+
+	// Generate pre-signed URL valid for 1 hour
+	imageURL, urlErr := s.fileStorage.GetPreSignedURL(ctx, objectName, time.Hour)
+	if urlErr != nil {
+		s.logger.ErrorContext(ctx, "failed to generate pre-signed URL", slog.String("error", urlErr.Error()))
+		return ""
+	}
+
+	s.logger.InfoContext(ctx, "Image uploaded successfully",
+		slog.String("object_name", objectName),
+		slog.String("image_url", imageURL))
+
+	return imageURL
 }

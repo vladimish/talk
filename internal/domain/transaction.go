@@ -40,10 +40,11 @@ type TokenBalance struct {
 
 // ModelInfo represents the complete information for an AI model.
 type ModelInfo struct {
-	ID          string    `json:"id"`           // Internal model identifier
-	DisplayName string    `json:"display_name"` // User-friendly name for buttons
-	Cost        int64     `json:"cost"`         // Token cost per message
-	TokenType   TokenType `json:"token_type"`   // Type of tokens required
+	ID           string    `json:"id"`            // Internal model identifier
+	DisplayName  string    `json:"display_name"`  // User-friendly name for buttons
+	Cost         int64     `json:"cost"`          // Token cost per message
+	TokenType    TokenType `json:"token_type"`    // Type of tokens required
+	ImageSupport bool      `json:"image_support"` // Whether the model supports image inputs
 }
 
 // Token cost constants.
@@ -56,34 +57,39 @@ const (
 // AvailableModels defines all available AI models with their complete information.
 var AvailableModels = []ModelInfo{
 	{
-		ID:          "google/gemini-2.5-flash-preview-05-20",
-		DisplayName: "🚀 Gemini 2.5 Flash (Fast)",
-		Cost:        TokenCostLow,
-		TokenType:   TokenTypeRegular,
+		ID:           "google/gemini-2.5-flash-preview-05-20",
+		DisplayName:  "🚀 Gemini 2.5 Flash (Fast) 👁️",
+		Cost:         TokenCostLow,
+		TokenType:    TokenTypeRegular,
+		ImageSupport: true,
 	},
 	{
-		ID:          "openai/gpt-4o",
-		DisplayName: "🧠 GPT-4o (Most Capable)",
-		Cost:        TokenCostHigh,
-		TokenType:   TokenTypePremium,
+		ID:           "openai/gpt-4o",
+		DisplayName:  "🧠 GPT-4o (Most Capable) 👁️",
+		Cost:         TokenCostHigh,
+		TokenType:    TokenTypePremium,
+		ImageSupport: true,
 	},
 	{
-		ID:          "openai/gpt-4o-mini",
-		DisplayName: "⚡ GPT-4o Mini (Balanced)",
-		Cost:        TokenCostLow,
-		TokenType:   TokenTypeRegular,
+		ID:           "openai/gpt-4o-mini",
+		DisplayName:  "⚡ GPT-4o Mini (Balanced) 👁️",
+		Cost:         TokenCostLow,
+		TokenType:    TokenTypeRegular,
+		ImageSupport: true,
 	},
 	{
-		ID:          "anthropic/claude-4-sonnet-20250522",
-		DisplayName: "🎭 Claude 4 Sonnet (Creative)",
-		Cost:        TokenCostMedium,
-		TokenType:   TokenTypePremium,
+		ID:           "anthropic/claude-4-sonnet-20250522",
+		DisplayName:  "🎭 Claude 4 Sonnet (Creative) 👁️",
+		Cost:         TokenCostMedium,
+		TokenType:    TokenTypePremium,
+		ImageSupport: true,
 	},
 	{
-		ID:          "google/gemini-2.5-pro-preview",
-		DisplayName: "🌸 Gemini 2.5 Pro (Long context)",
-		Cost:        TokenCostLow,
-		TokenType:   TokenTypeRegular,
+		ID:           "google/gemini-2.5-pro-preview",
+		DisplayName:  "🌸 Gemini 2.5 Pro (Long context) 👁️",
+		Cost:         TokenCostLow,
+		TokenType:    TokenTypeRegular,
+		ImageSupport: true,
 	},
 }
 

@@ -35,8 +35,9 @@ const (
 	ConversationListPageInfo = "conversation_list.page_info"
 
 	// Model selection messages.
-	ModelSelectTitle   = "model.select_title"
-	ModelUpdateSuccess = "model.update_success"
+	ModelSelectTitle       = "model.select_title"
+	ModelUpdateSuccess     = "model.update_success"
+	ModelImageNotSupported = "model.image_not_supported"
 
 	// Queue messages.
 	QueueMessageQueued = "queue.message_queued"
@@ -152,8 +153,9 @@ var Strings = map[string]map[string]string{
 		ConversationListPageInfo: "💬 Select a conversation (page %d/%d):",
 
 		// Model Selection
-		ModelSelectTitle:   "🤖 Select AI model:",
-		ModelUpdateSuccess: "✅ Model updated successfully!",
+		ModelSelectTitle:       "🤖 Select AI model:\n\n👁️ = Supports image inputs",
+		ModelUpdateSuccess:     "✅ Model updated successfully!",
+		ModelImageNotSupported: "❌ The selected model does not support image inputs. Please choose a different model or send a text message.",
 
 		// Queue
 		QueueMessageQueued: "⏳ Your message has been queued (position: %d). I'll process it after finishing the current response.",
@@ -226,8 +228,9 @@ var Strings = map[string]map[string]string{
 		ConversationListPageInfo: "💬 Selecciona una conversación (página %d/%d):",
 
 		// Model Selection
-		ModelSelectTitle:   "🤖 Seleccionar modelo de IA:",
-		ModelUpdateSuccess: "✅ ¡Modelo actualizado exitosamente!",
+		ModelSelectTitle:       "🤖 Seleccionar modelo de IA:\n\n👁️ = Soporta imágenes",
+		ModelUpdateSuccess:     "✅ ¡Modelo actualizado exitosamente!",
+		ModelImageNotSupported: "❌ El modelo seleccionado no admite imágenes. Por favor elige un modelo diferente o envía un mensaje de texto.",
 
 		// Queue
 		QueueMessageQueued: "⏳ Tu mensaje ha sido puesto en cola (posición: %d). Lo procesaré después de terminar la respuesta actual.",
@@ -300,8 +303,9 @@ var Strings = map[string]map[string]string{
 		ConversationListPageInfo: "💬 Выберите беседу (страница %d/%d):",
 
 		// Model Selection
-		ModelSelectTitle:   "🤖 Выбрать ИИ модель:",
-		ModelUpdateSuccess: "✅ Модель успешно обновлена!",
+		ModelSelectTitle:       "🤖 Выбрать ИИ модель:\n\n👁️ = Поддерживает изображения",
+		ModelUpdateSuccess:     "✅ Модель успешно обновлена!",
+		ModelImageNotSupported: "❌ Выбранная модель не поддерживает изображения. Пожалуйста, выберите другую модель или отправьте текстовое сообщение.",
 
 		// Queue
 		QueueMessageQueued: "⏳ Ваше сообщение поставлено в очередь (позиция: %d). Я обработаю его после завершения текущего ответа.",
@@ -374,8 +378,9 @@ var Strings = map[string]map[string]string{
 		ConversationListPageInfo: "💬 Sélectionnez une conversation (page %d/%d) :",
 
 		// Model Selection
-		ModelSelectTitle:   "🤖 Sélectionner un modèle IA :",
-		ModelUpdateSuccess: "✅ Modèle mis à jour avec succès !",
+		ModelSelectTitle:       "🤖 Sélectionner un modèle IA :\n\n👁️ = Prend en charge les images",
+		ModelUpdateSuccess:     "✅ Modèle mis à jour avec succès !",
+		ModelImageNotSupported: "❌ Le modèle sélectionné ne prend pas en charge les images. Veuillez choisir un modèle différent ou envoyer un message texte.",
 
 		// Queue
 		QueueMessageQueued: "⏳ Votre message a été mis en file d'attente (position : %d). Je le traiterai après avoir terminé la réponse actuelle.",
@@ -448,8 +453,9 @@ var Strings = map[string]map[string]string{
 		ConversationListPageInfo: "💬 Wählen Sie ein Gespräch (Seite %d/%d):",
 
 		// Model Selection
-		ModelSelectTitle:   "🤖 KI-Modell auswählen:",
-		ModelUpdateSuccess: "✅ Modell erfolgreich aktualisiert!",
+		ModelSelectTitle:       "🤖 KI-Modell auswählen:\n\n👁️ = Unterstützt Bilder",
+		ModelUpdateSuccess:     "✅ Modell erfolgreich aktualisiert!",
+		ModelImageNotSupported: "❌ Das ausgewählte Modell unterstützt keine Bilder. Bitte wählen Sie ein anderes Modell oder senden Sie eine Textnachricht.",
 
 		// Queue
 		QueueMessageQueued: "⏳ Ihre Nachricht wurde in die Warteschlange eingereiht (Position: %d). Ich werde sie nach Beendigung der aktuellen Antwort bearbeiten.",
@@ -522,8 +528,9 @@ var Strings = map[string]map[string]string{
 		ConversationListPageInfo: "💬 Seleziona una conversazione (pagina %d/%d):",
 
 		// Model Selection
-		ModelSelectTitle:   "🤖 Seleziona modello IA:",
-		ModelUpdateSuccess: "✅ Modello aggiornato con successo!",
+		ModelSelectTitle:       "🤖 Seleziona modello IA:\n\n👁️ = Supporta immagini",
+		ModelUpdateSuccess:     "✅ Modello aggiornato con successo!",
+		ModelImageNotSupported: "❌ Il modello selezionato non supporta le immagini. Per favore scegli un modello diverso o invia un messaggio di testo.",
 
 		// Queue
 		QueueMessageQueued: "⏳ Il tuo messaggio è stato messo in coda (posizione: %d). Lo elaborerò dopo aver terminato la risposta attuale.",
@@ -596,8 +603,9 @@ var Strings = map[string]map[string]string{
 		ConversationListPageInfo: "💬 选择一个对话（第%d/%d页）：",
 
 		// Model Selection
-		ModelSelectTitle:   "🤖 选择AI模型：",
-		ModelUpdateSuccess: "✅ 模型更新成功！",
+		ModelSelectTitle:       "🤖 选择AI模型：\n\n👁️ = 支持图像输入",
+		ModelUpdateSuccess:     "✅ 模型更新成功！",
+		ModelImageNotSupported: "❌ 所选模型不支持图像输入。请选择其他模型或发送文本消息。",
 
 		// Queue
 		QueueMessageQueued: "⏳ 您的消息已排队（位置：%d）。我会在完成当前回复后处理它。",
@@ -670,8 +678,9 @@ var Strings = map[string]map[string]string{
 		ConversationListPageInfo: "💬 会話を選択してください（%d/%dページ）：",
 
 		// Model Selection
-		ModelSelectTitle:   "🤖 AIモデルを選択：",
-		ModelUpdateSuccess: "✅ モデルが正常に更新されました！",
+		ModelSelectTitle:       "🤖 AIモデルを選択：\n\n👁️ = 画像入力に対応",
+		ModelUpdateSuccess:     "✅ モデルが正常に更新されました！",
+		ModelImageNotSupported: "❌ 選択されたモデルは画像入力をサポートしていません。別のモデルを選択するか、テキストメッセージを送信してください。",
 
 		// Queue
 		QueueMessageQueued: "⏳ メッセージがキューに追加されました（位置：%d）。現在の応答を完了した後に処理します。",
@@ -744,8 +753,9 @@ var Strings = map[string]map[string]string{
 		ConversationListPageInfo: "💬 대화를 선택하세요 (%d/%d페이지):",
 
 		// Model Selection
-		ModelSelectTitle:   "🤖 AI 모델 선택:",
-		ModelUpdateSuccess: "✅ 모델이 성공적으로 업데이트되었습니다!",
+		ModelSelectTitle:       "🤖 AI 모델 선택:\n\n👁️ = 이미지 입력 지원",
+		ModelUpdateSuccess:     "✅ 모델이 성공적으로 업데이트되었습니다!",
+		ModelImageNotSupported: "❌ 선택한 모델은 이미지 입력을 지원하지 않습니다. 다른 모델을 선택하거나 텍스트 메시지를 보내주세요.",
 
 		// Queue
 		QueueMessageQueued: "⏳ 메시지가 대기열에 추가되었습니다 (위치: %d). 현재 응답을 완료한 후 처리하겠습니다.",
@@ -818,8 +828,9 @@ var Strings = map[string]map[string]string{
 		ConversationListPageInfo: "💬 Selecione uma conversa (página %d/%d):",
 
 		// Model Selection
-		ModelSelectTitle:   "🤖 Selecionar modelo de IA:",
-		ModelUpdateSuccess: "✅ Modelo atualizado com sucesso!",
+		ModelSelectTitle:       "🤖 Selecionar modelo de IA:\n\n👁️ = Suporta imagens",
+		ModelUpdateSuccess:     "✅ Modelo atualizado com sucesso!",
+		ModelImageNotSupported: "❌ O modelo selecionado não suporta entradas de imagem. Por favor, escolha um modelo diferente ou envie uma mensagem de texto.",
 
 		// Queue
 		QueueMessageQueued: "⏳ Sua mensagem foi colocada na fila (posição: %d). Vou processá-la após terminar a resposta atual.",
@@ -892,8 +903,9 @@ var Strings = map[string]map[string]string{
 		ConversationListPageInfo: "💬 Ընտրեք խոսակցությունը (էջ %d/%d):",
 
 		// Model Selection
-		ModelSelectTitle:   "🤖 Ընտրել AI մոդելը:",
-		ModelUpdateSuccess: "✅ Մոդելը հաջողությամբ թարմացվեց:",
+		ModelSelectTitle:       "🤖 Ընտրել AI մոդելը:\n\n👁️ = Աջակցում է պատկերները",
+		ModelUpdateSuccess:     "✅ Մոդելը հաջողությամբ թարմացվեց:",
+		ModelImageNotSupported: "❌ Ընտրված մոդելը չի աջակցում պատկերների մուտքագրմանը: Խնդրում ենք ընտրել այլ մոդել կամ ուղարկել տեքստային հաղորդագրություն:",
 
 		// Queue
 		QueueMessageQueued: "⏳ Ձեր հաղորդագրությունը հերթի մեջ է (դիրքը՝ %d): Ես կմշակեմ այն ընթացիկ պատասխանն ավարտելուց հետո:",
@@ -966,8 +978,9 @@ var Strings = map[string]map[string]string{
 		ConversationListPageInfo: "💬 Оберіть розмову (сторінка %d/%d):",
 
 		// Model Selection
-		ModelSelectTitle:   "🤖 Вибрати AI модель:",
-		ModelUpdateSuccess: "✅ Модель успішно оновлено!",
+		ModelSelectTitle:       "🤖 Вибрати AI модель:\n\n👁️ = Підтримує зображення",
+		ModelUpdateSuccess:     "✅ Модель успішно оновлено!",
+		ModelImageNotSupported: "❌ Обрана модель не підтримує зображення. Будь ласка, оберіть іншу модель або надішліть текстове повідомлення.",
 
 		// Queue
 		QueueMessageQueued: "⏳ Ваше повідомлення поставлено в чергу (позиція: %d). Я оброблю його після завершення поточної відповіді.",
@@ -1040,8 +1053,9 @@ var Strings = map[string]map[string]string{
 		ConversationListPageInfo: "💬 Сөйлесуді таңдаңыз (%d/%d бет):",
 
 		// Model Selection
-		ModelSelectTitle:   "🤖 AI моделін таңдау:",
-		ModelUpdateSuccess: "✅ Модель сәтті жаңартылды!",
+		ModelSelectTitle:       "🤖 AI моделін таңдау:\n\n👁️ = Кескіндерді қолдайды",
+		ModelUpdateSuccess:     "✅ Модель сәтті жаңартылды!",
+		ModelImageNotSupported: "❌ Таңдалған модель кескіндерді қолдамайды. Басқа модель таңдаңыз немесе мәтіндік хабарлама жіберіңіз.",
 
 		// Queue
 		QueueMessageQueued: "⏳ Сіздің хабарламаңыз кезекке қойылды (орын: %d). Мен оны ағымдағы жауапты аяқтағаннан кейін өңдеймін.",
@@ -1114,8 +1128,9 @@ var Strings = map[string]map[string]string{
 		ConversationListPageInfo: "💬 Маекти тандаңыз (%d/%d бет):",
 
 		// Model Selection
-		ModelSelectTitle:   "🤖 AI модель тандоо:",
-		ModelUpdateSuccess: "✅ Модель ийгиликтүү жаңыртылды!",
+		ModelSelectTitle:       "🤖 AI модель тандоо:\n\n👁️ = Сүрөттөрдү колдойт",
+		ModelUpdateSuccess:     "✅ Модель ийгиликтүү жаңыртылды!",
+		ModelImageNotSupported: "❌ Тандалган модель сүрөттөрдү колдобойт. Башка модель тандаңыз же текст билдирүү жөнөтүңүз.",
 
 		// Queue
 		QueueMessageQueued: "⏳ Сиздин билдирүүңүз кезекке коюлду (орун: %d). Мен аны учурдагы жоопту бүткөндөн кийин иштетем.",
@@ -1188,8 +1203,9 @@ var Strings = map[string]map[string]string{
 		ConversationListPageInfo: "💬 اختر محادثة (الصفحة %d/%d):",
 
 		// Model Selection
-		ModelSelectTitle:   "🤖 اختيار نموذج الذكاء الاصطناعي:",
-		ModelUpdateSuccess: "✅ تم تحديث النموذج بنجاح!",
+		ModelSelectTitle:       "🤖 اختيار نموذج الذكاء الاصطناعي:\n\n👁️ = يدعم الصور",
+		ModelUpdateSuccess:     "✅ تم تحديث النموذج بنجاح!",
+		ModelImageNotSupported: "❌ النموذج المحدد لا يدعم مدخلات الصور. يرجى اختيار نموذج مختلف أو إرسال رسالة نصية.",
 
 		// Queue
 		QueueMessageQueued: "⏳ تم وضع رسالتك في طابور الانتظار (الموضع: %d). سأقوم بمعالجتها بعد إنهاء الرد الحالي.",
@@ -1262,8 +1278,9 @@ var Strings = map[string]map[string]string{
 		ConversationListPageInfo: "💬 एक बातचीत चुनें (पेज %d/%d):",
 
 		// Model Selection
-		ModelSelectTitle:   "🤖 AI मॉडल चुनें:",
-		ModelUpdateSuccess: "✅ मॉडल सफलतापूर्वक अपडेट हो गया!",
+		ModelSelectTitle:       "🤖 AI मॉडल चुनें:\n\n👁️ = छवि इनपुट का समर्थन करता है",
+		ModelUpdateSuccess:     "✅ मॉडल सफलतापूर्वक अपडेट हो गया!",
+		ModelImageNotSupported: "❌ चयनित मॉडल छवि इनपुट का समर्थन नहीं करता है। कृपया एक अलग मॉडल चुनें या टेक्स्ट संदेश भेजें।",
 
 		// Queue
 		QueueMessageQueued: "⏳ आपका संदेश कतार में रखा गया है (स्थिति: %d)। मैं वर्तमान जवाब पूरा करने के बाद इसे प्रोसेस करूंगा।",
