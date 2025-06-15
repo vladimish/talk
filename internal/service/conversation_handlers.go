@@ -152,7 +152,28 @@ func (s *UpdateService) handleConversationMessage(ctx context.Context, user *dom
 	}
 
 	// Handle image upload if present
-	currentImageURL := s.handleImageUpload(ctx, update.ImageData, update.ImageMimeType)
+	uploadResult := s.handleImageUpload(ctx, update.ImageData, update.ImageMimeType)
+	currentImageURL := ""
+	if uploadResult != nil {
+		currentImageURL = uploadResult.imageURL
+	}
+
+	// Create attachment record if image was uploaded
+	if uploadResult != nil {
+		_, attachmentErr := s.storage.CreateAttachment(ctx, &domain.Attachment{
+			MessageID:   userMessage.ID,
+			S3Name:      uploadResult.objectName,
+			ContentType: uploadResult.contentType,
+			Size:        uploadResult.size,
+		})
+		if attachmentErr != nil {
+			s.logger.ErrorContext(
+				ctx,
+				"failed to create attachment record",
+				slog.String("error", attachmentErr.Error()),
+			)
+		}
+	}
 
 	systemPrompt := "You are a helpful assistant."
 	tokenStream, err := s.completion.CompleteStream(ctx, user.SelectedModel, systemPrompt, messages, currentImageURL)
@@ -429,28 +450,44 @@ func (s *UpdateService) processQueuedMessages(ctx context.Context, user *domain.
 	}
 }
 
-func (s *UpdateService) handleImageUpload(ctx context.Context, imageData []byte, imageMimeType string) string {
+type imageUploadResult struct {
+	imageURL    string
+	objectName  string
+	contentType string
+	size        int64
+}
+
+func (s *UpdateService) handleImageUpload(
+	ctx context.Context,
+	imageData []byte,
+	imageMimeType string,
+) *imageUploadResult {
 	if len(imageData) == 0 || imageMimeType == "" || s.fileStorage == nil {
-		return ""
+		return nil
 	}
 
 	// Upload image to S3 and get pre-signed URL
 	objectName, uploadErr := s.fileStorage.Upload(ctx, imageData, imageMimeType)
 	if uploadErr != nil {
 		s.logger.ErrorContext(ctx, "failed to upload image", slog.String("error", uploadErr.Error()))
-		return ""
+		return nil
 	}
 
 	// Generate pre-signed URL valid for 1 hour
 	imageURL, urlErr := s.fileStorage.GetPreSignedURL(ctx, objectName, time.Hour)
 	if urlErr != nil {
 		s.logger.ErrorContext(ctx, "failed to generate pre-signed URL", slog.String("error", urlErr.Error()))
-		return ""
+		return nil
 	}
 
 	s.logger.InfoContext(ctx, "Image uploaded successfully",
 		slog.String("object_name", objectName),
 		slog.String("image_url", imageURL))
 
-	return imageURL
+	return &imageUploadResult{
+		imageURL:    imageURL,
+		objectName:  objectName,
+		contentType: imageMimeType,
+		size:        int64(len(imageData)),
+	}
 }

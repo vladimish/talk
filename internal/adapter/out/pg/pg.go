@@ -726,6 +726,31 @@ func (p *PG) GetActiveSubscriptionByUserID(ctx context.Context, userID int64) (*
 	}, nil
 }
 
+// CreateAttachment creates a new attachment in the database.
+func (p *PG) CreateAttachment(ctx context.Context, attachment *domain.Attachment) (*domain.Attachment, error) {
+	contentType := sql.NullString{String: attachment.ContentType, Valid: attachment.ContentType != ""}
+	size := sql.NullInt64{Int64: attachment.Size, Valid: attachment.Size > 0}
+
+	dbAttachment, err := p.q.CreateAttachment(ctx, generated.CreateAttachmentParams{
+		MessageID:   attachment.MessageID,
+		S3Name:      attachment.S3Name,
+		ContentType: contentType,
+		Size:        size,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("can't create attachment: %w", err)
+	}
+
+	return &domain.Attachment{
+		ID:          dbAttachment.ID,
+		MessageID:   dbAttachment.MessageID,
+		S3Name:      dbAttachment.S3Name,
+		ContentType: dbAttachment.ContentType.String,
+		Size:        dbAttachment.Size.Int64,
+		CreatedAt:   dbAttachment.CreatedAt,
+	}, nil
+}
+
 // convertToInt64 converts various numeric types to int64.
 func (p *PG) convertToInt64(value interface{}) int64 {
 	switch v := value.(type) {

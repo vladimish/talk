@@ -52,6 +52,9 @@ type Storage interface {
 	// Subscription methods
 	CreateSubscription(ctx context.Context, subscription *domain.Subscription) (*domain.Subscription, error)
 	GetActiveSubscriptionByUserID(ctx context.Context, userID int64) (*domain.Subscription, error)
+
+	// Attachment methods
+	CreateAttachment(ctx context.Context, attachment *domain.Attachment) (*domain.Attachment, error)
 }
 
 var ErrNotFound = errors.New("not found")

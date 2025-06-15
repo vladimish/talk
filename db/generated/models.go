@@ -54,6 +54,15 @@ func (ns NullMessageSender) Value() (driver.Value, error) {
 	return string(ns.MessageSender), nil
 }
 
+type Attachment struct {
+	ID          int64
+	MessageID   int64
+	S3Name      string
+	ContentType sql.NullString
+	Size        sql.NullInt64
+	CreatedAt   time.Time
+}
+
 type Conversation struct {
 	ID        int64
 	Name      string
