@@ -3,7 +3,6 @@ version: '3.8'
 services:
   postgres:
     image: postgres:17-alpine
-    container_name: postgres_db
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
@@ -18,10 +17,11 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - dokploy-network
 
   redis:
     image: redis:7-alpine
-    container_name: redis_cache
     restart: unless-stopped
     ports:
       - "6379:6379"
@@ -32,17 +32,19 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - dokploy-network
 
   telegramify:
     image: ghcr.io/vladimish/telegramify-markdown-api:latest
-    container_name: telegramify
     restart: unless-stopped
     ports:
       - "8000:8000"
+    networks:
+      - dokploy-network
 
   minio:
     image: minio/minio:latest
-    container_name: minio_s3
     restart: unless-stopped
     command: server /data --console-address ":9001"
     environment:
@@ -58,10 +60,11 @@ services:
       interval: 30s
       timeout: 20s
       retries: 3
+    networks:
+      - dokploy-network
 
   minio-init:
     image: minio/mc:latest
-    container_name: minio_init
     depends_on:
       minio:
         condition: service_healthy
@@ -74,6 +77,8 @@ services:
       exit 0;
       "
     restart: "no"
+    networks:
+      - dokploy-network
 
   app:
     build:
@@ -106,6 +111,8 @@ services:
       timeout: 10s
       retries: 3
       start_period: 10s
+    networks:
+      - dokploy-network
 
 volumes:
   postgres_data:
@@ -114,3 +121,7 @@ volumes:
     driver: local
   minio_data:
     driver: local
+
+networks:
+  dokploy-network:
+    external: true
