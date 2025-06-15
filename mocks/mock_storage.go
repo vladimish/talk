@@ -437,3 +437,17 @@ func (mr *MockStorageMockRecorder) UpdateUserSelectedModel(ctx, userID, selected
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUserSelectedModel", reflect.TypeOf((*MockStorage)(nil).UpdateUserSelectedModel), ctx, userID, selectedModel)
 }
+
+// UpdateUserWebSearchEnabled mocks base method.
+func (m *MockStorage) UpdateUserWebSearchEnabled(ctx context.Context, userID int64, enabled bool) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateUserWebSearchEnabled", ctx, userID, enabled)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateUserWebSearchEnabled indicates an expected call of UpdateUserWebSearchEnabled.
+func (mr *MockStorageMockRecorder) UpdateUserWebSearchEnabled(ctx, userID, enabled any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUserWebSearchEnabled", reflect.TypeOf((*MockStorage)(nil).UpdateUserWebSearchEnabled), ctx, userID, enabled)
+}

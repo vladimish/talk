@@ -137,4 +137,5 @@ type User struct {
 	SelectedModel          string
 	CurrentConversation    sql.NullInt64
 	ConversationListOffset int32
+	WebSearchEnabled       bool
 }

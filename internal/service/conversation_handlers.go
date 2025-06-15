@@ -11,6 +11,7 @@ import (
 
 	"github.com/vladimish/talk/internal/domain"
 	"github.com/vladimish/talk/internal/port/queue"
+	"github.com/vladimish/talk/internal/port/storage"
 	"github.com/vladimish/talk/pkg/i18n"
 )
 
@@ -40,32 +41,43 @@ func (s *UpdateService) handleConversationMessage(ctx context.Context, user *dom
 		}
 	}
 
-	// Check if user has sufficient tokens for the selected model
-	modelCost, exists := domain.ModelCosts[user.SelectedModel]
-	if !exists {
-		// Default cost if model not found
-		modelCost = domain.ModelCost{
-			ModelName: user.SelectedModel,
-			Cost:      1,
-			TokenType: domain.TokenTypeRegular,
-		}
+	// Get model info for cost calculation
+	currentModel := domain.GetModelByID(user.SelectedModel)
+	if currentModel == nil {
+		return fmt.Errorf("model not found: %s", user.SelectedModel)
+	}
+
+	// Check if user has active subscription (required for web search)
+	activeSubscription, err := s.storage.GetActiveSubscriptionByUserID(ctx, user.ID)
+	if err != nil && !errors.Is(err, storage.ErrNotFound) {
+		return fmt.Errorf("failed to check subscription status: %w", err)
+	}
+	hasActiveSubscription := activeSubscription != nil
+
+	// Check if web search is enabled and user has subscription
+	webSearchEnabled := currentModel.WebSearch && user.WebSearchEnabled && hasActiveSubscription
+
+	// Calculate total cost (base cost + search cost if applicable)
+	totalCost := currentModel.Cost
+	if webSearchEnabled && currentModel.SearchCost != nil {
+		totalCost += *currentModel.SearchCost
 	}
 
 	// Get user's current balance for the required token type
-	currentBalance, err := s.storage.GetUserTokenBalanceByType(ctx, user.ID, modelCost.TokenType)
+	currentBalance, err := s.storage.GetUserTokenBalanceByType(ctx, user.ID, currentModel.TokenType)
 	if err != nil {
 		return fmt.Errorf("failed to get user token balance: %w", err)
 	}
 
 	// Check if user has sufficient tokens
-	if currentBalance < modelCost.Cost {
+	if currentBalance < totalCost {
 		tokenTypeName := "regular"
-		if modelCost.TokenType == domain.TokenTypePremium {
+		if currentModel.TokenType == domain.TokenTypePremium {
 			tokenTypeName = "premium"
 		}
 		insufficientTokensMsg := fmt.Sprintf(
 			i18n.GetString(user.Language, i18n.ProfileInsufficientTokens),
-			modelCost.Cost,
+			totalCost,
 			tokenTypeName,
 		)
 		_, sendErr := s.sender.SendMessage(ctx, user.ExternalID, insufficientTokensMsg)
@@ -176,7 +188,18 @@ func (s *UpdateService) handleConversationMessage(ctx context.Context, user *dom
 	}
 
 	systemPrompt := "You are a helpful assistant."
-	tokenStream, err := s.completion.CompleteStream(ctx, user.SelectedModel, systemPrompt, messages, currentImageURL)
+
+	// Web search is already calculated above with subscription check
+	// Use the webSearchEnabled variable from the cost calculation
+
+	tokenStream, err := s.completion.CompleteStream(
+		ctx,
+		user.SelectedModel,
+		systemPrompt,
+		messages,
+		currentImageURL,
+		webSearchEnabled,
+	)
 	if err != nil {
 		return fmt.Errorf("can't get completion: %w", err)
 	}
@@ -305,10 +328,10 @@ func (s *UpdateService) handleConversationMessage(ctx context.Context, user *dom
 	// Deduct tokens after successful completion
 	transaction := &domain.Transaction{
 		UserID:          user.ID,
-		TokenType:       modelCost.TokenType,
-		Amount:          -modelCost.Cost, // Negative for debit
+		TokenType:       currentModel.TokenType,
+		Amount:          -totalCost, // Negative for debit
 		TransactionType: domain.TransactionTypeMessageCost,
-		ModelUsed:       &modelCost.ModelName,
+		ModelUsed:       &currentModel.ID,
 		Description:     nil,
 		CreatedAt:       time.Now(),
 	}
@@ -318,8 +341,8 @@ func (s *UpdateService) handleConversationMessage(ctx context.Context, user *dom
 		// Log error but don't fail the entire operation
 		s.logger.ErrorContext(ctx, "failed to create token deduction transaction",
 			slog.String("error", err.Error()),
-			slog.String("model", modelCost.ModelName),
-			slog.Int("cost", int(modelCost.Cost)))
+			slog.String("model", currentModel.ID),
+			slog.Int("cost", int(totalCost)))
 	}
 
 	return nil
@@ -351,7 +374,8 @@ Examples:
 		"google/gemini-2.5-flash-preview-05-20",
 		systemPrompt,
 		messages,
-		"", // no image for conversation name generation
+		"",    // no image for conversation name generation
+		false, // no web search for conversation name generation
 	)
 	if err != nil {
 		s.logger.WarnContext(ctx, "failed to generate conversation name with LLM, using fallback",

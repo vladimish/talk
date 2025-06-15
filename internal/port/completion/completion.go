@@ -20,5 +20,6 @@ type Completion interface {
 		systemPrompt string,
 		messages []*domain.Message,
 		currentImageURL string, // Empty string if no image
+		webSearchEnabled bool, // Whether to enable web search plugin
 	) (<-chan StreamToken, error)
 }

@@ -66,6 +66,13 @@ func TestUpdateService_HandleMenuState(t *testing.T) {
 				mockStorage.EXPECT().
 					UpdateUserCurrentStep(gomock.Any(), int64(1), domain.UserStateModelSelect).
 					Return(nil)
+				// Mock calls for getting user balance and subscription for display name generation
+				mockStorage.EXPECT().
+					GetUserTokenBalance(gomock.Any(), int64(1)).
+					Return(&domain.TokenBalance{RegularBalance: 100, PremiumBalance: 50}, nil)
+				mockStorage.EXPECT().
+					GetActiveSubscriptionByUserID(gomock.Any(), int64(1)).
+					Return(nil, nil) // No active subscription
 				mockSender.EXPECT().
 					SendMessageWithContent(gomock.Any(), "12345", gomock.Any()).
 					Return("msg123", nil)

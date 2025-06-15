@@ -151,6 +151,22 @@ func (s *UpdateService) HandleConversationState(ctx context.Context, user *domai
 		return s.transitionToMenu(ctx, user)
 	}
 
+	// Check if user clicked web search toggle button (with or without red cross)
+	webSearchOnText := i18n.GetString(user.Language, i18n.ButtonWebSearchOn)
+	webSearchOffText := i18n.GetString(user.Language, i18n.ButtonWebSearchOff)
+	redCrossOffText := "❌ " + webSearchOffText
+
+	if update.MessageText == webSearchOnText ||
+		update.MessageText == webSearchOffText ||
+		update.MessageText == redCrossOffText {
+		return s.handleWebSearchToggle(ctx, user)
+	}
+
+	// Check if user clicked subscription button
+	if update.MessageText == i18n.GetString(user.Language, i18n.ButtonSubscription) {
+		return s.handleSubscriptionBuyCallback(ctx, user)
+	}
+
 	// Handle regular conversation message
 	if update.MessageText != "" && update.MessageText != i18n.GetString(user.Language, i18n.ButtonBackToMenu) {
 		return s.handleConversationMessage(ctx, user, update)
@@ -174,6 +190,49 @@ func (s *UpdateService) HandleConversationState(ctx context.Context, user *domai
 
 	_, err := s.sender.SendMessageWithContent(ctx, user.ExternalID, content)
 	return err
+}
+
+func (s *UpdateService) handleWebSearchToggle(ctx context.Context, user *domain.User) error {
+	// Check if user has active subscription (required for web search)
+	activeSubscription, err := s.storage.GetActiveSubscriptionByUserID(ctx, user.ID)
+	if err != nil && !errors.Is(err, storage.ErrNotFound) {
+		return fmt.Errorf("failed to check subscription status: %w", err)
+	}
+
+	// Only allow web search toggle if user has active subscription
+	if activeSubscription == nil {
+		// Send subscription requirement message with subscribe button
+		subscriptionMessage := i18n.GetString(user.Language, i18n.WebSearchSubscriptionRequired)
+		content := domain.MessageContent{
+			Text: subscriptionMessage,
+			ReplyKeyboard: &domain.ReplyKeyboard{
+				Buttons: [][]domain.KeyboardButton{
+					{
+						{Text: i18n.GetString(user.Language, i18n.ButtonSubscription)},
+					},
+					{
+						{Text: i18n.GetString(user.Language, i18n.ButtonBackToMenu)},
+					},
+				},
+				Resize:  true,
+				OneTime: false,
+			},
+		}
+		_, sendErr := s.sender.SendMessageWithContent(ctx, user.ExternalID, content)
+		return sendErr
+	}
+
+	// Toggle the web search enabled state
+	user.WebSearchEnabled = !user.WebSearchEnabled
+
+	// Update in database
+	err = s.storage.UpdateUserWebSearchEnabled(ctx, user.ID, user.WebSearchEnabled)
+	if err != nil {
+		return fmt.Errorf("can't update web search state: %w", err)
+	}
+
+	// Send updated conversation view with new button state
+	return s.transitionToConversation(ctx, user, nil)
 }
 
 func (s *UpdateService) shouldQueueMessage(user *domain.User, update domain.Update) bool {

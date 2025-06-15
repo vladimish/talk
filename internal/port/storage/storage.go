@@ -16,6 +16,7 @@ type Storage interface {
 	UpdateUserSelectedModel(ctx context.Context, userID int64, selectedModel string) error
 	UpdateUserLanguage(ctx context.Context, userID int64, language string) error
 	UpdateUserConversationListOffset(ctx context.Context, userID int64, offset int) error
+	UpdateUserWebSearchEnabled(ctx context.Context, userID int64, enabled bool) error
 
 	CreateMessage(ctx context.Context, message *domain.Message) (*domain.Message, error)
 	GetMessagesByUserID(ctx context.Context, userID int64) ([]*domain.Message, error)

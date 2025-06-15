@@ -2,9 +2,11 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/vladimish/talk/internal/domain"
+	"github.com/vladimish/talk/internal/port/storage"
 	"github.com/vladimish/talk/pkg/i18n"
 )
 
@@ -94,17 +96,28 @@ func (s *UpdateService) transitionToConversation(
 		text = i18n.GetString(user.Language, i18n.ConversationResumed)
 	}
 
+	// Create keyboard buttons
+	var buttons [][]domain.KeyboardButton
+
+	// Add web search button if model supports it
+	if s.shouldShowWebSearchButton(user) {
+		webSearchButton, webSearchErr := s.getWebSearchButton(ctx, user)
+		if webSearchErr != nil {
+			return webSearchErr
+		}
+		buttons = append(buttons, []domain.KeyboardButton{webSearchButton})
+	}
+
+	// Add back to menu button
+	buttons = append(buttons, []domain.KeyboardButton{
+		{Text: i18n.GetString(user.Language, i18n.ButtonBackToMenu)},
+	})
+
 	content := domain.MessageContent{
 		Text:             text,
 		ReplyToMessageID: replyToMessageID,
 		ReplyKeyboard: &domain.ReplyKeyboard{
-			Buttons: [][]domain.KeyboardButton{
-				{
-					{
-						Text: i18n.GetString(user.Language, i18n.ButtonBackToMenu),
-					},
-				},
-			},
+			Buttons: buttons,
 			Resize:  true,
 			OneTime: false,
 		},
@@ -124,4 +137,36 @@ func (s *UpdateService) transitionToMenu(ctx context.Context, user *domain.User)
 	}
 
 	return s.sendMenu(ctx, user, i18n.GetString(user.Language, i18n.MenuBackToMain))
+}
+
+// shouldShowWebSearchButton checks if the web search button should be shown.
+func (s *UpdateService) shouldShowWebSearchButton(user *domain.User) bool {
+	currentModel := domain.GetModelByID(user.SelectedModel)
+	return currentModel != nil && currentModel.WebSearch
+}
+
+// getWebSearchButton returns the web search button for the current model.
+func (s *UpdateService) getWebSearchButton(ctx context.Context, user *domain.User) (domain.KeyboardButton, error) {
+	// Check if user has active subscription (for button state)
+	activeSubscription, subErr := s.storage.GetActiveSubscriptionByUserID(ctx, user.ID)
+	if subErr != nil && !errors.Is(subErr, storage.ErrNotFound) {
+		return domain.KeyboardButton{}, fmt.Errorf("failed to check subscription status: %w", subErr)
+	}
+	hasActiveSubscription := activeSubscription != nil
+
+	// Always show web search toggle button for models that support it
+	var webSearchButtonText string
+	if hasActiveSubscription {
+		// User has subscription - show normal toggle
+		if user.WebSearchEnabled {
+			webSearchButtonText = i18n.GetString(user.Language, i18n.ButtonWebSearchOn)
+		} else {
+			webSearchButtonText = i18n.GetString(user.Language, i18n.ButtonWebSearchOff)
+		}
+	} else {
+		// User has no subscription - show with red cross
+		webSearchButtonText = "❌ " + i18n.GetString(user.Language, i18n.ButtonWebSearchOff)
+	}
+
+	return domain.KeyboardButton{Text: webSearchButtonText}, nil
 }

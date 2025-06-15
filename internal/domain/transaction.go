@@ -44,15 +44,16 @@ type TokenBalance struct {
 
 // ModelInfo represents the complete information for an AI model.
 type ModelInfo struct {
-	ID             string    `json:"id"`              // Internal model identifier
-	DisplayName    string    `json:"display_name"`    // User-friendly name for buttons (deprecated - use I18nKey)
-	I18nKey        string    `json:"i18n_key"`        // Internationalization key for display name
-	Cost           int64     `json:"cost"`            // Token cost per message
-	TokenType      TokenType `json:"token_type"`      // Type of tokens required
-	ImageSupport   bool      `json:"image_support"`   // Whether the model supports image inputs
-	Reasoning      bool      `json:"reasoning"`       // Whether the model has reasoning capabilities
-	WebSearch      bool      `json:"web_search"`      // Whether the model has web search capabilities
-	NoSubscription bool      `json:"no_subscription"` // If true, requires active subscription to use
+	ID             string    `json:"id"`                    // Internal model identifier
+	DisplayName    string    `json:"display_name"`          // User-friendly name for buttons (deprecated - use I18nKey)
+	I18nKey        string    `json:"i18n_key"`              // Internationalization key for display name
+	Cost           int64     `json:"cost"`                  // Token cost per message
+	TokenType      TokenType `json:"token_type"`            // Type of tokens required
+	ImageSupport   bool      `json:"image_support"`         // Whether the model supports image inputs
+	Reasoning      bool      `json:"reasoning"`             // Whether the model has reasoning capabilities
+	WebSearch      bool      `json:"web_search"`            // Whether the model has web search capabilities
+	NoSubscription bool      `json:"no_subscription"`       // If true, requires active subscription to use
+	SearchCost     *int64    `json:"search_cost,omitempty"` // Additional cost when using web search (optional)
 }
 
 // Token cost constants.
@@ -71,8 +72,9 @@ var AvailableModels = []ModelInfo{
 		TokenType:      TokenTypeRegular,
 		ImageSupport:   true,
 		Reasoning:      false,
-		WebSearch:      false,
+		WebSearch:      true,
 		NoSubscription: false,
+		SearchCost:     &[]int64{2}[0], // 2 additional tokens when using web search
 	},
 	{
 		ID:             "openai/gpt-4o",
@@ -111,7 +113,7 @@ var AvailableModels = []ModelInfo{
 		TokenType:      TokenTypeRegular,
 		ImageSupport:   true,
 		Reasoning:      false,
-		WebSearch:      false,
+		WebSearch:      true,
 		NoSubscription: false,
 	},
 	{

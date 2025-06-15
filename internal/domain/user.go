@@ -20,6 +20,7 @@ type User struct {
 	SelectedModel          string
 	CurrentConversationID  *int64
 	ConversationListOffset int
+	WebSearchEnabled       bool
 	CreatedAt              time.Time
 	UpdatedAt              time.Time
 }

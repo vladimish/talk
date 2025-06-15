@@ -12,9 +12,9 @@ import (
 )
 
 const createUser = `-- name: CreateUser :one
-INSERT INTO users (foreign_id, language, current_step, selected_model, conversation_list_offset, created_at, updated_at)
-VALUES ($1, $2, $3, $4, $5, $6, $7)
-RETURNING id, foreign_id, language, created_at, updated_at, current_step, selected_model, current_conversation, conversation_list_offset
+INSERT INTO users (foreign_id, language, current_step, selected_model, conversation_list_offset, web_search_enabled, created_at, updated_at)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+RETURNING id, foreign_id, language, created_at, updated_at, current_step, selected_model, current_conversation, conversation_list_offset, web_search_enabled
 `
 
 type CreateUserParams struct {
@@ -23,6 +23,7 @@ type CreateUserParams struct {
 	CurrentStep            string
 	SelectedModel          string
 	ConversationListOffset int32
+	WebSearchEnabled       bool
 	CreatedAt              time.Time
 	UpdatedAt              time.Time
 }
@@ -34,6 +35,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		arg.CurrentStep,
 		arg.SelectedModel,
 		arg.ConversationListOffset,
+		arg.WebSearchEnabled,
 		arg.CreatedAt,
 		arg.UpdatedAt,
 	)
@@ -48,12 +50,13 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		&i.SelectedModel,
 		&i.CurrentConversation,
 		&i.ConversationListOffset,
+		&i.WebSearchEnabled,
 	)
 	return i, err
 }
 
 const getUserByForeignID = `-- name: GetUserByForeignID :one
-SELECT id, foreign_id, language, created_at, updated_at, current_step, selected_model, current_conversation, conversation_list_offset
+SELECT id, foreign_id, language, created_at, updated_at, current_step, selected_model, current_conversation, conversation_list_offset, web_search_enabled
 FROM users
 WHERE foreign_id = $1
 LIMIT 1
@@ -72,6 +75,7 @@ func (q *Queries) GetUserByForeignID(ctx context.Context, foreignID int64) (User
 		&i.SelectedModel,
 		&i.CurrentConversation,
 		&i.ConversationListOffset,
+		&i.WebSearchEnabled,
 	)
 	return i, err
 }
@@ -153,5 +157,21 @@ type UpdateUserSelectedModelParams struct {
 
 func (q *Queries) UpdateUserSelectedModel(ctx context.Context, arg UpdateUserSelectedModelParams) error {
 	_, err := q.db.ExecContext(ctx, updateUserSelectedModel, arg.ID, arg.SelectedModel)
+	return err
+}
+
+const updateUserWebSearchEnabled = `-- name: UpdateUserWebSearchEnabled :exec
+UPDATE users
+SET web_search_enabled = $2, updated_at = NOW()
+WHERE id = $1
+`
+
+type UpdateUserWebSearchEnabledParams struct {
+	ID               int64
+	WebSearchEnabled bool
+}
+
+func (q *Queries) UpdateUserWebSearchEnabled(ctx context.Context, arg UpdateUserWebSearchEnabledParams) error {
+	_, err := q.db.ExecContext(ctx, updateUserWebSearchEnabled, arg.ID, arg.WebSearchEnabled)
 	return err
 }

@@ -5,8 +5,8 @@ WHERE foreign_id = $1
 LIMIT 1;
 
 -- name: CreateUser :one
-INSERT INTO users (foreign_id, language, current_step, selected_model, conversation_list_offset, created_at, updated_at)
-VALUES ($1, $2, $3, $4, $5, $6, $7)
+INSERT INTO users (foreign_id, language, current_step, selected_model, conversation_list_offset, web_search_enabled, created_at, updated_at)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 RETURNING *;
 
 -- name: UpdateUserCurrentStep :exec
@@ -32,4 +32,9 @@ WHERE id = $1;
 -- name: UpdateUserCurrentConversationID :exec
 UPDATE users
 SET current_conversation = $2, updated_at = NOW()
+WHERE id = $1;
+
+-- name: UpdateUserWebSearchEnabled :exec
+UPDATE users
+SET web_search_enabled = $2, updated_at = NOW()
 WHERE id = $1;

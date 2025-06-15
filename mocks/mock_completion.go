@@ -42,16 +42,16 @@ func (m *MockCompletion) EXPECT() *MockCompletionMockRecorder {
 }
 
 // CompleteStream mocks base method.
-func (m *MockCompletion) CompleteStream(ctx context.Context, model, systemPrompt string, messages []*domain.Message, currentImageURL string) (<-chan completion.StreamToken, error) {
+func (m *MockCompletion) CompleteStream(ctx context.Context, model, systemPrompt string, messages []*domain.Message, currentImageURL string, webSearchEnabled bool) (<-chan completion.StreamToken, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CompleteStream", ctx, model, systemPrompt, messages, currentImageURL)
+	ret := m.ctrl.Call(m, "CompleteStream", ctx, model, systemPrompt, messages, currentImageURL, webSearchEnabled)
 	ret0, _ := ret[0].(<-chan completion.StreamToken)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CompleteStream indicates an expected call of CompleteStream.
-func (mr *MockCompletionMockRecorder) CompleteStream(ctx, model, systemPrompt, messages, currentImageURL any) *gomock.Call {
+func (mr *MockCompletionMockRecorder) CompleteStream(ctx, model, systemPrompt, messages, currentImageURL, webSearchEnabled any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CompleteStream", reflect.TypeOf((*MockCompletion)(nil).CompleteStream), ctx, model, systemPrompt, messages, currentImageURL)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CompleteStream", reflect.TypeOf((*MockCompletion)(nil).CompleteStream), ctx, model, systemPrompt, messages, currentImageURL, webSearchEnabled)
 }

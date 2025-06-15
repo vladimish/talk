@@ -52,6 +52,11 @@ const (
 	// Queue messages.
 	QueueMessageQueued = "queue.message_queued"
 
+	// Web search messages.
+	ButtonWebSearchOn             = "button.web_search_on"
+	ButtonWebSearchOff            = "button.web_search_off"
+	WebSearchSubscriptionRequired = "web_search.subscription_required"
+
 	// Profile messages.
 	ProfileTitle              = "profile.title"
 	ProfileTokenBalance       = "profile.token_balance"
@@ -180,6 +185,11 @@ var Strings = map[string]map[string]string{
 		// Queue
 		QueueMessageQueued: "⏳ Your message has been queued (position: %d). I'll process it after finishing the current response.",
 
+		// Web Search
+		ButtonWebSearchOn:             "🌐 Web search: ON",
+		ButtonWebSearchOff:            "🌐 Web search: OFF",
+		WebSearchSubscriptionRequired: "🔐 Web search requires an active subscription. Please subscribe to use this feature.",
+
 		// Profile
 		ProfileTitle:              "👤 Your Profile",
 		ProfileTokenBalance:       "💰 Token Balance:",
@@ -264,6 +274,11 @@ var Strings = map[string]map[string]string{
 
 		// Queue
 		QueueMessageQueued: "⏳ Tu mensaje ha sido puesto en cola (posición: %d). Lo procesaré después de terminar la respuesta actual.",
+
+		// Web Search
+		ButtonWebSearchOn:             "🌐 Búsqueda web: ACTIVADA",
+		ButtonWebSearchOff:            "🌐 Búsqueda web: DESACTIVADA",
+		WebSearchSubscriptionRequired: "🔐 La búsqueda web requiere una suscripción activa. Por favor suscríbete para usar esta característica.",
 
 		// Profile
 		ProfileTitle:              "👤 Tu Perfil",
@@ -350,6 +365,11 @@ var Strings = map[string]map[string]string{
 		// Queue
 		QueueMessageQueued: "⏳ Ваше сообщение поставлено в очередь (позиция: %d). Я обработаю его после завершения текущего ответа.",
 
+		// Web Search
+		ButtonWebSearchOn:             "🌐 Веб-поиск: ВКЛЮЧЕН",
+		ButtonWebSearchOff:            "🌐 Веб-поиск: ВЫКЛЮЧЕН",
+		WebSearchSubscriptionRequired: "🔐 Веб-поиск требует активной подписки. Пожалуйста, оформите подписку для использования этой функции.",
+
 		// Profile
 		ProfileTitle:              "👤 Ваш Профиль",
 		ProfileTokenBalance:       "💰 Баланс Токенов:",
@@ -434,6 +454,11 @@ var Strings = map[string]map[string]string{
 
 		// Queue
 		QueueMessageQueued: "⏳ Votre message a été mis en file d'attente (position : %d). Je le traiterai après avoir terminé la réponse actuelle.",
+
+		// Web Search
+		ButtonWebSearchOn:             "🌐 Recherche web : ACTIVÉE",
+		ButtonWebSearchOff:            "🌐 Recherche web : DÉSACTIVÉE",
+		WebSearchSubscriptionRequired: "🔐 Web search requires an active subscription. Please subscribe to use this feature.",
 
 		// Profile
 		ProfileTitle:              "👤 Votre Profil",
@@ -520,6 +545,11 @@ var Strings = map[string]map[string]string{
 		// Queue
 		QueueMessageQueued: "⏳ Ihre Nachricht wurde in die Warteschlange eingereiht (Position: %d). Ich werde sie nach Beendigung der aktuellen Antwort bearbeiten.",
 
+		// Web Search
+		ButtonWebSearchOn:             "🌐 Web-Suche: EIN",
+		ButtonWebSearchOff:            "🌐 Web-Suche: AUS",
+		WebSearchSubscriptionRequired: "🔐 Web search requires an active subscription. Please subscribe to use this feature.",
+
 		// Profile
 		ProfileTitle:              "👤 Ihr Profil",
 		ProfileTokenBalance:       "💰 Token-Guthaben:",
@@ -604,6 +634,11 @@ var Strings = map[string]map[string]string{
 
 		// Queue
 		QueueMessageQueued: "⏳ Il tuo messaggio è stato messo in coda (posizione: %d). Lo elaborerò dopo aver terminato la risposta attuale.",
+
+		// Web Search
+		ButtonWebSearchOn:             "🌐 Ricerca web: ATTIVA",
+		ButtonWebSearchOff:            "🌐 Ricerca web: DISATTIVA",
+		WebSearchSubscriptionRequired: "🔐 Web search requires an active subscription. Please subscribe to use this feature.",
 
 		// Profile
 		ProfileTitle:              "👤 Il Tuo Profilo",
@@ -690,6 +725,11 @@ var Strings = map[string]map[string]string{
 		// Queue
 		QueueMessageQueued: "⏳ 您的消息已排队（位置：%d）。我会在完成当前回复后处理它。",
 
+		// Web Search
+		ButtonWebSearchOn:             "🌐 网络搜索：开启",
+		ButtonWebSearchOff:            "🌐 网络搜索：关闭",
+		WebSearchSubscriptionRequired: "🔐 Web search requires an active subscription. Please subscribe to use this feature.",
+
 		// Profile
 		ProfileTitle:              "👤 您的个人资料",
 		ProfileTokenBalance:       "💰 代币余额：",
@@ -775,6 +815,11 @@ var Strings = map[string]map[string]string{
 		// Queue
 		QueueMessageQueued: "⏳ メッセージがキューに追加されました（位置：%d）。現在の応答を完了した後に処理します。",
 
+		// Web Search
+		ButtonWebSearchOn:             "🌐 ウェブ検索：オン",
+		ButtonWebSearchOff:            "🌐 ウェブ検索：オフ",
+		WebSearchSubscriptionRequired: "🔐 Web search requires an active subscription. Please subscribe to use this feature.",
+
 		// Profile
 		ProfileTitle:              "👤 あなたのプロフィール",
 		ProfileTokenBalance:       "💰 トークン残高：",
@@ -849,6 +894,11 @@ var Strings = map[string]map[string]string{
 
 		// Queue
 		QueueMessageQueued: "⏳ 메시지가 대기열에 추가되었습니다 (위치: %d). 현재 응답을 완료한 후 처리하겠습니다.",
+
+		// Web Search
+		ButtonWebSearchOn:             "🌐 웹 검색: 켜짐",
+		ButtonWebSearchOff:            "🌐 웹 검색: 꺼짐",
+		WebSearchSubscriptionRequired: "🔐 Web search requires an active subscription. Please subscribe to use this feature.",
 
 		// Profile
 		ProfileTitle:              "👤 프로필",
@@ -935,6 +985,11 @@ var Strings = map[string]map[string]string{
 		// Queue
 		QueueMessageQueued: "⏳ Sua mensagem foi colocada na fila (posição: %d). Vou processá-la após terminar a resposta atual.",
 
+		// Web Search
+		ButtonWebSearchOn:             "🌐 Pesquisa web: LIGADA",
+		ButtonWebSearchOff:            "🌐 Pesquisa web: DESLIGADA",
+		WebSearchSubscriptionRequired: "🔐 Web search requires an active subscription. Please subscribe to use this feature.",
+
 		// Profile
 		ProfileTitle:              "👤 Seu Perfil",
 		ProfileTokenBalance:       "💰 Saldo de Tokens:",
@@ -1019,6 +1074,11 @@ var Strings = map[string]map[string]string{
 
 		// Queue
 		QueueMessageQueued: "⏳ Ձեր հաղորդագրությունը հերթի մեջ է (դիրքը՝ %d): Ես կմշակեմ այն ընթացիկ պատասխանն ավարտելուց հետո:",
+
+		// Web Search
+		ButtonWebSearchOn:             "🌐 Վեբ որոնում: ՄԻԱՑՎԱԾ",
+		ButtonWebSearchOff:            "🌐 Վեբ որոնում: ԱՆՋԱՏՎԱԾ",
+		WebSearchSubscriptionRequired: "🔐 Web search requires an active subscription. Please subscribe to use this feature.",
 
 		// Profile
 		ProfileTitle:              "👤 Ձեր Պրոֆիլը",
@@ -1105,6 +1165,11 @@ var Strings = map[string]map[string]string{
 		// Queue
 		QueueMessageQueued: "⏳ Ваше повідомлення поставлено в чергу (позиція: %d). Я оброблю його після завершення поточної відповіді.",
 
+		// Web Search
+		ButtonWebSearchOn:             "🌐 Веб-пошук: УВІМКНЕНО",
+		ButtonWebSearchOff:            "🌐 Веб-пошук: ВИМКНЕНО",
+		WebSearchSubscriptionRequired: "🔐 Web search requires an active subscription. Please subscribe to use this feature.",
+
 		// Profile
 		ProfileTitle:              "👤 Ваш Профіль",
 		ProfileTokenBalance:       "💰 Баланс Токенів:",
@@ -1189,6 +1254,11 @@ var Strings = map[string]map[string]string{
 
 		// Queue
 		QueueMessageQueued: "⏳ Сіздің хабарламаңыз кезекке қойылды (орын: %d). Мен оны ағымдағы жауапты аяқтағаннан кейін өңдеймін.",
+
+		// Web Search
+		ButtonWebSearchOn:             "🌐 Веб іздеу: ҚОСУЛЫ",
+		ButtonWebSearchOff:            "🌐 Веб іздеу: ӨШІРУЛІ",
+		WebSearchSubscriptionRequired: "🔐 Web search requires an active subscription. Please subscribe to use this feature.",
 
 		// Profile
 		ProfileTitle:              "👤 Сіздің Профиліңіз",
@@ -1275,6 +1345,11 @@ var Strings = map[string]map[string]string{
 		// Queue
 		QueueMessageQueued: "⏳ Сиздин билдирүүңүз кезекке коюлду (орун: %d). Мен аны учурдагы жоопту бүткөндөн кийин иштетем.",
 
+		// Web Search
+		ButtonWebSearchOn:             "🌐 Веб издөө: КҮЙГҮЗҮЛГӨН",
+		ButtonWebSearchOff:            "🌐 Веб издөө: ӨЧҮРҮЛГӨН",
+		WebSearchSubscriptionRequired: "🔐 Web search requires an active subscription. Please subscribe to use this feature.",
+
 		// Profile
 		ProfileTitle:              "👤 Сиздин Профилиңиз",
 		ProfileTokenBalance:       "💰 Токен Баланс:",
@@ -1360,6 +1435,11 @@ var Strings = map[string]map[string]string{
 		// Queue
 		QueueMessageQueued: "⏳ تم وضع رسالتك في طابور الانتظار (الموضع: %d). سأقوم بمعالجتها بعد إنهاء الرد الحالي.",
 
+		// Web Search
+		ButtonWebSearchOn:             "🌐 البحث على الويب: مُفعَّل",
+		ButtonWebSearchOff:            "🌐 البحث على الويب: مُعطَّل",
+		WebSearchSubscriptionRequired: "🔐 Web search requires an active subscription. Please subscribe to use this feature.",
+
 		// Profile
 		ProfileTitle:              "👤 ملفك الشخصي",
 		ProfileTokenBalance:       "💰 رصيد الرموز:",
@@ -1443,7 +1523,12 @@ var Strings = map[string]map[string]string{
 		ModelImageNotSupported: "❌ चयनित मॉडल छवि इनपुट का समर्थन नहीं करता है। कृपया एक अलग मॉडल चुनें या टेक्स्ट संदेश भेजें।",
 
 		// Queue
-		QueueMessageQueued: "⏳ आपका संदेश कतार में रखा गया है (स्थिति: %d)। मैं वर्तमान जवाब पूरा करने के बाद इसे प्रोसेस करूंगा।",
+		QueueMessageQueued: "⏳ आपका संदेश कतार में रखा गया है (स्थिति: %d)। मैं वर्तमान जवाब पूरा करने के बाد इसे प्रोसेस करूंगा।",
+
+		// Web Search
+		ButtonWebSearchOn:             "🌐 वेब खोज: चालू",
+		ButtonWebSearchOff:            "🌐 वेब खोज: बंद",
+		WebSearchSubscriptionRequired: "🔐 Web search requires an active subscription. Please subscribe to use this feature.",
 
 		// Profile
 		ProfileTitle:              "👤 आपकी प्रोफाइल",

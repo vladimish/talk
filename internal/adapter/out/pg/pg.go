@@ -50,6 +50,7 @@ func (p *PG) GetUserByExternalUserID(ctx context.Context, id string) (*domain.Us
 		SelectedModel:          u.SelectedModel,
 		CurrentConversationID:  conversationID,
 		ConversationListOffset: int(u.ConversationListOffset),
+		WebSearchEnabled:       u.WebSearchEnabled,
 		CreatedAt:              u.CreatedAt,
 		UpdatedAt:              u.UpdatedAt,
 	}, nil
@@ -88,6 +89,13 @@ func (p *PG) UpdateUserConversationListOffset(ctx context.Context, userID int64,
 	return p.q.UpdateUserConversationListOffset(ctx, generated.UpdateUserConversationListOffsetParams{
 		ID:                     userID,
 		ConversationListOffset: int32(offset), //nolint:gosec
+	})
+}
+
+func (p *PG) UpdateUserWebSearchEnabled(ctx context.Context, userID int64, enabled bool) error {
+	return p.q.UpdateUserWebSearchEnabled(ctx, generated.UpdateUserWebSearchEnabledParams{
+		ID:               userID,
+		WebSearchEnabled: enabled,
 	})
 }
 
@@ -324,6 +332,7 @@ func (p *PG) CreateUser(ctx context.Context, user *domain.User) (*domain.User, e
 		CurrentStep:            user.CurrentStep,
 		SelectedModel:          user.SelectedModel,
 		ConversationListOffset: int32(offset), //nolint:gosec
+		WebSearchEnabled:       user.WebSearchEnabled,
 		CreatedAt:              user.CreatedAt,
 		UpdatedAt:              user.UpdatedAt,
 	})

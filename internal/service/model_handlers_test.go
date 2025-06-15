@@ -53,9 +53,16 @@ func TestUpdateService_HandleModelSelectState(t *testing.T) {
 				Language:   "en",
 			},
 			update: domain.Update{
-				MessageText: "🚀 Gemini 2.5 Flash (Fast) 👁️",
+				MessageText: "🚀 Gemini 2.5 Flash (Fast & efficient for quick responses) 👁️ 🌐",
 			},
 			setupMocks: func(mockStorage *mocks.MockStorage, mockSender *mocks.MockSender) {
+				// Mock calls for getting user balance and subscription for display name generation
+				mockStorage.EXPECT().
+					GetUserTokenBalance(gomock.Any(), int64(1)).
+					Return(&domain.TokenBalance{RegularBalance: 100, PremiumBalance: 50}, nil)
+				mockStorage.EXPECT().
+					GetActiveSubscriptionByUserID(gomock.Any(), int64(1)).
+					Return(nil, nil) // No active subscription
 				mockStorage.EXPECT().
 					UpdateUserSelectedModel(gomock.Any(), int64(1), gomock.Any()).
 					Return(nil)
@@ -80,7 +87,14 @@ func TestUpdateService_HandleModelSelectState(t *testing.T) {
 			update: domain.Update{
 				MessageText: "unknown model",
 			},
-			setupMocks: func(_ *mocks.MockStorage, mockSender *mocks.MockSender) {
+			setupMocks: func(mockStorage *mocks.MockStorage, mockSender *mocks.MockSender) {
+				// Mock calls for getting user balance and subscription for display name generation
+				mockStorage.EXPECT().
+					GetUserTokenBalance(gomock.Any(), int64(1)).
+					Return(&domain.TokenBalance{RegularBalance: 100, PremiumBalance: 50}, nil).AnyTimes()
+				mockStorage.EXPECT().
+					GetActiveSubscriptionByUserID(gomock.Any(), int64(1)).
+					Return(nil, nil).AnyTimes() // No active subscription
 				mockSender.EXPECT().
 					SendMessageWithContent(gomock.Any(), "12345", gomock.Any()).
 					DoAndReturn(func(_ context.Context, _ string, content domain.MessageContent) (string, error) {
