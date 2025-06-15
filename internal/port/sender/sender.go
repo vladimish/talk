@@ -6,6 +6,8 @@ import (
 	"github.com/vladimish/talk/internal/domain"
 )
 
+//go:generate go tool mockgen -source=sender.go -destination=../../../mocks/mock_sender.go -package=mocks
+
 type Sender interface {
 	SendMessage(ctx context.Context, externalUserID string, text string) (string, error)
 	SendMessageWithContent(ctx context.Context, externalUserID string, content domain.MessageContent) (string, error)

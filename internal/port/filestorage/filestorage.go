@@ -5,6 +5,8 @@ import (
 	"time"
 )
 
+//go:generate go tool mockgen -source=filestorage.go -destination=../../../mocks/mock_filestorage.go -package=mocks
+
 // FileStorage defines the interface for file storage operations.
 type FileStorage interface {
 	// Upload uploads a file to the storage and returns the object name.

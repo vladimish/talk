@@ -5,5 +5,14 @@ migrate:
 generate:
 	go tool sqlc generate
 
+generate-mocks:
+	mkdir -p mocks
+	go generate ./internal/port/...
+
 lint:
 	go tool golangci-lint run
+
+clean-mocks:
+	rm -rf mocks
+
+.PHONY: migrate generate generate-mocks lint clean-mocks

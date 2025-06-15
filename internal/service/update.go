@@ -73,22 +73,22 @@ func (s *UpdateService) processUpdate(ctx context.Context, user *domain.User, up
 
 	switch currentState {
 	case domain.UserStateMenu:
-		return s.handleMenuState(ctx, user, update)
+		return s.HandleMenuState(ctx, user, update)
 	case domain.UserStateConversation:
-		return s.handleConversationState(ctx, user, update)
+		return s.HandleConversationState(ctx, user, update)
 	case domain.UserStateModelSelect:
-		return s.handleModelSelectState(ctx, user, update)
+		return s.HandleModelSelectState(ctx, user, update)
 	case domain.UserStateConversationList:
-		return s.handleConversationListState(ctx, user, update)
+		return s.HandleConversationListState(ctx, user, update)
 	case domain.UserStateSettings:
-		return s.handleSettingsState(ctx, user, update)
+		return s.HandleSettingsState(ctx, user, update)
 	case domain.UserStateLanguageSelect:
-		return s.handleLanguageSelectState(ctx, user, update)
+		return s.HandleLanguageSelectState(ctx, user, update)
 	case domain.UserStateProfile:
-		return s.handleProfileState(ctx, user, update)
+		return s.HandleProfileState(ctx, user, update)
 	default:
 		// Default to menu state for unknown states
-		return s.handleMenuState(ctx, user, update)
+		return s.HandleMenuState(ctx, user, update)
 	}
 }
 
@@ -145,7 +145,7 @@ func (s *UpdateService) createNewUserWithTokens(ctx context.Context, update doma
 	return user, nil
 }
 
-func (s *UpdateService) handleConversationState(ctx context.Context, user *domain.User, update domain.Update) error {
+func (s *UpdateService) HandleConversationState(ctx context.Context, user *domain.User, update domain.Update) error {
 	// Check if user sent "back to menu" text
 	if update.MessageText == i18n.GetString(user.Language, i18n.ButtonBackToMenu) {
 		return s.transitionToMenu(ctx, user)

@@ -8,8 +8,8 @@ import (
 	"github.com/vladimish/talk/pkg/i18n"
 )
 
-// Menu state handlers.
-func (s *UpdateService) handleMenuState(ctx context.Context, user *domain.User, update domain.Update) error {
+// HandleMenuState handles user interactions in the menu state.
+func (s *UpdateService) HandleMenuState(ctx context.Context, user *domain.User, update domain.Update) error {
 	// Check if user sent "start conversation" text
 	if update.MessageText == i18n.GetString(user.Language, i18n.ButtonStartConversation) {
 		return s.transitionToConversationList(ctx, user)

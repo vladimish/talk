@@ -7,6 +7,8 @@ import (
 	"github.com/vladimish/talk/internal/domain"
 )
 
+//go:generate go tool mockgen -source=storage.go -destination=../../../mocks/mock_storage.go -package=mocks
+
 type Storage interface {
 	GetUserByExternalUserID(ctx context.Context, id string) (*domain.User, error)
 	CreateUser(ctx context.Context, user *domain.User) (*domain.User, error)

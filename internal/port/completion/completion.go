@@ -6,6 +6,8 @@ import (
 	"github.com/vladimish/talk/internal/domain"
 )
 
+//go:generate go tool mockgen -source=completion.go -destination=../../../mocks/mock_completion.go -package=mocks
+
 type StreamToken struct {
 	Content string
 	Error   error

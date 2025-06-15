@@ -8,8 +8,8 @@ import (
 	"github.com/vladimish/talk/pkg/i18n"
 )
 
-// Profile state handlers.
-func (s *UpdateService) handleProfileState(ctx context.Context, user *domain.User, update domain.Update) error {
+// HandleProfileState handles user interactions in the profile state.
+func (s *UpdateService) HandleProfileState(ctx context.Context, user *domain.User, update domain.Update) error {
 	// Check if user sent "back to menu" text
 	if update.MessageText == i18n.GetString(user.Language, i18n.ButtonBackToMenu) {
 		return s.transitionToMenu(ctx, user)

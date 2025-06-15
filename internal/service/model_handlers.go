@@ -21,7 +21,7 @@ func (s *UpdateService) transitionToModelSelect(ctx context.Context, user *domai
 	return s.showModelSelection(ctx, user)
 }
 
-func (s *UpdateService) handleModelSelectState(ctx context.Context, user *domain.User, update domain.Update) error {
+func (s *UpdateService) HandleModelSelectState(ctx context.Context, user *domain.User, update domain.Update) error {
 	// Check if user sent "back to menu" text
 	if update.MessageText == i18n.GetString(user.Language, i18n.ButtonBackToMenu) {
 		return s.transitionToMenu(ctx, user)

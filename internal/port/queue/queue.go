@@ -8,6 +8,8 @@ import (
 	"github.com/vladimish/talk/internal/domain"
 )
 
+//go:generate go tool mockgen -source=queue.go -destination=../../../mocks/mock_queue.go -package=mocks
+
 var (
 	ErrAlreadyProcessing = errors.New("user is already processing a request")
 	ErrEmptyQueue        = errors.New("queue is empty")

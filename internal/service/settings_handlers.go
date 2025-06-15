@@ -8,8 +8,8 @@ import (
 	"github.com/vladimish/talk/pkg/i18n"
 )
 
-// Settings state handlers.
-func (s *UpdateService) handleSettingsState(ctx context.Context, user *domain.User, update domain.Update) error {
+// HandleSettingsState handles user interactions in the settings state.
+func (s *UpdateService) HandleSettingsState(ctx context.Context, user *domain.User, update domain.Update) error {
 	// Check if user sent "back to menu" text
 	if update.MessageText == i18n.GetString(user.Language, i18n.ButtonBackToMenu) {
 		return s.transitionToMenu(ctx, user)
@@ -24,7 +24,7 @@ func (s *UpdateService) handleSettingsState(ctx context.Context, user *domain.Us
 	return s.sendSettings(ctx, user, i18n.GetString(user.Language, i18n.SettingsTitle))
 }
 
-func (s *UpdateService) handleLanguageSelectState(ctx context.Context, user *domain.User, update domain.Update) error {
+func (s *UpdateService) HandleLanguageSelectState(ctx context.Context, user *domain.User, update domain.Update) error {
 	// Check if user sent "back to menu" text
 	if update.MessageText == i18n.GetString(user.Language, i18n.ButtonBackToMenu) {
 		return s.transitionToSettings(ctx, user)

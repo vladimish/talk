@@ -32,7 +32,7 @@ func (s *UpdateService) transitionToConversationList(ctx context.Context, user *
 	return s.showConversationList(ctx, user)
 }
 
-func (s *UpdateService) handleConversationListState(
+func (s *UpdateService) HandleConversationListState(
 	ctx context.Context,
 	user *domain.User,
 	update domain.Update,
