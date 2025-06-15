@@ -6,8 +6,8 @@ services:
     container_name: postgres_db
     restart: unless-stopped
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       TZ: UTC
     ports:
       - "5432:5432"
@@ -89,15 +89,15 @@ services:
       minio:
         condition: service_healthy
     environment:
-      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/postgres
-      - REDIS_URL=redis://redis:6379
-      - TELEGRAMIFY_URL=http://telegramify:8000
-      - MINIO_ENDPOINT=minio:9000
-      - MINIO_ACCESS_KEY=minioadmin
-      - MINIO_SECRET_KEY=minioadmin
-      - MINIO_USE_SSL=false
-      - MINIO_BUCKET=telegram-images
-      - MINIO_PUBLIC_DOMAIN=s3.vladimish.com
+      - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=${REDIS_URL}
+      - TELEGRAMIFY_URL=${TELEGRAMIFY_URL}
+      - MINIO_ENDPOINT=${MINIO_ENDPOINT}
+      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}
+      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY}
+      - MINIO_USE_SSL=${MINIO_USE_SSL}
+      - MINIO_BUCKET=${MINIO_BUCKET}
+      - MINIO_PUBLIC_DOMAIN=${MINIO_PUBLIC_DOMAIN}
       - TG_TOKEN=${TG_TOKEN}
       - OPENAI_API_KEY=${OPENAI_API_KEY}
     healthcheck:
