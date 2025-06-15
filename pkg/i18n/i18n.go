@@ -39,6 +39,16 @@ const (
 	ModelUpdateSuccess     = "model.update_success"
 	ModelImageNotSupported = "model.image_not_supported"
 
+	// Model names (for internationalization).
+	ModelGeminiFlash   = "model.gemini_flash"
+	ModelGPT4o         = "model.gpt4o"
+	ModelGPT4oMini     = "model.gpt4o_mini"
+	ModelClaude4Sonnet = "model.claude4_sonnet"
+	ModelGeminiPro     = "model.gemini_pro"
+	ModelO3Mini        = "model.o3_mini"
+	ModelDeepSeekChat  = "model.deepseek_chat"
+	ModelDeepSeekR1    = "model.deepseek_r1"
+
 	// Queue messages.
 	QueueMessageQueued = "queue.message_queued"
 
@@ -153,9 +163,19 @@ var Strings = map[string]map[string]string{
 		ConversationListPageInfo: "💬 Select a conversation (page %d/%d):",
 
 		// Model Selection
-		ModelSelectTitle:       "🤖 Select AI model:\n\n👁️ = Supports image inputs",
+		ModelSelectTitle:       "🤖 Select AI model:\n\n👁️ = Image support | 🧠 = Reasoning | 🌐 = Web search\n❌ = Not available (insufficient tokens/subscription required)",
 		ModelUpdateSuccess:     "✅ Model updated successfully!",
 		ModelImageNotSupported: "❌ The selected model does not support image inputs. Please choose a different model or send a text message.",
+
+		// Model Names
+		ModelGeminiFlash:   "🚀 Gemini 2.5 Flash (Fast & efficient for quick responses)",
+		ModelGPT4o:         "🧠 GPT-4o (Most capable for complex tasks)",
+		ModelGPT4oMini:     "⚡ GPT-4o Mini (Balanced speed & performance)",
+		ModelClaude4Sonnet: "🎭 Claude 4 Sonnet (Creative writing & analysis)",
+		ModelGeminiPro:     "🌸 Gemini 2.5 Pro (Long documents & context)",
+		ModelO3Mini:        "🤖 OpenAI o3-mini (Advanced reasoning model)",
+		ModelDeepSeekChat:  "🔬 DeepSeek Chat v3 (Research & coding)",
+		ModelDeepSeekR1:    "🔍 DeepSeek R1 (Deep reasoning & logic)",
 
 		// Queue
 		QueueMessageQueued: "⏳ Your message has been queued (position: %d). I'll process it after finishing the current response.",
@@ -228,9 +248,19 @@ var Strings = map[string]map[string]string{
 		ConversationListPageInfo: "💬 Selecciona una conversación (página %d/%d):",
 
 		// Model Selection
-		ModelSelectTitle:       "🤖 Seleccionar modelo de IA:\n\n👁️ = Soporta imágenes",
+		ModelSelectTitle:       "🤖 Seleccionar modelo de IA:\n\n👁️ = Soporte de imágenes | 🧠 = Razonamiento | 🌐 = Búsqueda web\n❌ = No disponible (tokens insuficientes/suscripción requerida)",
 		ModelUpdateSuccess:     "✅ ¡Modelo actualizado exitosamente!",
 		ModelImageNotSupported: "❌ El modelo seleccionado no admite imágenes. Por favor elige un modelo diferente o envía un mensaje de texto.",
+
+		// Model Names
+		ModelGeminiFlash:   "🚀 Gemini 2.5 Flash (Rápido y eficiente para respuestas ágiles)",
+		ModelGPT4o:         "🧠 GPT-4o (Más capaz para tareas complejas)",
+		ModelGPT4oMini:     "⚡ GPT-4o Mini (Velocidad y rendimiento equilibrados)",
+		ModelClaude4Sonnet: "🎭 Claude 4 Sonnet (Escritura creativa y análisis)",
+		ModelGeminiPro:     "🌸 Gemini 2.5 Pro (Documentos largos y contexto)",
+		ModelO3Mini:        "🤖 OpenAI o3-mini (Modelo de razonamiento avanzado)",
+		ModelDeepSeekChat:  "🔬 DeepSeek Chat v3 (Investigación y programación)",
+		ModelDeepSeekR1:    "🔍 DeepSeek R1 (Razonamiento profundo y lógica)",
 
 		// Queue
 		QueueMessageQueued: "⏳ Tu mensaje ha sido puesto en cola (posición: %d). Lo procesaré después de terminar la respuesta actual.",
@@ -303,9 +333,19 @@ var Strings = map[string]map[string]string{
 		ConversationListPageInfo: "💬 Выберите беседу (страница %d/%d):",
 
 		// Model Selection
-		ModelSelectTitle:       "🤖 Выбрать ИИ модель:\n\n👁️ = Поддерживает изображения",
+		ModelSelectTitle:       "🤖 Выбрать ИИ модель:\n\n👁️ = Поддержка изображений | 🧠 = Рассуждение | 🌐 = Веб-поиск\n❌ = Недоступно (недостаточно токенов/требуется подписка)",
 		ModelUpdateSuccess:     "✅ Модель успешно обновлена!",
 		ModelImageNotSupported: "❌ Выбранная модель не поддерживает изображения. Пожалуйста, выберите другую модель или отправьте текстовое сообщение.",
+
+		// Model Names
+		ModelGeminiFlash:   "🚀 Gemini 2.5 Flash (Быстрый и эффективный для оперативных ответов)",
+		ModelGPT4o:         "🧠 GPT-4o (Самый способный для сложных задач)",
+		ModelGPT4oMini:     "⚡ GPT-4o Mini (Сбалансированная скорость и производительность)",
+		ModelClaude4Sonnet: "🎭 Claude 4 Sonnet (Творческое письмо и анализ)",
+		ModelGeminiPro:     "🌸 Gemini 2.5 Pro (Длинные документы и контекст)",
+		ModelO3Mini:        "🤖 OpenAI o3-mini (Продвинутая модель рассуждений)",
+		ModelDeepSeekChat:  "🔬 DeepSeek Chat v3 (Исследования и программирование)",
+		ModelDeepSeekR1:    "🔍 DeepSeek R1 (Глубокие рассуждения и логика)",
 
 		// Queue
 		QueueMessageQueued: "⏳ Ваше сообщение поставлено в очередь (позиция: %d). Я обработаю его после завершения текущего ответа.",
@@ -378,9 +418,19 @@ var Strings = map[string]map[string]string{
 		ConversationListPageInfo: "💬 Sélectionnez une conversation (page %d/%d) :",
 
 		// Model Selection
-		ModelSelectTitle:       "🤖 Sélectionner un modèle IA :\n\n👁️ = Prend en charge les images",
+		ModelSelectTitle:       "🤖 Sélectionner un modèle IA :\n\n👁️ = Support d'images | 🧠 = Raisonnement | 🌐 = Recherche web\n❌ = Indisponible (jetons insuffisants/abonnement requis)",
 		ModelUpdateSuccess:     "✅ Modèle mis à jour avec succès !",
 		ModelImageNotSupported: "❌ Le modèle sélectionné ne prend pas en charge les images. Veuillez choisir un modèle différent ou envoyer un message texte.",
+
+		// Model Names
+		ModelGeminiFlash:   "🚀 Gemini 2.5 Flash (Rapide et efficace pour réponses vives)",
+		ModelGPT4o:         "🧠 GPT-4o (Le plus capable pour tâches complexes)",
+		ModelGPT4oMini:     "⚡ GPT-4o Mini (Vitesse et performance équilibrées)",
+		ModelClaude4Sonnet: "🎭 Claude 4 Sonnet (Écriture créative et analyse)",
+		ModelGeminiPro:     "🌸 Gemini 2.5 Pro (Longs documents et contexte)",
+		ModelO3Mini:        "🤖 OpenAI o3-mini (Modèle de raisonnement avancé)",
+		ModelDeepSeekChat:  "🔬 DeepSeek Chat v3 (Recherche et programmation)",
+		ModelDeepSeekR1:    "🔍 DeepSeek R1 (Raisonnement profond et logique)",
 
 		// Queue
 		QueueMessageQueued: "⏳ Votre message a été mis en file d'attente (position : %d). Je le traiterai après avoir terminé la réponse actuelle.",
@@ -453,9 +503,19 @@ var Strings = map[string]map[string]string{
 		ConversationListPageInfo: "💬 Wählen Sie ein Gespräch (Seite %d/%d):",
 
 		// Model Selection
-		ModelSelectTitle:       "🤖 KI-Modell auswählen:\n\n👁️ = Unterstützt Bilder",
+		ModelSelectTitle:       "🤖 KI-Modell auswählen:\n\n👁️ = Bildunterstützung | 🧠 = Denkvermögen | 🌐 = Web-Suche\n❌ = Nicht verfügbar (unzureichende Token/Abonnement erforderlich)",
 		ModelUpdateSuccess:     "✅ Modell erfolgreich aktualisiert!",
 		ModelImageNotSupported: "❌ Das ausgewählte Modell unterstützt keine Bilder. Bitte wählen Sie ein anderes Modell oder senden Sie eine Textnachricht.",
+
+		// Model Names
+		ModelGeminiFlash:   "🚀 Gemini 2.5 Flash (Schnell und effizient für rasche Antworten)",
+		ModelGPT4o:         "🧠 GPT-4o (Am fähigsten für komplexe Aufgaben)",
+		ModelGPT4oMini:     "⚡ GPT-4o Mini (Ausgewogene Geschwindigkeit und Leistung)",
+		ModelClaude4Sonnet: "🎭 Claude 4 Sonnet (Kreatives Schreiben und Analyse)",
+		ModelGeminiPro:     "🌸 Gemini 2.5 Pro (Lange Dokumente und Kontext)",
+		ModelO3Mini:        "🤖 OpenAI o3-mini (Fortgeschrittenes Denkmodell)",
+		ModelDeepSeekChat:  "🔬 DeepSeek Chat v3 (Forschung und Programmierung)",
+		ModelDeepSeekR1:    "🔍 DeepSeek R1 (Tiefes Denken und Logik)",
 
 		// Queue
 		QueueMessageQueued: "⏳ Ihre Nachricht wurde in die Warteschlange eingereiht (Position: %d). Ich werde sie nach Beendigung der aktuellen Antwort bearbeiten.",
@@ -528,9 +588,19 @@ var Strings = map[string]map[string]string{
 		ConversationListPageInfo: "💬 Seleziona una conversazione (pagina %d/%d):",
 
 		// Model Selection
-		ModelSelectTitle:       "🤖 Seleziona modello IA:\n\n👁️ = Supporta immagini",
+		ModelSelectTitle:       "🤖 Seleziona modello IA:\n\n👁️ = Supporto immagini | 🧠 = Ragionamento | 🌐 = Ricerca web\n❌ = Non disponibile (token insufficienti/abbonamento richiesto)",
 		ModelUpdateSuccess:     "✅ Modello aggiornato con successo!",
 		ModelImageNotSupported: "❌ Il modello selezionato non supporta le immagini. Per favore scegli un modello diverso o invia un messaggio di testo.",
+
+		// Model Names
+		ModelGeminiFlash:   "🚀 Gemini 2.5 Flash (Veloce ed efficiente per risposte rapide)",
+		ModelGPT4o:         "🧠 GPT-4o (Più capace per compiti complessi)",
+		ModelGPT4oMini:     "⚡ GPT-4o Mini (Velocità e prestazioni bilanciate)",
+		ModelClaude4Sonnet: "🎭 Claude 4 Sonnet (Scrittura creativa e analisi)",
+		ModelGeminiPro:     "🌸 Gemini 2.5 Pro (Documenti lunghi e contesto)",
+		ModelO3Mini:        "🤖 OpenAI o3-mini (Modello di ragionamento avanzato)",
+		ModelDeepSeekChat:  "🔬 DeepSeek Chat v3 (Ricerca e programmazione)",
+		ModelDeepSeekR1:    "🔍 DeepSeek R1 (Ragionamento profondo e logica)",
 
 		// Queue
 		QueueMessageQueued: "⏳ Il tuo messaggio è stato messo in coda (posizione: %d). Lo elaborerò dopo aver terminato la risposta attuale.",
@@ -603,9 +673,19 @@ var Strings = map[string]map[string]string{
 		ConversationListPageInfo: "💬 选择一个对话（第%d/%d页）：",
 
 		// Model Selection
-		ModelSelectTitle:       "🤖 选择AI模型：\n\n👁️ = 支持图像输入",
+		ModelSelectTitle:       "🤖 选择AI模型：\n\n👁️ = 图像支持 | 🧠 = 推理能力 | 🌐 = 网络搜索\n❌ = 不可用（代币不足/需要订阅）",
 		ModelUpdateSuccess:     "✅ 模型更新成功！",
 		ModelImageNotSupported: "❌ 所选模型不支持图像输入。请选择其他模型或发送文本消息。",
+
+		// Model Names
+		ModelGeminiFlash:   "🚀 Gemini 2.5 Flash（快速高效，适合快速响应）",
+		ModelGPT4o:         "🧠 GPT-4o（最强能力，适合复杂任务）",
+		ModelGPT4oMini:     "⚡ GPT-4o Mini（平衡速度与性能）",
+		ModelClaude4Sonnet: "🎭 Claude 4 Sonnet（创意写作与分析）",
+		ModelGeminiPro:     "🌸 Gemini 2.5 Pro（长文档与上下文）",
+		ModelO3Mini:        "🤖 OpenAI o3-mini（高级推理模型）",
+		ModelDeepSeekChat:  "🔬 DeepSeek Chat v3（研究与编程）",
+		ModelDeepSeekR1:    "🔍 DeepSeek R1（深度推理与逻辑）",
 
 		// Queue
 		QueueMessageQueued: "⏳ 您的消息已排队（位置：%d）。我会在完成当前回复后处理它。",
@@ -678,9 +758,19 @@ var Strings = map[string]map[string]string{
 		ConversationListPageInfo: "💬 会話を選択してください（%d/%dページ）：",
 
 		// Model Selection
-		ModelSelectTitle:       "🤖 AIモデルを選択：\n\n👁️ = 画像入力に対応",
+		ModelSelectTitle:       "🤖 AIモデルを選択：\n\n👁️ = 画像サポート | 🧠 = 推論機能 | 🌐 = ウェブ検索\n❌ = 利用不可（トークン不足/サブスクリプション必要）",
 		ModelUpdateSuccess:     "✅ モデルが正常に更新されました！",
 		ModelImageNotSupported: "❌ 選択されたモデルは画像入力をサポートしていません。別のモデルを選択するか、テキストメッセージを送信してください。",
+
+		// Model Names
+		ModelGeminiFlash:   "🚀 Gemini 2.5 Flash（高速で効率的、素早い応答に最適）",
+		ModelGPT4o:         "🧠 GPT-4o（最高性能、複雑なタスクに最適）",
+		ModelGPT4oMini:     "⚡ GPT-4o Mini（速度と性能のバランス）",
+		ModelClaude4Sonnet: "🎭 Claude 4 Sonnet（創造的な文章作成と分析）",
+		ModelGeminiPro:     "🌸 Gemini 2.5 Pro（長文書とコンテキスト）",
+		ModelO3Mini:        "🤖 OpenAI o3-mini（高度な推論モデル）",
+		ModelDeepSeekChat:  "🔬 DeepSeek Chat v3（研究とプログラミング）",
+		ModelDeepSeekR1:    "🔍 DeepSeek R1（深い推論と論理）",
 
 		// Queue
 		QueueMessageQueued: "⏳ メッセージがキューに追加されました（位置：%d）。現在の応答を完了した後に処理します。",
@@ -753,7 +843,7 @@ var Strings = map[string]map[string]string{
 		ConversationListPageInfo: "💬 대화를 선택하세요 (%d/%d페이지):",
 
 		// Model Selection
-		ModelSelectTitle:       "🤖 AI 모델 선택:\n\n👁️ = 이미지 입력 지원",
+		ModelSelectTitle:       "👁️ = 이미지 지원 | 🧠 = 추론 | 🌐 = 웹 검색\n❌ = 사용 불가 (토큰 부족/구독 필요)\n\n🤖 AI 모델 선택:",
 		ModelUpdateSuccess:     "✅ 모델이 성공적으로 업데이트되었습니다!",
 		ModelImageNotSupported: "❌ 선택한 모델은 이미지 입력을 지원하지 않습니다. 다른 모델을 선택하거나 텍스트 메시지를 보내주세요.",
 
@@ -793,6 +883,16 @@ var Strings = map[string]map[string]string{
 		LangKyrgyz:     "🇰🇬 Кыргызча",
 		LangArabic:     "🇸🇦 العربية",
 		LangHindi:      "🇮🇳 हिन्दी",
+
+		// Model Names
+		ModelGeminiFlash:   "🚀 Gemini 2.5 Flash (빠르고 효율적인 응답)",
+		ModelGPT4o:         "🧠 GPT-4o (복잡한 작업에 가장 적합)",
+		ModelGPT4oMini:     "⚡ GPT-4o Mini (속도와 성능의 균형)",
+		ModelClaude4Sonnet: "🎭 Claude 4 Sonnet (창의적 글쓰기 및 분석)",
+		ModelGeminiPro:     "🌸 Gemini 2.5 Pro (긴 문서 및 컨텍스트)",
+		ModelO3Mini:        "🤖 OpenAI o3-mini (고급 추론 모델)",
+		ModelDeepSeekChat:  "🔬 DeepSeek Chat v3 (연구 및 코딩)",
+		ModelDeepSeekR1:    "🔍 DeepSeek R1 (심층 추론 및 논리)",
 	},
 	"pt": {
 		// Buttons
@@ -828,7 +928,7 @@ var Strings = map[string]map[string]string{
 		ConversationListPageInfo: "💬 Selecione uma conversa (página %d/%d):",
 
 		// Model Selection
-		ModelSelectTitle:       "🤖 Selecionar modelo de IA:\n\n👁️ = Suporta imagens",
+		ModelSelectTitle:       "👁️ = Suporte a imagens | 🧠 = Raciocínio | 🌐 = Busca na web\n❌ = Não disponível (tokens insuficientes/assinatura necessária)\n\n🤖 Selecionar modelo de IA:",
 		ModelUpdateSuccess:     "✅ Modelo atualizado com sucesso!",
 		ModelImageNotSupported: "❌ O modelo selecionado não suporta entradas de imagem. Por favor, escolha um modelo diferente ou envie uma mensagem de texto.",
 
@@ -868,6 +968,16 @@ var Strings = map[string]map[string]string{
 		LangKyrgyz:     "🇰🇬 Кыргызча",
 		LangArabic:     "🇸🇦 العربية",
 		LangHindi:      "🇮🇳 हिन्दी",
+
+		// Model Names
+		ModelGeminiFlash:   "🚀 Gemini 2.5 Flash (Rápido e eficiente para respostas ágeis)",
+		ModelGPT4o:         "🧠 GPT-4o (Mais capaz para tarefas complexas)",
+		ModelGPT4oMini:     "⚡ GPT-4o Mini (Velocidade e desempenho equilibrados)",
+		ModelClaude4Sonnet: "🎭 Claude 4 Sonnet (Escrita criativa e análise)",
+		ModelGeminiPro:     "🌸 Gemini 2.5 Pro (Documentos longos e contexto)",
+		ModelO3Mini:        "🤖 OpenAI o3-mini (Modelo de raciocínio avançado)",
+		ModelDeepSeekChat:  "🔬 DeepSeek Chat v3 (Pesquisa e programação)",
+		ModelDeepSeekR1:    "🔍 DeepSeek R1 (Raciocínio profundo e lógica)",
 	},
 	"hy": {
 		// Buttons
@@ -903,7 +1013,7 @@ var Strings = map[string]map[string]string{
 		ConversationListPageInfo: "💬 Ընտրեք խոսակցությունը (էջ %d/%d):",
 
 		// Model Selection
-		ModelSelectTitle:       "🤖 Ընտրել AI մոդելը:\n\n👁️ = Աջակցում է պատկերները",
+		ModelSelectTitle:       "👁️ = Գծավոր աջակցություն | 🧠 = Մտածողություն | 🌐 = Վեբ որոնում\n❌ = Հասանելի չէ (բավարար տոկեններ/բաժանորդագրություն պահանջ)\n\n🤖 Ընտրել AI մոդելը:",
 		ModelUpdateSuccess:     "✅ Մոդելը հաջողությամբ թարմացվեց:",
 		ModelImageNotSupported: "❌ Ընտրված մոդելը չի աջակցում պատկերների մուտքագրմանը: Խնդրում ենք ընտրել այլ մոդել կամ ուղարկել տեքստային հաղորդագրություն:",
 
@@ -943,6 +1053,16 @@ var Strings = map[string]map[string]string{
 		LangKyrgyz:     "🇰🇬 Кыргызча",
 		LangArabic:     "🇸🇦 العربية",
 		LangHindi:      "🇮🇳 हिन्दी",
+
+		// Model Names
+		ModelGeminiFlash:   "🚀 Gemini 2.5 Flash (Արագ և արդյունավետ պատասխանների համար)",
+		ModelGPT4o:         "🧠 GPT-4o (Լավագույնը բարդ խնդիրների համար)",
+		ModelGPT4oMini:     "⚡ GPT-4o Mini (Հավասարակշռված արագություն և արդյունավետություն)",
+		ModelClaude4Sonnet: "🎭 Claude 4 Sonnet (Ստեղծագործական գրություն և վերլուծություն)",
+		ModelGeminiPro:     "🌸 Gemini 2.5 Pro (Երկար փաստաթղթեր և համատեքստ)",
+		ModelO3Mini:        "🤖 OpenAI o3-mini (Առաջադեմ տրամաբանության մոդել)",
+		ModelDeepSeekChat:  "🔬 DeepSeek Chat v3 (Հետազոտություն և ծրագրավորում)",
+		ModelDeepSeekR1:    "🔍 DeepSeek R1 (Խորը տրամաբանություն և տրամաբանություն)",
 	},
 	"uk": {
 		// Buttons
@@ -978,7 +1098,7 @@ var Strings = map[string]map[string]string{
 		ConversationListPageInfo: "💬 Оберіть розмову (сторінка %d/%d):",
 
 		// Model Selection
-		ModelSelectTitle:       "🤖 Вибрати AI модель:\n\n👁️ = Підтримує зображення",
+		ModelSelectTitle:       "👁️ = Підтримка зображень | 🧠 = Мислення | 🌐 = Пошук в інтернеті\n❌ = Недоступно (недостатньо токенів/потрібна підписка)\n\n🤖 Вибрати AI модель:",
 		ModelUpdateSuccess:     "✅ Модель успішно оновлено!",
 		ModelImageNotSupported: "❌ Обрана модель не підтримує зображення. Будь ласка, оберіть іншу модель або надішліть текстове повідомлення.",
 
@@ -1018,6 +1138,16 @@ var Strings = map[string]map[string]string{
 		LangKyrgyz:     "🇰🇬 Кыргызча",
 		LangArabic:     "🇸🇦 العربية",
 		LangHindi:      "🇮🇳 हिन्दी",
+
+		// Model Names
+		ModelGeminiFlash:   "🚀 Gemini 2.5 Flash (Швидкий та ефективний для швидких відповідей)",
+		ModelGPT4o:         "🧠 GPT-4o (Найкращий для складних завдань)",
+		ModelGPT4oMini:     "⚡ GPT-4o Mini (Збалансована швидкість і продуктивність)",
+		ModelClaude4Sonnet: "🎭 Claude 4 Sonnet (Творче письмо та аналіз)",
+		ModelGeminiPro:     "🌸 Gemini 2.5 Pro (Довгі документи та контекст)",
+		ModelO3Mini:        "🤖 OpenAI o3-mini (Модель розширеного міркування)",
+		ModelDeepSeekChat:  "🔬 DeepSeek Chat v3 (Дослідження та програмування)",
+		ModelDeepSeekR1:    "🔍 DeepSeek R1 (Глибоке міркування та логіка)",
 	},
 	"kk": {
 		// Buttons
@@ -1053,7 +1183,7 @@ var Strings = map[string]map[string]string{
 		ConversationListPageInfo: "💬 Сөйлесуді таңдаңыз (%d/%d бет):",
 
 		// Model Selection
-		ModelSelectTitle:       "🤖 AI моделін таңдау:\n\n👁️ = Кескіндерді қолдайды",
+		ModelSelectTitle:       "👁️ = Кескін қолдауы | 🧠 = Ойлау | 🌐 = Веб іздеу\n❌ = Қолжетімсіз (токен жетіспейді/жазылым қажет)\n\n🤖 AI моделін таңдау:",
 		ModelUpdateSuccess:     "✅ Модель сәтті жаңартылды!",
 		ModelImageNotSupported: "❌ Таңдалған модель кескіндерді қолдамайды. Басқа модель таңдаңыз немесе мәтіндік хабарлама жіберіңіз.",
 
@@ -1093,6 +1223,16 @@ var Strings = map[string]map[string]string{
 		LangKyrgyz:     "🇰🇬 Кыргызча",
 		LangArabic:     "🇸🇦 العربية",
 		LangHindi:      "🇮🇳 हिन्दी",
+
+		// Model Names
+		ModelGeminiFlash:   "🚀 Gemini 2.5 Flash (Жылдам жауаптар үшін тез және тиімді)",
+		ModelGPT4o:         "🧠 GPT-4o (Күрделі тапсырмалар үшін ең жақсы)",
+		ModelGPT4oMini:     "⚡ GPT-4o Mini (Теңдестірілген жылдамдық және өнімділік)",
+		ModelClaude4Sonnet: "🎭 Claude 4 Sonnet (Шығармашылық жазу және талдау)",
+		ModelGeminiPro:     "🌸 Gemini 2.5 Pro (Ұзақ құжаттар және мәнмәтін)",
+		ModelO3Mini:        "🤖 OpenAI o3-mini (Жетілдірілген ойлау моделі)",
+		ModelDeepSeekChat:  "🔬 DeepSeek Chat v3 (Зерттеу және бағдарламалау)",
+		ModelDeepSeekR1:    "🔍 DeepSeek R1 (Терең ойлау және логика)",
 	},
 	"ky": {
 		// Buttons
@@ -1128,7 +1268,7 @@ var Strings = map[string]map[string]string{
 		ConversationListPageInfo: "💬 Маекти тандаңыз (%d/%d бет):",
 
 		// Model Selection
-		ModelSelectTitle:       "🤖 AI модель тандоо:\n\n👁️ = Сүрөттөрдү колдойт",
+		ModelSelectTitle:       "👁️ = Сүрөт колдуу | 🧠 = Ой жүгүртүү | 🌐 = Веб издөө\n❌ = Жеткиликсиз (токен жетишпейт/жазылуу керек)\n\n🤖 AI модель тандоо:",
 		ModelUpdateSuccess:     "✅ Модель ийгиликтүү жаңыртылды!",
 		ModelImageNotSupported: "❌ Тандалган модель сүрөттөрдү колдобойт. Башка модель тандаңыз же текст билдирүү жөнөтүңүз.",
 
@@ -1168,6 +1308,16 @@ var Strings = map[string]map[string]string{
 		LangKyrgyz:     "🇰🇬 Кыргызча",
 		LangArabic:     "🇸🇦 العربية",
 		LangHindi:      "🇮🇳 हिन्दी",
+
+		// Model Names
+		ModelGeminiFlash:   "🚀 Gemini 2.5 Flash (Тез жана натыйжалуу жооптор үчүн)",
+		ModelGPT4o:         "🧠 GPT-4o (Татаал тапшырмалар үчүн эң мыкты)",
+		ModelGPT4oMini:     "⚡ GPT-4o Mini (Теңдештирилген ылдамдык жана аткаруу)",
+		ModelClaude4Sonnet: "🎭 Claude 4 Sonnet (Чыгармачыл жазуу жана анализ)",
+		ModelGeminiPro:     "🌸 Gemini 2.5 Pro (Узун документтер жана контекст)",
+		ModelO3Mini:        "🤖 OpenAI o3-mini (Өркүндөтүлгөн ой жүгүртүү модели)",
+		ModelDeepSeekChat:  "🔬 DeepSeek Chat v3 (Изилдөө жана программалоо)",
+		ModelDeepSeekR1:    "🔍 DeepSeek R1 (Терең ой жүгүртүү жана логика)",
 	},
 	"ar": {
 		// Buttons
@@ -1203,7 +1353,7 @@ var Strings = map[string]map[string]string{
 		ConversationListPageInfo: "💬 اختر محادثة (الصفحة %d/%d):",
 
 		// Model Selection
-		ModelSelectTitle:       "🤖 اختيار نموذج الذكاء الاصطناعي:\n\n👁️ = يدعم الصور",
+		ModelSelectTitle:       "👁️ = دعم الصور | 🧠 = التفكير | 🌐 = بحث الويب\n❌ = غير متاح (رموز غير كافية/اشتراك مطلوب)\n\n🤖 اختيار نموذج الذكاء الاصطناعي:",
 		ModelUpdateSuccess:     "✅ تم تحديث النموذج بنجاح!",
 		ModelImageNotSupported: "❌ النموذج المحدد لا يدعم مدخلات الصور. يرجى اختيار نموذج مختلف أو إرسال رسالة نصية.",
 
@@ -1243,6 +1393,16 @@ var Strings = map[string]map[string]string{
 		LangKyrgyz:     "🇰🇬 Кыргызча",
 		LangArabic:     "🇸🇦 العربية",
 		LangHindi:      "🇮🇳 हिन्दी",
+
+		// Model Names
+		ModelGeminiFlash:   "🚀 Gemini 2.5 Flash (سريع وفعال للإجابات السريعة)",
+		ModelGPT4o:         "🧠 GPT-4o (الأكثر قدرة للمهام المعقدة)",
+		ModelGPT4oMini:     "⚡ GPT-4o Mini (سرعة وأداء متوازنان)",
+		ModelClaude4Sonnet: "🎭 Claude 4 Sonnet (الكتابة الإبداعية والتحليل)",
+		ModelGeminiPro:     "🌸 Gemini 2.5 Pro (مستندات طويلة وسياق)",
+		ModelO3Mini:        "🤖 OpenAI o3-mini (نموذج تفكير متقدم)",
+		ModelDeepSeekChat:  "🔬 DeepSeek Chat v3 (البحث والبرمجة)",
+		ModelDeepSeekR1:    "🔍 DeepSeek R1 (التفكير العميق والمنطق)",
 	},
 	"hi": {
 		// Buttons
@@ -1278,7 +1438,7 @@ var Strings = map[string]map[string]string{
 		ConversationListPageInfo: "💬 एक बातचीत चुनें (पेज %d/%d):",
 
 		// Model Selection
-		ModelSelectTitle:       "🤖 AI मॉडल चुनें:\n\n👁️ = छवि इनपुट का समर्थन करता है",
+		ModelSelectTitle:       "👁️ = छवि समर्थन | 🧠 = तर्क | 🌐 = वेब खोज\n❌ = उपलब्ध नहीं (अपर्याप्त टोकन/सब्सक्रिप्शन आवश्यक)\n\n🤖 AI मॉडल चुनें:",
 		ModelUpdateSuccess:     "✅ मॉडल सफलतापूर्वक अपडेट हो गया!",
 		ModelImageNotSupported: "❌ चयनित मॉडल छवि इनपुट का समर्थन नहीं करता है। कृपया एक अलग मॉडल चुनें या टेक्स्ट संदेश भेजें।",
 
@@ -1318,6 +1478,16 @@ var Strings = map[string]map[string]string{
 		LangKyrgyz:     "🇰🇬 Кыргызча",
 		LangArabic:     "🇸🇦 العربية",
 		LangHindi:      "🇮🇳 हिन्दी",
+
+		// Model Names
+		ModelGeminiFlash:   "🚀 Gemini 2.5 Flash (त्वरित उत्तरों के लिए तेज़ और कुशल)",
+		ModelGPT4o:         "🧠 GPT-4o (जटिल कार्यों के लिए सबसे सक्षम)",
+		ModelGPT4oMini:     "⚡ GPT-4o Mini (संतुलित गति और प्रदर्शन)",
+		ModelClaude4Sonnet: "🎭 Claude 4 Sonnet (रचनात्मक लेखन और विश्लेषण)",
+		ModelGeminiPro:     "🌸 Gemini 2.5 Pro (लंबे दस्तावेज़ और संदर्भ)",
+		ModelO3Mini:        "🤖 OpenAI o3-mini (उन्नत तर्क मॉडल)",
+		ModelDeepSeekChat:  "🔬 DeepSeek Chat v3 (अनुसंधान और कोडिंग)",
+		ModelDeepSeekR1:    "🔍 DeepSeek R1 (गहन तर्क और तर्कशास्त्र)",
 	},
 }
 

@@ -27,9 +27,31 @@ func (s *UpdateService) HandleModelSelectState(ctx context.Context, user *domain
 		return s.transitionToMenu(ctx, user)
 	}
 
-	// Check if user selected a model
+	// Get user balance and subscription to compare with displayed names
+	balance, err := s.storage.GetUserTokenBalance(ctx, user.ID)
+	if err != nil {
+		return fmt.Errorf("can't get user token balance: %w", err)
+	}
+
+	activeSubscription, err := s.storage.GetActiveSubscriptionByUserID(ctx, user.ID)
+	hasActiveSubscription := err == nil && activeSubscription != nil
+
+	// Check if user selected a model by comparing with display names
 	for _, model := range domain.AvailableModels {
-		if update.MessageText == model.DisplayName {
+		displayName := model.GetDisplayNameForUser(user.Language, hasActiveSubscription, *balance)
+		if update.MessageText == displayName {
+			// Check if user can actually use this model
+			if !domain.CanUserUseModel(&model, hasActiveSubscription, *balance) {
+				// Send error message for unavailable model
+				insufficientText := i18n.GetString(user.Language, i18n.ProfileInsufficientTokens)
+				_, sendErr := s.sender.SendMessageWithContent(ctx, user.ExternalID, domain.MessageContent{
+					Text: insufficientText,
+				})
+				if sendErr != nil {
+					return sendErr
+				}
+				return s.showModelSelection(ctx, user)
+			}
 			return s.selectModel(ctx, user, model.ID)
 		}
 	}
@@ -39,11 +61,21 @@ func (s *UpdateService) HandleModelSelectState(ctx context.Context, user *domain
 }
 
 func (s *UpdateService) showModelSelection(ctx context.Context, user *domain.User) error {
-	// Create buttons for each model
+	// Get user balance and subscription status
+	balance, err := s.storage.GetUserTokenBalance(ctx, user.ID)
+	if err != nil {
+		return fmt.Errorf("can't get user token balance: %w", err)
+	}
+
+	activeSubscription, err := s.storage.GetActiveSubscriptionByUserID(ctx, user.ID)
+	hasActiveSubscription := err == nil && activeSubscription != nil
+
+	// Create buttons for each model with user-specific display names
 	var modelButtons [][]domain.KeyboardButton
 	for _, model := range domain.AvailableModels {
+		displayName := model.GetDisplayNameForUser(user.Language, hasActiveSubscription, *balance)
 		modelButtons = append(modelButtons, []domain.KeyboardButton{
-			{Text: model.DisplayName},
+			{Text: displayName},
 		})
 	}
 
@@ -54,10 +86,10 @@ func (s *UpdateService) showModelSelection(ctx context.Context, user *domain.Use
 
 	titleText := i18n.GetString(user.Language, i18n.ModelSelectTitle)
 
-	// Get current model display name
+	// Get current model display name with emojis
 	currentModelDisplay := user.SelectedModel
 	if currentModel := domain.GetModelByID(user.SelectedModel); currentModel != nil {
-		currentModelDisplay = currentModel.DisplayName
+		currentModelDisplay = currentModel.GetDisplayNameWithEmojis(user.Language)
 	}
 
 	content := domain.MessageContent{
@@ -70,7 +102,7 @@ func (s *UpdateService) showModelSelection(ctx context.Context, user *domain.Use
 		},
 	}
 
-	_, err := s.sender.SendMessageWithContent(ctx, user.ExternalID, content)
+	_, err = s.sender.SendMessageWithContent(ctx, user.ExternalID, content)
 	return err
 }
 
@@ -96,7 +128,7 @@ func (s *UpdateService) selectModel(ctx context.Context, user *domain.User, mode
 	// Get model display name for success message
 	modelDisplayName := model
 	if selectedModel := domain.GetModelByID(model); selectedModel != nil {
-		modelDisplayName = selectedModel.DisplayName
+		modelDisplayName = selectedModel.GetDisplayNameWithEmojis(user.Language)
 	}
 
 	successMessage := fmt.Sprintf("%s %s", i18n.GetString(user.Language, i18n.ModelUpdateSuccess), modelDisplayName)
