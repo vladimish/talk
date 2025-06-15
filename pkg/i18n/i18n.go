@@ -19,10 +19,14 @@ const (
 	MenuBackToMain = "menu.back_to_main"
 
 	// Conversation messages.
-	ConversationStarted       = "conversation.started"
-	ConversationResumed       = "conversation.resumed"
-	ConversationModePrompt    = "conversation.mode_prompt"
-	ConversationNameGenerated = "conversation.name_generated"
+	ConversationStarted             = "conversation.started"
+	ConversationResumed             = "conversation.resumed"
+	ConversationModePrompt          = "conversation.mode_prompt"
+	ConversationNameGenerated       = "conversation.name_generated"
+	ConversationStartedWebSearchOff = "conversation.started_web_search_off"
+	ConversationStartedWebSearchOn  = "conversation.started_web_search_on"
+	ConversationResumedWebSearchOff = "conversation.resumed_web_search_off"
+	ConversationResumedWebSearchOn  = "conversation.resumed_web_search_on"
 
 	// Settings messages.
 	SettingsTitle         = "settings.title"
@@ -56,6 +60,7 @@ const (
 	ButtonWebSearchOn             = "button.web_search_on"
 	ButtonWebSearchOff            = "button.web_search_off"
 	WebSearchSubscriptionRequired = "web_search.subscription_required"
+	WebSearchEnabledNotification  = "web_search.enabled_notification"
 
 	// Profile messages.
 	ProfileTitle              = "profile.title"
@@ -152,10 +157,14 @@ var Strings = map[string]map[string]string{
 		MenuBackToMain: "🏠 Back to main menu. Choose an option:",
 
 		// Conversation
-		ConversationStarted:       "🗣️ Conversation started! Send me a message and I'll respond. You can always go back to the menu.",
-		ConversationResumed:       "🗣️ Conversation resumed! Send me a message and I'll respond. You can always go back to the menu.",
-		ConversationModePrompt:    "You're in conversation mode. Send a message to chat, or go back to menu:",
-		ConversationNameGenerated: "conversation name generated successfully",
+		ConversationStarted:             "🗣️ Conversation started! Send me a message and I'll respond. You can always go back to the menu.",
+		ConversationResumed:             "🗣️ Conversation resumed! Send me a message and I'll respond. You can always go back to the menu.",
+		ConversationModePrompt:          "You're in conversation mode. Send a message to chat, or go back to menu:",
+		ConversationNameGenerated:       "conversation name generated successfully",
+		ConversationStartedWebSearchOff: "🗣️ Conversation started! Send me a message and I'll respond. Web search is OFF.",
+		ConversationStartedWebSearchOn:  "🗣️ Conversation started! Send me a message and I'll respond. Web search is ON (costs 1 premium token per query).",
+		ConversationResumedWebSearchOff: "🗣️ Conversation resumed! Send me a message and I'll respond. Web search is OFF.",
+		ConversationResumedWebSearchOn:  "🗣️ Conversation resumed! Send me a message and I'll respond. Web search is ON (costs 1 premium token per query).",
 
 		// Settings
 		SettingsTitle:         "⚙️ Settings. Choose an option:",
@@ -189,6 +198,7 @@ var Strings = map[string]map[string]string{
 		ButtonWebSearchOn:             "🌐 Web search: ON",
 		ButtonWebSearchOff:            "🌐 Web search: OFF",
 		WebSearchSubscriptionRequired: "🔐 Web search requires an active subscription. Please subscribe to use this feature.",
+		WebSearchEnabledNotification:  "🌐 Web search enabled! Each search query will cost 1 additional premium token.",
 
 		// Profile
 		ProfileTitle:              "👤 Your Profile",
@@ -242,10 +252,14 @@ var Strings = map[string]map[string]string{
 		MenuBackToMain: "🏠 Volver al menú principal. Elige una opción:",
 
 		// Conversation
-		ConversationStarted:       "🗣️ ¡Conversación iniciada! Envíame un mensaje y te responderé. Siempre puedes volver al menú.",
-		ConversationResumed:       "🗣️ ¡Conversación reanudada! Envíame un mensaje y te responderé. Siempre puedes volver al menú.",
-		ConversationModePrompt:    "Estás en modo conversación. Envía un mensaje para chatear, o vuelve al menú:",
-		ConversationNameGenerated: "nombre de conversación generado exitosamente",
+		ConversationStarted:             "🗣️ ¡Conversación iniciada! Envíame un mensaje y te responderé. Siempre puedes volver al menú.",
+		ConversationResumed:             "🗣️ ¡Conversación reanudada! Envíame un mensaje y te responderé. Siempre puedes volver al menú.",
+		ConversationModePrompt:          "Estás en modo conversación. Envía un mensaje para chatear, o vuelve al menú:",
+		ConversationNameGenerated:       "nombre de conversación generado exitosamente",
+		ConversationStartedWebSearchOff: "🗣️ ¡Conversación iniciada! Envíame un mensaje y te responderé. Búsqueda web está DESACTIVADA.",
+		ConversationStartedWebSearchOn:  "🗣️ ¡Conversación iniciada! Envíame un mensaje y te responderé. Búsqueda web está ACTIVADA (cuesta 1 token premium por consulta).",
+		ConversationResumedWebSearchOff: "🗣️ ¡Conversación reanudada! Envíame un mensaje y te responderé. Búsqueda web está DESACTIVADA.",
+		ConversationResumedWebSearchOn:  "🗣️ ¡Conversación reanudada! Envíame un mensaje y te responderé. Búsqueda web está ACTIVADA (cuesta 1 token premium por consulta).",
 
 		// Settings
 		SettingsTitle:         "⚙️ Configuración. Elige una opción:",
@@ -279,6 +293,7 @@ var Strings = map[string]map[string]string{
 		ButtonWebSearchOn:             "🌐 Búsqueda web: ACTIVADA",
 		ButtonWebSearchOff:            "🌐 Búsqueda web: DESACTIVADA",
 		WebSearchSubscriptionRequired: "🔐 La búsqueda web requiere una suscripción activa. Por favor suscríbete para usar esta característica.",
+		WebSearchEnabledNotification:  "🌐 Web search enabled! Each search query will cost 1 additional premium token.",
 
 		// Profile
 		ProfileTitle:              "👤 Tu Perfil",
@@ -369,6 +384,7 @@ var Strings = map[string]map[string]string{
 		ButtonWebSearchOn:             "🌐 Веб-поиск: ВКЛЮЧЕН",
 		ButtonWebSearchOff:            "🌐 Веб-поиск: ВЫКЛЮЧЕН",
 		WebSearchSubscriptionRequired: "🔐 Веб-поиск требует активной подписки. Пожалуйста, оформите подписку для использования этой функции.",
+		WebSearchEnabledNotification:  "🌐 Web search enabled! Each search query will cost 1 additional premium token.",
 
 		// Profile
 		ProfileTitle:              "👤 Ваш Профиль",
@@ -459,6 +475,7 @@ var Strings = map[string]map[string]string{
 		ButtonWebSearchOn:             "🌐 Recherche web : ACTIVÉE",
 		ButtonWebSearchOff:            "🌐 Recherche web : DÉSACTIVÉE",
 		WebSearchSubscriptionRequired: "🔐 Web search requires an active subscription. Please subscribe to use this feature.",
+		WebSearchEnabledNotification:  "🌐 Web search enabled! Each search query will cost 1 additional premium token.",
 
 		// Profile
 		ProfileTitle:              "👤 Votre Profil",
@@ -549,6 +566,7 @@ var Strings = map[string]map[string]string{
 		ButtonWebSearchOn:             "🌐 Web-Suche: EIN",
 		ButtonWebSearchOff:            "🌐 Web-Suche: AUS",
 		WebSearchSubscriptionRequired: "🔐 Web search requires an active subscription. Please subscribe to use this feature.",
+		WebSearchEnabledNotification:  "🌐 Web search enabled! Each search query will cost 1 additional premium token.",
 
 		// Profile
 		ProfileTitle:              "👤 Ihr Profil",
@@ -639,6 +657,7 @@ var Strings = map[string]map[string]string{
 		ButtonWebSearchOn:             "🌐 Ricerca web: ATTIVA",
 		ButtonWebSearchOff:            "🌐 Ricerca web: DISATTIVA",
 		WebSearchSubscriptionRequired: "🔐 Web search requires an active subscription. Please subscribe to use this feature.",
+		WebSearchEnabledNotification:  "🌐 Web search enabled! Each search query will cost 1 additional premium token.",
 
 		// Profile
 		ProfileTitle:              "👤 Il Tuo Profilo",
@@ -729,6 +748,7 @@ var Strings = map[string]map[string]string{
 		ButtonWebSearchOn:             "🌐 网络搜索：开启",
 		ButtonWebSearchOff:            "🌐 网络搜索：关闭",
 		WebSearchSubscriptionRequired: "🔐 Web search requires an active subscription. Please subscribe to use this feature.",
+		WebSearchEnabledNotification:  "🌐 Web search enabled! Each search query will cost 1 additional premium token.",
 
 		// Profile
 		ProfileTitle:              "👤 您的个人资料",
@@ -819,6 +839,7 @@ var Strings = map[string]map[string]string{
 		ButtonWebSearchOn:             "🌐 ウェブ検索：オン",
 		ButtonWebSearchOff:            "🌐 ウェブ検索：オフ",
 		WebSearchSubscriptionRequired: "🔐 Web search requires an active subscription. Please subscribe to use this feature.",
+		WebSearchEnabledNotification:  "🌐 Web search enabled! Each search query will cost 1 additional premium token.",
 
 		// Profile
 		ProfileTitle:              "👤 あなたのプロフィール",
@@ -899,6 +920,7 @@ var Strings = map[string]map[string]string{
 		ButtonWebSearchOn:             "🌐 웹 검색: 켜짐",
 		ButtonWebSearchOff:            "🌐 웹 검색: 꺼짐",
 		WebSearchSubscriptionRequired: "🔐 Web search requires an active subscription. Please subscribe to use this feature.",
+		WebSearchEnabledNotification:  "🌐 Web search enabled! Each search query will cost 1 additional premium token.",
 
 		// Profile
 		ProfileTitle:              "👤 프로필",
@@ -989,6 +1011,7 @@ var Strings = map[string]map[string]string{
 		ButtonWebSearchOn:             "🌐 Pesquisa web: LIGADA",
 		ButtonWebSearchOff:            "🌐 Pesquisa web: DESLIGADA",
 		WebSearchSubscriptionRequired: "🔐 Web search requires an active subscription. Please subscribe to use this feature.",
+		WebSearchEnabledNotification:  "🌐 Web search enabled! Each search query will cost 1 additional premium token.",
 
 		// Profile
 		ProfileTitle:              "👤 Seu Perfil",
@@ -1079,6 +1102,7 @@ var Strings = map[string]map[string]string{
 		ButtonWebSearchOn:             "🌐 Վեբ որոնում: ՄԻԱՑՎԱԾ",
 		ButtonWebSearchOff:            "🌐 Վեբ որոնում: ԱՆՋԱՏՎԱԾ",
 		WebSearchSubscriptionRequired: "🔐 Web search requires an active subscription. Please subscribe to use this feature.",
+		WebSearchEnabledNotification:  "🌐 Web search enabled! Each search query will cost 1 additional premium token.",
 
 		// Profile
 		ProfileTitle:              "👤 Ձեր Պրոֆիլը",
@@ -1169,6 +1193,7 @@ var Strings = map[string]map[string]string{
 		ButtonWebSearchOn:             "🌐 Веб-пошук: УВІМКНЕНО",
 		ButtonWebSearchOff:            "🌐 Веб-пошук: ВИМКНЕНО",
 		WebSearchSubscriptionRequired: "🔐 Web search requires an active subscription. Please subscribe to use this feature.",
+		WebSearchEnabledNotification:  "🌐 Web search enabled! Each search query will cost 1 additional premium token.",
 
 		// Profile
 		ProfileTitle:              "👤 Ваш Профіль",
@@ -1259,6 +1284,7 @@ var Strings = map[string]map[string]string{
 		ButtonWebSearchOn:             "🌐 Веб іздеу: ҚОСУЛЫ",
 		ButtonWebSearchOff:            "🌐 Веб іздеу: ӨШІРУЛІ",
 		WebSearchSubscriptionRequired: "🔐 Web search requires an active subscription. Please subscribe to use this feature.",
+		WebSearchEnabledNotification:  "🌐 Web search enabled! Each search query will cost 1 additional premium token.",
 
 		// Profile
 		ProfileTitle:              "👤 Сіздің Профиліңіз",
@@ -1349,6 +1375,7 @@ var Strings = map[string]map[string]string{
 		ButtonWebSearchOn:             "🌐 Веб издөө: КҮЙГҮЗҮЛГӨН",
 		ButtonWebSearchOff:            "🌐 Веб издөө: ӨЧҮРҮЛГӨН",
 		WebSearchSubscriptionRequired: "🔐 Web search requires an active subscription. Please subscribe to use this feature.",
+		WebSearchEnabledNotification:  "🌐 Web search enabled! Each search query will cost 1 additional premium token.",
 
 		// Profile
 		ProfileTitle:              "👤 Сиздин Профилиңиз",
@@ -1439,6 +1466,7 @@ var Strings = map[string]map[string]string{
 		ButtonWebSearchOn:             "🌐 البحث على الويب: مُفعَّل",
 		ButtonWebSearchOff:            "🌐 البحث على الويب: مُعطَّل",
 		WebSearchSubscriptionRequired: "🔐 Web search requires an active subscription. Please subscribe to use this feature.",
+		WebSearchEnabledNotification:  "🌐 Web search enabled! Each search query will cost 1 additional premium token.",
 
 		// Profile
 		ProfileTitle:              "👤 ملفك الشخصي",
@@ -1529,6 +1557,7 @@ var Strings = map[string]map[string]string{
 		ButtonWebSearchOn:             "🌐 वेब खोज: चालू",
 		ButtonWebSearchOff:            "🌐 वेब खोज: बंद",
 		WebSearchSubscriptionRequired: "🔐 Web search requires an active subscription. Please subscribe to use this feature.",
+		WebSearchEnabledNotification:  "🌐 Web search enabled! Each search query will cost 1 additional premium token.",
 
 		// Profile
 		ProfileTitle:              "👤 आपकी प्रोफाइल",

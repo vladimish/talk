@@ -9,6 +9,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/vladimish/talk/pkg/pointer"
+
 	"github.com/vladimish/talk/internal/domain"
 	"github.com/vladimish/talk/internal/port/queue"
 	"github.com/vladimish/talk/internal/port/storage"
@@ -57,31 +59,46 @@ func (s *UpdateService) handleConversationMessage(ctx context.Context, user *dom
 	// Check if web search is enabled and user has subscription
 	webSearchEnabled := currentModel.WebSearch && user.WebSearchEnabled && hasActiveSubscription
 
-	// Calculate total cost (base cost + search cost if applicable)
-	totalCost := currentModel.Cost
-	if webSearchEnabled && currentModel.SearchCost != nil {
-		totalCost += *currentModel.SearchCost
-	}
-
-	// Get user's current balance for the required token type
-	currentBalance, err := s.storage.GetUserTokenBalanceByType(ctx, user.ID, currentModel.TokenType)
+	// Check base model token balance
+	baseBalance, err := s.storage.GetUserTokenBalanceByType(ctx, user.ID, currentModel.TokenType)
 	if err != nil {
-		return fmt.Errorf("failed to get user token balance: %w", err)
+		return fmt.Errorf("failed to get user base token balance: %w", err)
 	}
 
-	// Check if user has sufficient tokens
-	if currentBalance < totalCost {
+	if baseBalance < currentModel.Cost {
 		tokenTypeName := "regular"
 		if currentModel.TokenType == domain.TokenTypePremium {
 			tokenTypeName = "premium"
 		}
 		insufficientTokensMsg := fmt.Sprintf(
 			i18n.GetString(user.Language, i18n.ProfileInsufficientTokens),
-			totalCost,
+			currentModel.Cost,
 			tokenTypeName,
 		)
 		_, sendErr := s.sender.SendMessage(ctx, user.ExternalID, insufficientTokensMsg)
 		return sendErr
+	}
+
+	// Check search token balance if web search is enabled
+	if webSearchEnabled && currentModel.SearchCost != nil && currentModel.SearchTokenType != nil {
+		searchBalance, searchErr := s.storage.GetUserTokenBalanceByType(ctx, user.ID, *currentModel.SearchTokenType)
+		if searchErr != nil {
+			return fmt.Errorf("failed to get user search token balance: %w", searchErr)
+		}
+
+		if searchBalance < *currentModel.SearchCost {
+			searchTokenTypeName := "regular"
+			if *currentModel.SearchTokenType == domain.TokenTypePremium {
+				searchTokenTypeName = "premium"
+			}
+			insufficientSearchTokensMsg := fmt.Sprintf(
+				i18n.GetString(user.Language, i18n.ProfileInsufficientTokens),
+				*currentModel.SearchCost,
+				searchTokenTypeName,
+			)
+			_, sendErr := s.sender.SendMessage(ctx, user.ExternalID, insufficientSearchTokensMsg)
+			return sendErr
+		}
 	}
 
 	// Set processing lock with 5 minute timeout
@@ -325,24 +342,46 @@ func (s *UpdateService) handleConversationMessage(ctx context.Context, user *dom
 		}
 	}
 
-	// Deduct tokens after successful completion
-	transaction := &domain.Transaction{
+	// Deduct base model tokens after successful completion
+	baseTransaction := &domain.Transaction{
 		UserID:          user.ID,
 		TokenType:       currentModel.TokenType,
-		Amount:          -totalCost, // Negative for debit
+		Amount:          -currentModel.Cost, // Negative for debit
 		TransactionType: domain.TransactionTypeMessageCost,
 		ModelUsed:       &currentModel.ID,
 		Description:     nil,
 		CreatedAt:       time.Now(),
 	}
 
-	_, err = s.storage.CreateTransaction(ctx, transaction)
+	_, err = s.storage.CreateTransaction(ctx, baseTransaction)
 	if err != nil {
 		// Log error but don't fail the entire operation
-		s.logger.ErrorContext(ctx, "failed to create token deduction transaction",
+		s.logger.ErrorContext(ctx, "failed to create base token deduction transaction",
 			slog.String("error", err.Error()),
 			slog.String("model", currentModel.ID),
-			slog.Int("cost", int(totalCost)))
+			slog.Int("cost", int(currentModel.Cost)))
+	}
+
+	// Deduct search tokens if web search was used
+	if webSearchEnabled && currentModel.SearchCost != nil && currentModel.SearchTokenType != nil {
+		searchTransaction := &domain.Transaction{
+			UserID:          user.ID,
+			TokenType:       *currentModel.SearchTokenType,
+			Amount:          -*currentModel.SearchCost, // Negative for debit
+			TransactionType: domain.TransactionTypeMessageCost,
+			ModelUsed:       &currentModel.ID,
+			Description:     pointer.To("Web search cost"),
+			CreatedAt:       time.Now(),
+		}
+
+		_, err = s.storage.CreateTransaction(ctx, searchTransaction)
+		if err != nil {
+			// Log error but don't fail the entire operation
+			s.logger.ErrorContext(ctx, "failed to create search token deduction transaction",
+				slog.String("error", err.Error()),
+				slog.String("model", currentModel.ID),
+				slog.Int("search_cost", int(*currentModel.SearchCost)))
+		}
 	}
 
 	return nil

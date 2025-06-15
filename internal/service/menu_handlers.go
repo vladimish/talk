@@ -91,9 +91,10 @@ func (s *UpdateService) transitionToConversation(
 		return fmt.Errorf("can't update user state: %w", err)
 	}
 
-	text := i18n.GetString(user.Language, i18n.ConversationStarted)
-	if replyToMessageID != nil {
-		text = i18n.GetString(user.Language, i18n.ConversationResumed)
+	// Determine conversation start/resume message based on web search status
+	text, err := s.getConversationStartMessage(ctx, user, replyToMessageID)
+	if err != nil {
+		return err
 	}
 
 	// Create keyboard buttons
@@ -169,4 +170,52 @@ func (s *UpdateService) getWebSearchButton(ctx context.Context, user *domain.Use
 	}
 
 	return domain.KeyboardButton{Text: webSearchButtonText}, nil
+}
+
+// getConversationStartMessage returns the appropriate conversation message based on web search status.
+func (s *UpdateService) getConversationStartMessage(
+	ctx context.Context,
+	user *domain.User,
+	replyToMessageID *int64,
+) (string, error) {
+	isResuming := replyToMessageID != nil
+	webSearchActive, err := s.isWebSearchActive(ctx, user)
+	if err != nil {
+		return "", err
+	}
+
+	if webSearchActive {
+		return s.getWebSearchOnMessage(user.Language, isResuming), nil
+	}
+	return s.getWebSearchOffMessage(user.Language, isResuming), nil
+}
+
+// isWebSearchActive checks if web search is active for the user.
+func (s *UpdateService) isWebSearchActive(ctx context.Context, user *domain.User) (bool, error) {
+	currentModel := domain.GetModelByID(user.SelectedModel)
+	if currentModel == nil || !currentModel.WebSearch || !user.WebSearchEnabled {
+		return false, nil
+	}
+
+	activeSubscription, err := s.storage.GetActiveSubscriptionByUserID(ctx, user.ID)
+	if err != nil && !errors.Is(err, storage.ErrNotFound) {
+		return false, fmt.Errorf("failed to check subscription status: %w", err)
+	}
+	return activeSubscription != nil, nil
+}
+
+// getWebSearchOnMessage returns the message when web search is on.
+func (s *UpdateService) getWebSearchOnMessage(language string, isResuming bool) string {
+	if isResuming {
+		return i18n.GetString(language, i18n.ConversationResumedWebSearchOn)
+	}
+	return i18n.GetString(language, i18n.ConversationStartedWebSearchOn)
+}
+
+// getWebSearchOffMessage returns the message when web search is off.
+func (s *UpdateService) getWebSearchOffMessage(language string, isResuming bool) string {
+	if isResuming {
+		return i18n.GetString(language, i18n.ConversationResumedWebSearchOff)
+	}
+	return i18n.GetString(language, i18n.ConversationStartedWebSearchOff)
 }

@@ -231,7 +231,7 @@ func (s *UpdateService) handleWebSearchToggle(ctx context.Context, user *domain.
 		return fmt.Errorf("can't update web search state: %w", err)
 	}
 
-	// Send updated conversation view with new button state
+	// Send updated conversation view with new button state - the unified message will include web search status
 	return s.transitionToConversation(ctx, user, nil)
 }
 
