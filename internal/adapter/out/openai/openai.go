@@ -6,6 +6,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log/slog"
 	"net/http"
 	"strings"
@@ -198,8 +199,18 @@ func (o *Completion) createStreamWithPlugins(
 
 	// Check for HTTP errors
 	if resp.StatusCode >= httpErrorThreshold {
+		// Read response body for error details
+		bodyBytes, readErr := io.ReadAll(resp.Body)
 		_ = resp.Body.Close()
-		return nil, fmt.Errorf("HTTP error: %d", resp.StatusCode)
+
+		var errorMsg string
+		if readErr != nil {
+			errorMsg = fmt.Sprintf("HTTP error: %d (failed to read response body: %v)", resp.StatusCode, readErr)
+		} else {
+			errorMsg = fmt.Sprintf("HTTP error: %d - Response: %s", resp.StatusCode, string(bodyBytes))
+		}
+
+		return nil, fmt.Errorf("%s", errorMsg)
 	}
 
 	tokenChan := make(chan completion.StreamToken)

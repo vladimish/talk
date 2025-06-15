@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"runtime/debug"
 	"time"
 
 	"github.com/vladimish/talk/internal/domain"
@@ -45,7 +46,22 @@ func NewUpdateService(
 	}
 }
 
-func (s *UpdateService) HandleUpdate(ctx context.Context, update domain.Update) error {
+func (s *UpdateService) HandleUpdate(ctx context.Context, update domain.Update) (err error) {
+	// Add panic recovery to prevent crashes during user request handling
+	defer func() {
+		if r := recover(); r != nil {
+			stackTrace := debug.Stack()
+			s.logger.ErrorContext(ctx, "Panic occurred while handling user update",
+				"panic", r,
+				"stack_trace", string(stackTrace),
+				"user_id", update.ExternalUserID,
+				"message_text", update.MessageText)
+
+			// Convert panic to error
+			err = fmt.Errorf("panic occurred while handling update: %v", r)
+		}
+	}()
+
 	// Check if this user is in conversation state and might need queueing
 	user, err := s.getOrCreateUser(ctx, update)
 	if err != nil {
@@ -282,7 +298,22 @@ func (s *UpdateService) handleMessageQueueing(
 	return true, nil
 }
 
-func (s *UpdateService) HandleCallbackQuery(ctx context.Context, callbackQuery domain.CallbackQuery) error {
+func (s *UpdateService) HandleCallbackQuery(ctx context.Context, callbackQuery domain.CallbackQuery) (err error) {
+	// Add panic recovery to prevent crashes during callback handling
+	defer func() {
+		if r := recover(); r != nil {
+			stackTrace := debug.Stack()
+			s.logger.ErrorContext(ctx, "Panic occurred while handling callback query",
+				"panic", r,
+				"stack_trace", string(stackTrace),
+				"user_id", callbackQuery.ExternalUserID,
+				"callback_data", callbackQuery.Data)
+
+			// Convert panic to error
+			err = fmt.Errorf("panic occurred while handling callback query: %v", r)
+		}
+	}()
+
 	// Get user for callback (don't create if not exists)
 	user, err := s.storage.GetUserByExternalUserID(ctx, callbackQuery.ExternalUserID)
 	if err != nil {
@@ -307,7 +338,22 @@ func (s *UpdateService) HandleCallbackQuery(ctx context.Context, callbackQuery d
 	}
 }
 
-func (s *UpdateService) HandlePreCheckoutQuery(ctx context.Context, query domain.PreCheckoutQuery) error {
+func (s *UpdateService) HandlePreCheckoutQuery(ctx context.Context, query domain.PreCheckoutQuery) (err error) {
+	// Add panic recovery to prevent crashes during pre-checkout handling
+	defer func() {
+		if r := recover(); r != nil {
+			stackTrace := debug.Stack()
+			s.logger.ErrorContext(ctx, "Panic occurred while handling pre-checkout query",
+				"panic", r,
+				"stack_trace", string(stackTrace),
+				"user_id", query.ExternalUserID,
+				"invoice_payload", query.InvoicePayload)
+
+			// Convert panic to error
+			err = fmt.Errorf("panic occurred while handling pre-checkout query: %v", r)
+		}
+	}()
+
 	// Get payment record by invoice payload
 	dbPayment, err := s.storage.GetPaymentByInvoicePayload(ctx, query.InvoicePayload)
 	if err != nil {
@@ -343,7 +389,23 @@ func (s *UpdateService) HandlePreCheckoutQuery(ctx context.Context, query domain
 	return s.sender.AnswerPreCheckoutQuery(ctx, query.ID, true, "")
 }
 
-func (s *UpdateService) HandleSuccessfulPayment(ctx context.Context, payment domain.SuccessfulPayment) error {
+func (s *UpdateService) HandleSuccessfulPayment(ctx context.Context, payment domain.SuccessfulPayment) (err error) {
+	// Add panic recovery to prevent crashes during payment handling
+	defer func() {
+		if r := recover(); r != nil {
+			stackTrace := debug.Stack()
+			s.logger.ErrorContext(ctx, "Panic occurred while handling successful payment",
+				"panic", r,
+				"stack_trace", string(stackTrace),
+				"user_id", payment.ExternalUserID,
+				"invoice_payload", payment.InvoicePayload,
+				"telegram_charge_id", payment.TelegramChargeID)
+
+			// Convert panic to error
+			err = fmt.Errorf("panic occurred while handling successful payment: %v", r)
+		}
+	}()
+
 	// Get user
 	user, err := s.storage.GetUserByExternalUserID(ctx, payment.ExternalUserID)
 	if err != nil {
