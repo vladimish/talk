@@ -55,3 +55,18 @@ func (mr *MockCompletionMockRecorder) CompleteStream(ctx, model, systemPrompt, m
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CompleteStream", reflect.TypeOf((*MockCompletion)(nil).CompleteStream), ctx, model, systemPrompt, messages, currentImageURL, webSearchEnabled)
 }
+
+// CompleteStreamWithAttachments mocks base method.
+func (m *MockCompletion) CompleteStreamWithAttachments(ctx context.Context, model, systemPrompt string, messages []*domain.Message, imageAttachment, pdfAttachment *completion.FileAttachment, webSearchEnabled bool) (<-chan completion.StreamToken, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CompleteStreamWithAttachments", ctx, model, systemPrompt, messages, imageAttachment, pdfAttachment, webSearchEnabled)
+	ret0, _ := ret[0].(<-chan completion.StreamToken)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CompleteStreamWithAttachments indicates an expected call of CompleteStreamWithAttachments.
+func (mr *MockCompletionMockRecorder) CompleteStreamWithAttachments(ctx, model, systemPrompt, messages, imageAttachment, pdfAttachment, webSearchEnabled any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CompleteStreamWithAttachments", reflect.TypeOf((*MockCompletion)(nil).CompleteStreamWithAttachments), ctx, model, systemPrompt, messages, imageAttachment, pdfAttachment, webSearchEnabled)
+}

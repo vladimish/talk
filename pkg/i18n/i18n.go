@@ -42,6 +42,7 @@ const (
 	ModelSelectTitle       = "model.select_title"
 	ModelUpdateSuccess     = "model.update_success"
 	ModelImageNotSupported = "model.image_not_supported"
+	ModelPDFNotSupported   = "model.pdf_not_supported"
 
 	// Model names (for internationalization).
 	ModelGeminiFlash   = "model.gemini_flash"
@@ -177,9 +178,10 @@ var Strings = map[string]map[string]string{
 		ConversationListPageInfo: "💬 Select a conversation (page %d/%d):",
 
 		// Model Selection
-		ModelSelectTitle:       "🤖 Select AI model:\n\n👁️ = Image support | 🧠 = Reasoning | 🌐 = Web search\n❌ = Not available (insufficient tokens/subscription required)",
+		ModelSelectTitle:       "🤖 Select AI model:\n\n👁️ = Image support | 📄 = PDF support | 🧠 = Reasoning | 🌐 = Web search\n❌ = Not available (insufficient tokens/subscription required)",
 		ModelUpdateSuccess:     "✅ Model updated successfully!",
 		ModelImageNotSupported: "❌ The selected model does not support image inputs. Please choose a different model or send a text message.",
+		ModelPDFNotSupported:   "❌ The selected model does not support PDF inputs. Please choose a different model or send a text message.",
 
 		// Model Names
 		ModelGeminiFlash:   "🚀 Gemini 2.5 Flash (Fast & efficient for quick responses)",
@@ -272,9 +274,10 @@ var Strings = map[string]map[string]string{
 		ConversationListPageInfo: "💬 Selecciona una conversación (página %d/%d):",
 
 		// Model Selection
-		ModelSelectTitle:       "🤖 Seleccionar modelo de IA:\n\n👁️ = Soporte de imágenes | 🧠 = Razonamiento | 🌐 = Búsqueda web\n❌ = No disponible (tokens insuficientes/suscripción requerida)",
+		ModelSelectTitle:       "🤖 Seleccionar modelo de IA:\n\n👁️ = Soporte de imágenes | 📄 = Soporte de PDF | 🧠 = Razonamiento | 🌐 = Búsqueda web\n❌ = No disponible (tokens insuficientes/suscripción requerida)",
 		ModelUpdateSuccess:     "✅ ¡Modelo actualizado exitosamente!",
 		ModelImageNotSupported: "❌ El modelo seleccionado no admite imágenes. Por favor elige un modelo diferente o envía un mensaje de texto.",
+		ModelPDFNotSupported:   "❌ El modelo seleccionado no admite archivos PDF. Por favor elige un modelo diferente o envía un mensaje de texto.",
 
 		// Model Names
 		ModelGeminiFlash:   "🚀 Gemini 2.5 Flash (Rápido y eficiente para respuestas ágiles)",
@@ -363,9 +366,10 @@ var Strings = map[string]map[string]string{
 		ConversationListPageInfo: "💬 Выберите беседу (страница %d/%d):",
 
 		// Model Selection
-		ModelSelectTitle:       "🤖 Выбрать ИИ модель:\n\n👁️ = Поддержка изображений | 🧠 = Рассуждение | 🌐 = Веб-поиск\n❌ = Недоступно (недостаточно токенов/требуется подписка)",
+		ModelSelectTitle:       "🤖 Выбрать ИИ модель:\n\n👁️ = Поддержка изображений | 📄 = Поддержка PDF | 🧠 = Рассуждение | 🌐 = Веб-поиск\n❌ = Недоступно (недостаточно токенов/требуется подписка)",
 		ModelUpdateSuccess:     "✅ Модель успешно обновлена!",
 		ModelImageNotSupported: "❌ Выбранная модель не поддерживает изображения. Пожалуйста, выберите другую модель или отправьте текстовое сообщение.",
+		ModelPDFNotSupported:   "❌ Выбранная модель не поддерживает PDF файлы. Пожалуйста, выберите другую модель или отправьте текстовое сообщение.",
 
 		// Model Names
 		ModelGeminiFlash:   "🚀 Gemini 2.5 Flash (Быстрый и эффективный для оперативных ответов)",
@@ -454,9 +458,10 @@ var Strings = map[string]map[string]string{
 		ConversationListPageInfo: "💬 Sélectionnez une conversation (page %d/%d) :",
 
 		// Model Selection
-		ModelSelectTitle:       "🤖 Sélectionner un modèle IA :\n\n👁️ = Support d'images | 🧠 = Raisonnement | 🌐 = Recherche web\n❌ = Indisponible (jetons insuffisants/abonnement requis)",
+		ModelSelectTitle:       "🤖 Sélectionner un modèle IA :\n\n👁️ = Support d'images | 📄 = Support PDF | 🧠 = Raisonnement | 🌐 = Recherche web\n❌ = Indisponible (jetons insuffisants/abonnement requis)",
 		ModelUpdateSuccess:     "✅ Modèle mis à jour avec succès !",
 		ModelImageNotSupported: "❌ Le modèle sélectionné ne prend pas en charge les images. Veuillez choisir un modèle différent ou envoyer un message texte.",
+		ModelPDFNotSupported:   "❌ Le modèle sélectionné ne prend pas en charge les fichiers PDF. Veuillez choisir un modèle différent ou envoyer un message texte.",
 
 		// Model Names
 		ModelGeminiFlash:   "🚀 Gemini 2.5 Flash (Rapide et efficace pour réponses vives)",
@@ -545,9 +550,10 @@ var Strings = map[string]map[string]string{
 		ConversationListPageInfo: "💬 Wählen Sie ein Gespräch (Seite %d/%d):",
 
 		// Model Selection
-		ModelSelectTitle:       "🤖 KI-Modell auswählen:\n\n👁️ = Bildunterstützung | 🧠 = Denkvermögen | 🌐 = Web-Suche\n❌ = Nicht verfügbar (unzureichende Token/Abonnement erforderlich)",
+		ModelSelectTitle:       "🤖 KI-Modell auswählen:\n\n👁️ = Bildunterstützung | 📄 = PDF-Unterstützung | 🧠 = Denkvermögen | 🌐 = Web-Suche\n❌ = Nicht verfügbar (unzureichende Token/Abonnement erforderlich)",
 		ModelUpdateSuccess:     "✅ Modell erfolgreich aktualisiert!",
 		ModelImageNotSupported: "❌ Das ausgewählte Modell unterstützt keine Bilder. Bitte wählen Sie ein anderes Modell oder senden Sie eine Textnachricht.",
+		ModelPDFNotSupported:   "❌ Das ausgewählte Modell unterstützt keine PDF-Dateien. Bitte wählen Sie ein anderes Modell oder senden Sie eine Textnachricht.",
 
 		// Model Names
 		ModelGeminiFlash:   "🚀 Gemini 2.5 Flash (Schnell und effizient für rasche Antworten)",
@@ -636,9 +642,10 @@ var Strings = map[string]map[string]string{
 		ConversationListPageInfo: "💬 Seleziona una conversazione (pagina %d/%d):",
 
 		// Model Selection
-		ModelSelectTitle:       "🤖 Seleziona modello IA:\n\n👁️ = Supporto immagini | 🧠 = Ragionamento | 🌐 = Ricerca web\n❌ = Non disponibile (token insufficienti/abbonamento richiesto)",
+		ModelSelectTitle:       "🤖 Seleziona modello IA:\n\n👁️ = Supporto immagini | 📄 = Supporto PDF | 🧠 = Ragionamento | 🌐 = Ricerca web\n❌ = Non disponibile (token insufficienti/abbonamento richiesto)",
 		ModelUpdateSuccess:     "✅ Modello aggiornato con successo!",
 		ModelImageNotSupported: "❌ Il modello selezionato non supporta le immagini. Per favore scegli un modello diverso o invia un messaggio di testo.",
+		ModelPDFNotSupported:   "❌ Il modello selezionato non supporta i file PDF. Per favore scegli un modello diverso o invia un messaggio di testo.",
 
 		// Model Names
 		ModelGeminiFlash:   "🚀 Gemini 2.5 Flash (Veloce ed efficiente per risposte rapide)",
@@ -727,9 +734,10 @@ var Strings = map[string]map[string]string{
 		ConversationListPageInfo: "💬 选择一个对话（第%d/%d页）：",
 
 		// Model Selection
-		ModelSelectTitle:       "🤖 选择AI模型：\n\n👁️ = 图像支持 | 🧠 = 推理能力 | 🌐 = 网络搜索\n❌ = 不可用（代币不足/需要订阅）",
+		ModelSelectTitle:       "🤖 选择AI模型：\n\n👁️ = 图像支持 | 📄 = PDF支持 | 🧠 = 推理能力 | 🌐 = 网络搜索\n❌ = 不可用（代币不足/需要订阅）",
 		ModelUpdateSuccess:     "✅ 模型更新成功！",
 		ModelImageNotSupported: "❌ 所选模型不支持图像输入。请选择其他模型或发送文本消息。",
+		ModelPDFNotSupported:   "❌ 所选模型不支持PDF文件。请选择其他模型或发送文本消息。",
 
 		// Model Names
 		ModelGeminiFlash:   "🚀 Gemini 2.5 Flash（快速高效，适合快速响应）",
@@ -818,9 +826,10 @@ var Strings = map[string]map[string]string{
 		ConversationListPageInfo: "💬 会話を選択してください（%d/%dページ）：",
 
 		// Model Selection
-		ModelSelectTitle:       "🤖 AIモデルを選択：\n\n👁️ = 画像サポート | 🧠 = 推論機能 | 🌐 = ウェブ検索\n❌ = 利用不可（トークン不足/サブスクリプション必要）",
+		ModelSelectTitle:       "🤖 AIモデルを選択：\n\n👁️ = 画像サポート | 📄 = PDFサポート | 🧠 = 推論機能 | 🌐 = ウェブ検索\n❌ = 利用不可（トークン不足/サブスクリプション必要）",
 		ModelUpdateSuccess:     "✅ モデルが正常に更新されました！",
 		ModelImageNotSupported: "❌ 選択されたモデルは画像入力をサポートしていません。別のモデルを選択するか、テキストメッセージを送信してください。",
+		ModelPDFNotSupported:   "❌ 選択されたモデルはPDFファイルをサポートしていません。別のモデルを選択するか、テキストメッセージを送信してください。",
 
 		// Model Names
 		ModelGeminiFlash:   "🚀 Gemini 2.5 Flash（高速で効率的、素早い応答に最適）",
@@ -909,9 +918,10 @@ var Strings = map[string]map[string]string{
 		ConversationListPageInfo: "💬 대화를 선택하세요 (%d/%d페이지):",
 
 		// Model Selection
-		ModelSelectTitle:       "👁️ = 이미지 지원 | 🧠 = 추론 | 🌐 = 웹 검색\n❌ = 사용 불가 (토큰 부족/구독 필요)\n\n🤖 AI 모델 선택:",
+		ModelSelectTitle:       "🤖 AI 모델 선택:\n\n👁️ = 이미지 지원 | 📄 = PDF 지원 | 🧠 = 추론 | 🌐 = 웹 검색\n❌ = 사용 불가 (토큰 부족/구독 필요)",
 		ModelUpdateSuccess:     "✅ 모델이 성공적으로 업데이트되었습니다!",
 		ModelImageNotSupported: "❌ 선택한 모델은 이미지 입력을 지원하지 않습니다. 다른 모델을 선택하거나 텍스트 메시지를 보내주세요.",
+		ModelPDFNotSupported:   "❌ 선택한 모델은 PDF 파일을 지원하지 않습니다. 다른 모델을 선택하거나 텍스트 메시지를 보내주세요.",
 
 		// Queue
 		QueueMessageQueued: "⏳ 메시지가 대기열에 추가되었습니다 (위치: %d). 현재 응답을 완료한 후 처리하겠습니다.",
@@ -1000,9 +1010,10 @@ var Strings = map[string]map[string]string{
 		ConversationListPageInfo: "💬 Selecione uma conversa (página %d/%d):",
 
 		// Model Selection
-		ModelSelectTitle:       "👁️ = Suporte a imagens | 🧠 = Raciocínio | 🌐 = Busca na web\n❌ = Não disponível (tokens insuficientes/assinatura necessária)\n\n🤖 Selecionar modelo de IA:",
+		ModelSelectTitle:       "🤖 Selecionar modelo de IA:\n\n👁️ = Suporte a imagens | 📄 = Suporte a PDF | 🧠 = Raciocínio | 🌐 = Busca na web\n❌ = Não disponível (tokens insuficientes/assinatura necessária)",
 		ModelUpdateSuccess:     "✅ Modelo atualizado com sucesso!",
 		ModelImageNotSupported: "❌ O modelo selecionado não suporta entradas de imagem. Por favor, escolha um modelo diferente ou envie uma mensagem de texto.",
+		ModelPDFNotSupported:   "❌ O modelo selecionado não suporta arquivos PDF. Por favor, escolha um modelo diferente ou envie uma mensagem de texto.",
 
 		// Queue
 		QueueMessageQueued: "⏳ Sua mensagem foi colocada na fila (posição: %d). Vou processá-la após terminar a resposta atual.",
@@ -1091,9 +1102,10 @@ var Strings = map[string]map[string]string{
 		ConversationListPageInfo: "💬 Ընտրեք խոսակցությունը (էջ %d/%d):",
 
 		// Model Selection
-		ModelSelectTitle:       "👁️ = Գծավոր աջակցություն | 🧠 = Մտածողություն | 🌐 = Վեբ որոնում\n❌ = Հասանելի չէ (բավարար տոկեններ/բաժանորդագրություն պահանջ)\n\n🤖 Ընտրել AI մոդելը:",
+		ModelSelectTitle:       "🤖 Ընտրել AI մոդելը:\n\n👁️ = Գծավոր աջակցություն | 📄 = PDF աջակցություն | 🧠 = Մտածողություն | 🌐 = Վեբ որոնում\n❌ = Հասանելի չէ (բավարար տոկեններ/բաժանորդագրություն պահանջ)",
 		ModelUpdateSuccess:     "✅ Մոդելը հաջողությամբ թարմացվեց:",
 		ModelImageNotSupported: "❌ Ընտրված մոդելը չի աջակցում պատկերների մուտքագրմանը: Խնդրում ենք ընտրել այլ մոդել կամ ուղարկել տեքստային հաղորդագրություն:",
+		ModelPDFNotSupported:   "❌ Ընտրված մոդելը չի աջակցում PDF ֆայլերին: Խնդրում ենք ընտրել այլ մոդել կամ ուղարկել տեքստային հաղորդագրություն:",
 
 		// Queue
 		QueueMessageQueued: "⏳ Ձեր հաղորդագրությունը հերթի մեջ է (դիրքը՝ %d): Ես կմշակեմ այն ընթացիկ պատասխանն ավարտելուց հետո:",
@@ -1182,9 +1194,10 @@ var Strings = map[string]map[string]string{
 		ConversationListPageInfo: "💬 Оберіть розмову (сторінка %d/%d):",
 
 		// Model Selection
-		ModelSelectTitle:       "👁️ = Підтримка зображень | 🧠 = Мислення | 🌐 = Пошук в інтернеті\n❌ = Недоступно (недостатньо токенів/потрібна підписка)\n\n🤖 Вибрати AI модель:",
+		ModelSelectTitle:       "🤖 Вибрати AI модель:\n\n👁️ = Підтримка зображень | 📄 = Підтримка PDF | 🧠 = Мислення | 🌐 = Пошук в інтернеті\n❌ = Недоступно (недостатньо токенів/потрібна підписка)",
 		ModelUpdateSuccess:     "✅ Модель успішно оновлено!",
 		ModelImageNotSupported: "❌ Обрана модель не підтримує зображення. Будь ласка, оберіть іншу модель або надішліть текстове повідомлення.",
+		ModelPDFNotSupported:   "❌ Обрана модель не підтримує PDF файли. Будь ласка, оберіть іншу модель або надішліть текстове повідомлення.",
 
 		// Queue
 		QueueMessageQueued: "⏳ Ваше повідомлення поставлено в чергу (позиція: %d). Я оброблю його після завершення поточної відповіді.",
@@ -1273,9 +1286,10 @@ var Strings = map[string]map[string]string{
 		ConversationListPageInfo: "💬 Сөйлесуді таңдаңыз (%d/%d бет):",
 
 		// Model Selection
-		ModelSelectTitle:       "👁️ = Кескін қолдауы | 🧠 = Ойлау | 🌐 = Веб іздеу\n❌ = Қолжетімсіз (токен жетіспейді/жазылым қажет)\n\n🤖 AI моделін таңдау:",
+		ModelSelectTitle:       "🤖 AI моделін таңдау:\n\n👁️ = Кескін қолдауы | 📄 = PDF қолдауы | 🧠 = Ойлау | 🌐 = Веб іздеу\n❌ = Қолжетімсіз (токен жетіспейді/жазылым қажет)",
 		ModelUpdateSuccess:     "✅ Модель сәтті жаңартылды!",
 		ModelImageNotSupported: "❌ Таңдалған модель кескіндерді қолдамайды. Басқа модель таңдаңыз немесе мәтіндік хабарлама жіберіңіз.",
+		ModelPDFNotSupported:   "❌ Таңдалған модель PDF файлдарын қолдамайды. Басқа модель таңдаңыз немесе мәтіндік хабарлама жіберіңіз.",
 
 		// Queue
 		QueueMessageQueued: "⏳ Сіздің хабарламаңыз кезекке қойылды (орын: %d). Мен оны ағымдағы жауапты аяқтағаннан кейін өңдеймін.",
@@ -1364,9 +1378,10 @@ var Strings = map[string]map[string]string{
 		ConversationListPageInfo: "💬 Маекти тандаңыз (%d/%d бет):",
 
 		// Model Selection
-		ModelSelectTitle:       "👁️ = Сүрөт колдуу | 🧠 = Ой жүгүртүү | 🌐 = Веб издөө\n❌ = Жеткиликсиз (токен жетишпейт/жазылуу керек)\n\n🤖 AI модель тандоо:",
+		ModelSelectTitle:       "🤖 AI модель тандоо:\n\n👁️ = Сүрөт колдуу | 📄 = PDF колдуу | 🧠 = Ой жүгүртүү | 🌐 = Веб издөө\n❌ = Жеткиликсиз (токен жетишпейт/жазылуу керек)",
 		ModelUpdateSuccess:     "✅ Модель ийгиликтүү жаңыртылды!",
 		ModelImageNotSupported: "❌ Тандалган модель сүрөттөрдү колдобойт. Башка модель тандаңыз же текст билдирүү жөнөтүңүз.",
+		ModelPDFNotSupported:   "❌ Тандалган модель PDF файлдарды колдобойт. Башка модель тандаңыз же текст билдирүү жөнөтүңүз.",
 
 		// Queue
 		QueueMessageQueued: "⏳ Сиздин билдирүүңүз кезекке коюлду (орун: %d). Мен аны учурдагы жоопту бүткөндөн кийин иштетем.",
@@ -1455,9 +1470,10 @@ var Strings = map[string]map[string]string{
 		ConversationListPageInfo: "💬 اختر محادثة (الصفحة %d/%d):",
 
 		// Model Selection
-		ModelSelectTitle:       "👁️ = دعم الصور | 🧠 = التفكير | 🌐 = بحث الويب\n❌ = غير متاح (رموز غير كافية/اشتراك مطلوب)\n\n🤖 اختيار نموذج الذكاء الاصطناعي:",
+		ModelSelectTitle:       "🤖 اختيار نموذج الذكاء الاصطناعي:\n\n👁️ = دعم الصور | 📄 = دعم PDF | 🧠 = التفكير | 🌐 = بحث الويب\n❌ = غير متاح (رموز غير كافية/اشتراك مطلوب)",
 		ModelUpdateSuccess:     "✅ تم تحديث النموذج بنجاح!",
 		ModelImageNotSupported: "❌ النموذج المحدد لا يدعم مدخلات الصور. يرجى اختيار نموذج مختلف أو إرسال رسالة نصية.",
+		ModelPDFNotSupported:   "❌ النموذج المحدد لا يدعم ملفات PDF. يرجى اختيار نموذج مختلف أو إرسال رسالة نصية.",
 
 		// Queue
 		QueueMessageQueued: "⏳ تم وضع رسالتك في طابور الانتظار (الموضع: %d). سأقوم بمعالجتها بعد إنهاء الرد الحالي.",
@@ -1546,9 +1562,10 @@ var Strings = map[string]map[string]string{
 		ConversationListPageInfo: "💬 एक बातचीत चुनें (पेज %d/%d):",
 
 		// Model Selection
-		ModelSelectTitle:       "👁️ = छवि समर्थन | 🧠 = तर्क | 🌐 = वेब खोज\n❌ = उपलब्ध नहीं (अपर्याप्त टोकन/सब्सक्रिप्शन आवश्यक)\n\n🤖 AI मॉडल चुनें:",
+		ModelSelectTitle:       "🤖 AI मॉडल चुनें:\n\n👁️ = छवि समर्थन | 📄 = PDF समर्थन | 🧠 = तर्क | 🌐 = वेब खोज\n❌ = उपलब्ध नहीं (अपर्याप्त टोकन/सब्सक्रिप्शन आवश्यक)",
 		ModelUpdateSuccess:     "✅ मॉडल सफलतापूर्वक अपडेट हो गया!",
 		ModelImageNotSupported: "❌ चयनित मॉडल छवि इनपुट का समर्थन नहीं करता है। कृपया एक अलग मॉडल चुनें या टेक्स्ट संदेश भेजें।",
+		ModelPDFNotSupported:   "❌ चयनित मॉडल PDF फाइलों का समर्थन नहीं करता है। कृपया एक अलग मॉडल चुनें या टेक्स्ट संदेश भेजें।",
 
 		// Queue
 		QueueMessageQueued: "⏳ आपका संदेश कतार में रखा गया है (स्थिति: %d)। मैं वर्तमान जवाब पूरा करने के बाد इसे प्रोसेस करूंगा।",

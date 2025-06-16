@@ -12,6 +12,7 @@ import (
 	"github.com/vladimish/talk/pkg/pointer"
 
 	"github.com/vladimish/talk/internal/domain"
+	"github.com/vladimish/talk/internal/port/completion"
 	"github.com/vladimish/talk/internal/port/queue"
 	"github.com/vladimish/talk/internal/port/storage"
 	"github.com/vladimish/talk/pkg/i18n"
@@ -139,6 +140,9 @@ func (s *UpdateService) handleConversationMessage(ctx context.Context, user *dom
 			Text:          update.MessageText,
 			ImageData:     update.ImageData,
 			ImageMimeType: update.ImageMimeType,
+			PDFData:       update.PDFData,
+			PDFMimeType:   update.PDFMimeType,
+			PDFFileName:   update.PDFFileName,
 		},
 		SentBy:         domain.MessageSenderUser,
 		ConversationID: user.CurrentConversationID,
@@ -187,6 +191,15 @@ func (s *UpdateService) handleConversationMessage(ctx context.Context, user *dom
 		currentImageURL = uploadResult.imageURL
 	}
 
+	// Handle PDF upload if present
+	pdfUploadResult := s.handlePDFUpload(ctx, update.PDFData, update.PDFMimeType, update.PDFFileName)
+	currentPDFURL := ""
+	currentPDFFileName := ""
+	if pdfUploadResult != nil {
+		currentPDFURL = pdfUploadResult.pdfURL
+		currentPDFFileName = update.PDFFileName
+	}
+
 	// Create attachment record if image was uploaded
 	if uploadResult != nil {
 		_, attachmentErr := s.storage.CreateAttachment(ctx, &domain.Attachment{
@@ -198,10 +211,38 @@ func (s *UpdateService) handleConversationMessage(ctx context.Context, user *dom
 		if attachmentErr != nil {
 			s.logger.ErrorContext(
 				ctx,
-				"failed to create attachment record",
+				"failed to create image attachment record",
 				slog.String("error", attachmentErr.Error()),
 			)
 		}
+	}
+
+	// Create attachment record if PDF was uploaded
+	if pdfUploadResult != nil {
+		_, attachmentErr := s.storage.CreateAttachment(ctx, &domain.Attachment{
+			MessageID:   userMessage.ID,
+			S3Name:      pdfUploadResult.objectName,
+			ContentType: pdfUploadResult.contentType,
+			Size:        pdfUploadResult.size,
+		})
+		if attachmentErr != nil {
+			s.logger.ErrorContext(
+				ctx,
+				"failed to create PDF attachment record",
+				slog.String("error", attachmentErr.Error()),
+			)
+		}
+	}
+
+	// Check if PDF is provided but model doesn't support it
+	if pdfUploadResult != nil && !currentModel.PDFSupport {
+		notSupportedMsg := i18n.GetString(user.Language, i18n.ModelPDFNotSupported)
+		_, sendErr := s.sender.SendMessage(ctx, user.ExternalID, notSupportedMsg)
+		if sendErr != nil {
+			s.logger.WarnContext(ctx, "failed to send PDF not supported message",
+				slog.String("error", sendErr.Error()))
+		}
+		return nil
 	}
 
 	systemPrompt := "You are a helpful assistant."
@@ -209,12 +250,32 @@ func (s *UpdateService) handleConversationMessage(ctx context.Context, user *dom
 	// Web search is already calculated above with subscription check
 	// Use the webSearchEnabled variable from the cost calculation
 
-	tokenStream, err := s.completion.CompleteStream(
+	// Prepare file attachments if any
+	var imageAttachment *completion.FileAttachment
+	if currentImageURL != "" {
+		imageAttachment = &completion.FileAttachment{
+			URL:      currentImageURL,
+			MimeType: "image/jpeg",
+		}
+	}
+
+	var pdfAttachment *completion.FileAttachment
+	if len(update.PDFData) > 0 {
+		pdfAttachment = &completion.FileAttachment{
+			URL:      currentPDFURL, // Keep the MinIO URL for other purposes if needed
+			MimeType: "application/pdf",
+			FileName: currentPDFFileName,
+			Data:     update.PDFData, // Pass the raw PDF data for OpenRouter
+		}
+	}
+
+	tokenStream, err := s.completion.CompleteStreamWithAttachments(
 		ctx,
 		user.SelectedModel,
 		systemPrompt,
 		messages,
-		currentImageURL,
+		imageAttachment,
+		pdfAttachment,
 		webSearchEnabled,
 	)
 	if err != nil {
@@ -552,5 +613,49 @@ func (s *UpdateService) handleImageUpload(
 		objectName:  objectName,
 		contentType: imageMimeType,
 		size:        int64(len(imageData)),
+	}
+}
+
+type pdfUploadResult struct {
+	pdfURL      string
+	objectName  string
+	contentType string
+	size        int64
+}
+
+func (s *UpdateService) handlePDFUpload(
+	ctx context.Context,
+	pdfData []byte,
+	pdfMimeType string,
+	pdfFileName string,
+) *pdfUploadResult {
+	if len(pdfData) == 0 || pdfMimeType == "" || s.fileStorage == nil {
+		return nil
+	}
+
+	// Upload PDF to S3 and get pre-signed URL
+	objectName, uploadErr := s.fileStorage.Upload(ctx, pdfData, pdfMimeType)
+	if uploadErr != nil {
+		s.logger.ErrorContext(ctx, "failed to upload PDF", slog.String("error", uploadErr.Error()))
+		return nil
+	}
+
+	// Generate pre-signed URL valid for 1 hour
+	pdfURL, urlErr := s.fileStorage.GetPreSignedURL(ctx, objectName, time.Hour)
+	if urlErr != nil {
+		s.logger.ErrorContext(ctx, "failed to generate pre-signed URL for PDF", slog.String("error", urlErr.Error()))
+		return nil
+	}
+
+	s.logger.InfoContext(ctx, "PDF uploaded successfully",
+		slog.String("object_name", objectName),
+		slog.String("pdf_url", pdfURL),
+		slog.String("file_name", pdfFileName))
+
+	return &pdfUploadResult{
+		pdfURL:      pdfURL,
+		objectName:  objectName,
+		contentType: pdfMimeType,
+		size:        int64(len(pdfData)),
 	}
 }

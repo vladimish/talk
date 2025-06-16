@@ -23,4 +23,7 @@ type MessageType struct {
 	Text          string `json:"text"`
 	ImageData     []byte `json:"image_data"`
 	ImageMimeType string `json:"image_mime_type"`
+	PDFData       []byte `json:"pdf_data"`
+	PDFMimeType   string `json:"pdf_mime_type"`
+	PDFFileName   string `json:"pdf_filename"`
 }

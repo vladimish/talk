@@ -53,16 +53,18 @@ func TestUpdateService_HandleModelSelectState(t *testing.T) {
 				Language:   "en",
 			},
 			update: domain.Update{
-				MessageText: "🚀 Gemini 2.5 Flash (Fast & efficient for quick responses) 👁️ 🌐",
+				MessageText: "🚀 Gemini 2.5 Flash (Fast & efficient for quick responses) 👁️ 📄 🌐",
 			},
 			setupMocks: func(mockStorage *mocks.MockStorage, mockSender *mocks.MockSender) {
 				// Mock calls for getting user balance and subscription for display name generation
 				mockStorage.EXPECT().
 					GetUserTokenBalance(gomock.Any(), int64(1)).
-					Return(&domain.TokenBalance{RegularBalance: 100, PremiumBalance: 50}, nil)
+					Return(&domain.TokenBalance{RegularBalance: 100, PremiumBalance: 50}, nil).
+					AnyTimes()
 				mockStorage.EXPECT().
 					GetActiveSubscriptionByUserID(gomock.Any(), int64(1)).
-					Return(nil, nil) // No active subscription
+					Return(nil, nil). // No active subscription
+					AnyTimes()
 				mockStorage.EXPECT().
 					UpdateUserSelectedModel(gomock.Any(), int64(1), gomock.Any()).
 					Return(nil)

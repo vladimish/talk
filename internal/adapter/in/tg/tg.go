@@ -55,6 +55,9 @@ func (b *Bot) Handle(ctx context.Context, _ *bot.Bot, update *models.Update) {
 	// Extract image data if present
 	var imageData []byte
 	var imageMimeType string
+	var pdfData []byte
+	var pdfMimeType string
+	var pdfFileName string
 	messageText := update.Message.Text
 
 	// Handle photo messages
@@ -73,6 +76,23 @@ func (b *Bot) Handle(ctx context.Context, _ *bot.Bot, update *models.Update) {
 			slog.Int("downloaded_size", len(imageData)))
 	}
 
+	// Handle document messages (for PDFs)
+	if update.Message.Document != nil && update.Message.Document.MimeType == "application/pdf" {
+		pdfData, pdfMimeType = b.downloadDocument(ctx, update.Message.Document)
+		pdfFileName = update.Message.Document.FileName
+
+		// Use caption as message text if no text is provided
+		if messageText == "" && update.Message.Caption != "" {
+			messageText = update.Message.Caption
+		}
+
+		b.l.InfoContext(ctx, "PDF document received",
+			slog.String("file_id", update.Message.Document.FileID),
+			slog.Int64("file_size", update.Message.Document.FileSize),
+			slog.String("file_name", pdfFileName),
+			slog.Int("downloaded_size", len(pdfData)))
+	}
+
 	err := b.s.HandleUpdate(ctx, domain.Update{
 		ExternalID:        strconv.FormatInt(update.ID, 10),
 		ExternalUserID:    strconv.FormatInt(update.Message.From.ID, 10),
@@ -80,6 +100,9 @@ func (b *Bot) Handle(ctx context.Context, _ *bot.Bot, update *models.Update) {
 		MessageText:       messageText,
 		ImageData:         imageData,
 		ImageMimeType:     imageMimeType,
+		PDFData:           pdfData,
+		PDFMimeType:       pdfMimeType,
+		PDFFileName:       pdfFileName,
 		ExternalMessageID: update.Message.ID,
 	})
 	if err != nil {
@@ -198,4 +221,54 @@ func (b *Bot) downloadPhoto(ctx context.Context, photo models.PhotoSize) ([]byte
 		slog.Int("size", len(fileData)))
 
 	return fileData, "image/jpeg" // Telegram photos are always JPEG
+}
+
+func (b *Bot) downloadDocument(ctx context.Context, document *models.Document) ([]byte, string) {
+	// Download the document using Telegram Bot API
+	file, err := b.bot.GetFile(ctx, &bot.GetFileParams{
+		FileID: document.FileID,
+	})
+	if err != nil {
+		b.l.ErrorContext(ctx, "failed to get file info", slog.String("error", err.Error()))
+		return nil, ""
+	}
+
+	if file.FilePath == "" {
+		return nil, ""
+	}
+
+	// Download the actual file content
+	downloadURL := fmt.Sprintf("https://api.telegram.org/file/bot%s/%s", b.token, file.FilePath)
+
+	req, reqErr := http.NewRequestWithContext(ctx, http.MethodGet, downloadURL, nil)
+	if reqErr != nil {
+		b.l.ErrorContext(ctx, "failed to create request", slog.String("error", reqErr.Error()))
+		return nil, ""
+	}
+
+	httpResp, httpErr := http.DefaultClient.Do(req)
+	if httpErr != nil {
+		b.l.ErrorContext(ctx, "failed to download file", slog.String("error", httpErr.Error()))
+		return nil, ""
+	}
+	defer httpResp.Body.Close()
+
+	if httpResp.StatusCode != http.StatusOK {
+		b.l.ErrorContext(ctx, "failed to download file",
+			slog.Int("status_code", httpResp.StatusCode))
+		return nil, ""
+	}
+
+	// Read the file content
+	fileData, readErr := io.ReadAll(httpResp.Body)
+	if readErr != nil {
+		b.l.ErrorContext(ctx, "failed to read file content", slog.String("error", readErr.Error()))
+		return nil, ""
+	}
+
+	b.l.InfoContext(ctx, "Successfully downloaded document",
+		slog.Int("size", len(fileData)),
+		slog.String("mime_type", document.MimeType))
+
+	return fileData, document.MimeType
 }

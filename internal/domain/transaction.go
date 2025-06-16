@@ -52,6 +52,7 @@ type ModelInfo struct {
 	Cost            int64      `json:"cost"`                        // Token cost per message
 	TokenType       TokenType  `json:"token_type"`                  // Type of tokens required
 	ImageSupport    bool       `json:"image_support"`               // Whether the model supports image inputs
+	PDFSupport      bool       `json:"pdf_support"`                 // Whether the model supports PDF inputs
 	Reasoning       bool       `json:"reasoning"`                   // Whether the model has reasoning capabilities
 	WebSearch       bool       `json:"web_search"`                  // Whether the model has web search capabilities
 	NoSubscription  bool       `json:"no_subscription"`             // If true, requires active subscription to use
@@ -74,6 +75,7 @@ var AvailableModels = []ModelInfo{
 		Cost:            TokenCostLow,
 		TokenType:       TokenTypeRegular,
 		ImageSupport:    true,
+		PDFSupport:      true,
 		Reasoning:       false,
 		WebSearch:       true,
 		NoSubscription:  false,
@@ -86,6 +88,7 @@ var AvailableModels = []ModelInfo{
 		Cost:           TokenCostLow,
 		TokenType:      TokenTypePremium,
 		ImageSupport:   true,
+		PDFSupport:     true,
 		Reasoning:      false,
 		WebSearch:      false,
 		NoSubscription: false,
@@ -96,6 +99,7 @@ var AvailableModels = []ModelInfo{
 		Cost:           TokenCostLow,
 		TokenType:      TokenTypeRegular,
 		ImageSupport:   true,
+		PDFSupport:     true,
 		Reasoning:      false,
 		WebSearch:      false,
 		NoSubscription: false,
@@ -106,6 +110,7 @@ var AvailableModels = []ModelInfo{
 		Cost:           TokenCostLow,
 		TokenType:      TokenTypePremium,
 		ImageSupport:   true,
+		PDFSupport:     true,
 		Reasoning:      false,
 		WebSearch:      false,
 		NoSubscription: false,
@@ -116,6 +121,7 @@ var AvailableModels = []ModelInfo{
 		Cost:            TokenCostLow,
 		TokenType:       TokenTypeRegular,
 		ImageSupport:    true,
+		PDFSupport:      true,
 		Reasoning:       false,
 		WebSearch:       true,
 		NoSubscription:  false,
@@ -128,6 +134,7 @@ var AvailableModels = []ModelInfo{
 		Cost:           TokenCostMedium,
 		TokenType:      TokenTypePremium,
 		ImageSupport:   false,
+		PDFSupport:     false,
 		Reasoning:      true,
 		WebSearch:      false,
 		NoSubscription: true,
@@ -138,6 +145,7 @@ var AvailableModels = []ModelInfo{
 		Cost:           TokenCostLow,
 		TokenType:      TokenTypeRegular,
 		ImageSupport:   false,
+		PDFSupport:     false,
 		Reasoning:      false,
 		WebSearch:      false,
 		NoSubscription: false,
@@ -148,6 +156,7 @@ var AvailableModels = []ModelInfo{
 		Cost:           TokenCostMedium,
 		TokenType:      TokenTypeRegular,
 		ImageSupport:   false,
+		PDFSupport:     false,
 		Reasoning:      true,
 		WebSearch:      false,
 		NoSubscription: false,
@@ -176,6 +185,9 @@ func (m *ModelInfo) GetDisplayNameWithEmojis(language string) string {
 	// Add capability emojis
 	if m.ImageSupport {
 		name += " 👁️"
+	}
+	if m.PDFSupport {
+		name += " 📄" // Page emoji indicates PDF document support
 	}
 	if m.Reasoning {
 		name += " 🧠"

@@ -33,6 +33,9 @@ type Update struct {
 	MessageText       string             `json:"message_text"`
 	ImageData         []byte             `json:"image_data,omitempty"`      // Base64 encoded image data
 	ImageMimeType     string             `json:"image_mime_type,omitempty"` // MIME type of the image
+	PDFData           []byte             `json:"pdf_data,omitempty"`        // Base64 encoded PDF data
+	PDFMimeType       string             `json:"pdf_mime_type,omitempty"`   // MIME type of the PDF
+	PDFFileName       string             `json:"pdf_filename,omitempty"`    // Original file name
 	ExternalMessageID int                `json:"external_message_id"`       // Telegram message ID
 	CallbackQuery     *CallbackQuery     `json:"callback_query,omitempty"`
 	PreCheckoutQuery  *PreCheckoutQuery  `json:"pre_checkout_query,omitempty"`
