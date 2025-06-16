@@ -87,25 +87,46 @@ func (s *UpdateService) processUpdate(ctx context.Context, user *domain.User, up
 	// Handle based on current user state
 	currentState := user.CurrentStep
 
+	var err error
 	switch currentState {
 	case domain.UserStateMenu:
-		return s.HandleMenuState(ctx, user, update)
+		err = s.HandleMenuState(ctx, user, update)
 	case domain.UserStateConversation:
-		return s.HandleConversationState(ctx, user, update)
+		err = s.HandleConversationState(ctx, user, update)
 	case domain.UserStateModelSelect:
-		return s.HandleModelSelectState(ctx, user, update)
+		err = s.HandleModelSelectState(ctx, user, update)
 	case domain.UserStateConversationList:
-		return s.HandleConversationListState(ctx, user, update)
+		err = s.HandleConversationListState(ctx, user, update)
 	case domain.UserStateSettings:
-		return s.HandleSettingsState(ctx, user, update)
+		err = s.HandleSettingsState(ctx, user, update)
 	case domain.UserStateLanguageSelect:
-		return s.HandleLanguageSelectState(ctx, user, update)
+		err = s.HandleLanguageSelectState(ctx, user, update)
 	case domain.UserStateProfile:
-		return s.HandleProfileState(ctx, user, update)
+		err = s.HandleProfileState(ctx, user, update)
 	default:
 		// Default to menu state for unknown states
-		return s.HandleMenuState(ctx, user, update)
+		err = s.HandleMenuState(ctx, user, update)
 	}
+
+	// If an error occurred during handler execution, send user-friendly message
+	if err != nil {
+		// Log the error for debugging
+		s.logger.ErrorContext(ctx, "error processing update",
+			slog.String("error", err.Error()),
+			slog.String("user_id", user.ExternalID),
+			slog.String("state", currentState))
+
+		// Send localized error message to user
+		errorMsg := i18n.GetString(user.Language, i18n.ErrorResponseGeneration)
+		_, sendErr := s.sender.SendMessage(ctx, user.ExternalID, errorMsg)
+		if sendErr != nil {
+			s.logger.ErrorContext(ctx, "failed to send error message to user",
+				slog.String("send_error", sendErr.Error()),
+				slog.String("original_error", err.Error()))
+		}
+	}
+
+	return err
 }
 
 func (s *UpdateService) getOrCreateUser(ctx context.Context, update domain.Update) (*domain.User, error) {

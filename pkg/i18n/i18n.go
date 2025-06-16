@@ -70,6 +70,9 @@ const (
 	ProfileRegularTokens      = "profile.regular_tokens"
 	ProfileInsufficientTokens = "profile.insufficient_tokens" //nolint:gosec
 
+	// Error messages.
+	ErrorResponseGeneration = "error.response_generation"
+
 	// Subscription messages.
 	SubscriptionTitle        = "subscription.title"
 	SubscriptionMonthlyOffer = "subscription.monthly_offer"
@@ -209,6 +212,9 @@ var Strings = map[string]map[string]string{
 		ProfileRegularTokens:      "🔵 Regular: %d tokens",
 		ProfileInsufficientTokens: "❌ Insufficient tokens. You need %d %s tokens to use this model.",
 
+		// Error messages
+		ErrorResponseGeneration: "❌ Sorry, something went wrong while generating the response. Please try again later.",
+
 		// Subscription
 		SubscriptionTitle:        "💳 Subscription",
 		SubscriptionMonthlyOffer: "🌟 Monthly Premium Subscription\n\n✨ Get 1500 regular tokens + 100 premium tokens every month!\n\nPrice: ⭐ 600 Telegram Stars per month",
@@ -305,6 +311,9 @@ var Strings = map[string]map[string]string{
 		ProfileRegularTokens:      "🔵 Regular: %d tokens",
 		ProfileInsufficientTokens: "❌ Tokens insuficientes. Necesitas %d tokens %s para usar este modelo.",
 
+		// Error messages
+		ErrorResponseGeneration: "❌ Lo siento, algo salió mal al generar la respuesta. Inténtalo de nuevo más tarde.",
+
 		// Subscription
 		SubscriptionTitle:        "💳 Suscripción",
 		SubscriptionMonthlyOffer: "🌟 Suscripción Premium Mensual\n\n✨ ¡Obtén 1500 tokens regulares + 100 tokens premium cada mes!\n\nPrecio: ⭐ 600 Estrellas de Telegram por mes",
@@ -396,6 +405,9 @@ var Strings = map[string]map[string]string{
 		ProfilePremiumTokens:      "🟡 Премиум: %d токенов",
 		ProfileRegularTokens:      "🔵 Обычные: %d токенов",
 		ProfileInsufficientTokens: "❌ Недостаточно токенов. Вам нужно %d %s токенов для использования этой модели.",
+
+		// Error messages
+		ErrorResponseGeneration: "❌ Извините, что-то пошло не так при генерации ответа. Попробуйте ещё раз позже.",
 
 		// Subscription
 		SubscriptionTitle:        "💳 Подписка",
@@ -489,6 +501,9 @@ var Strings = map[string]map[string]string{
 		ProfileRegularTokens:      "🔵 Régulier : %d jetons",
 		ProfileInsufficientTokens: "❌ Jetons insuffisants. Vous avez besoin de %d jetons %s pour utiliser ce modèle.",
 
+		// Error messages
+		ErrorResponseGeneration: "❌ Désolé, quelque chose s'est mal passé lors de la génération de la réponse. Veuillez réessayer plus tard.",
+
 		// Subscription
 		SubscriptionTitle:        "💳 Abonnement",
 		SubscriptionMonthlyOffer: "🌟 Abonnement Premium Mensuel\n\n✨ Obtenez 1500 jetons réguliers + 100 jetons premium chaque mois !\n\nPrix : ⭐ 600 Étoiles Telegram par mois",
@@ -580,6 +595,9 @@ var Strings = map[string]map[string]string{
 		ProfilePremiumTokens:      "🟡 Premium: %d Token",
 		ProfileRegularTokens:      "🔵 Regulär: %d Token",
 		ProfileInsufficientTokens: "❌ Unzureichende Token. Sie benötigen %d %s Token, um dieses Modell zu verwenden.",
+
+		// Error messages
+		ErrorResponseGeneration: "❌ Entschuldigung, beim Generieren der Antwort ist etwas schief gelaufen. Bitte versuchen Sie es später erneut.",
 
 		// Subscription
 		SubscriptionTitle:        "💳 Abonnement",
@@ -673,6 +691,9 @@ var Strings = map[string]map[string]string{
 		ProfileRegularTokens:      "🔵 Regolare: %d token",
 		ProfileInsufficientTokens: "❌ Token insufficienti. Hai bisogno di %d token %s per usare questo modello.",
 
+		// Error messages
+		ErrorResponseGeneration: "❌ Mi dispiace, qualcosa è andato storto durante la generazione della risposta. Riprova più tardi.",
+
 		// Subscription
 		SubscriptionTitle:        "💳 Abbonamento",
 		SubscriptionMonthlyOffer: "🌟 Abbonamento Premium Mensile\n\n✨ Ottieni 1500 token regolari + 100 token premium ogni mese!\n\nPrezzo: ⭐ 600 Stelle Telegram al mese",
@@ -764,6 +785,9 @@ var Strings = map[string]map[string]string{
 		ProfilePremiumTokens:      "🟡 高级：%d 代币",
 		ProfileRegularTokens:      "🔵 普通：%d 代币",
 		ProfileInsufficientTokens: "❌ 代币不足。您需要 %d 个 %s 代币来使用此模型。",
+
+		// Error messages
+		ErrorResponseGeneration: "❌ 抱歉，生成回复时出现问题。请稍后重试。",
 
 		// Subscription
 		SubscriptionTitle:        "💳 订阅",
@@ -857,6 +881,9 @@ var Strings = map[string]map[string]string{
 		ProfileRegularTokens:      "🔵 通常：%d トークン",
 		ProfileInsufficientTokens: "❌ トークンが不足しています。このモデルを使用するには %d 個の %s トークンが必要です。",
 
+		// Error messages
+		ErrorResponseGeneration: "❌ 申し訳ありません、応答の生成中に問題が発生しました。後でもう一度お試しください。",
+
 		// Subscription
 		SubscriptionTitle:        "💳 サブスクリプション",
 		SubscriptionMonthlyOffer: "🌟 月額プレミアムサブスクリプション\n\n✨ 毎月1500個の通常トークン + 100個のプレミアムトークンを取得！\n\n料金：⭐ 月額600テレグラムスター",
@@ -938,6 +965,9 @@ var Strings = map[string]map[string]string{
 		ProfilePremiumTokens:      "🟡 프리미엄: %d 토큰",
 		ProfileRegularTokens:      "🔵 일반: %d 토큰",
 		ProfileInsufficientTokens: "❌ 토큰이 부족합니다. 이 모델을 사용하려면 %d개의 %s 토큰이 필요합니다.",
+
+		// Error messages
+		ErrorResponseGeneration: "❌ 죄송합니다. 응답 생성 중에 문제가 발생했습니다. 나중에 다시 시도해주세요.",
 
 		// Subscription
 		SubscriptionTitle:        "💳 구독",
@@ -1030,6 +1060,9 @@ var Strings = map[string]map[string]string{
 		ProfilePremiumTokens:      "🟡 Premium: %d tokens",
 		ProfileRegularTokens:      "🔵 Regular: %d tokens",
 		ProfileInsufficientTokens: "❌ Tokens insuficientes. Você precisa de %d tokens %s para usar este modelo.",
+
+		// Error messages
+		ErrorResponseGeneration: "❌ Desculpe, algo deu errado ao gerar a resposta. Tente novamente mais tarde.",
 
 		// Subscription
 		SubscriptionTitle:        "💳 Assinatura",

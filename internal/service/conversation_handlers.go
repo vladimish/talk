@@ -328,6 +328,10 @@ func (s *UpdateService) handleConversationMessage(ctx context.Context, user *dom
 				currentContent,
 			)
 			if updateErr != nil {
+				// Log error but don't send another error message to user to avoid spam
+				s.logger.ErrorContext(ctx, "failed to update messages during streaming",
+					slog.String("error", updateErr.Error()),
+					slog.String("user_id", user.ExternalID))
 				return fmt.Errorf("can't update messages: %w", updateErr)
 			}
 			// Update our tracked message IDs
@@ -348,6 +352,9 @@ func (s *UpdateService) handleConversationMessage(ctx context.Context, user *dom
 			finalContent,
 		)
 		if finalUpdateErr != nil {
+			s.logger.ErrorContext(ctx, "failed to update final messages",
+				slog.String("error", finalUpdateErr.Error()),
+				slog.String("user_id", user.ExternalID))
 			return fmt.Errorf("can't update final messages: %w", finalUpdateErr)
 		}
 		// Update our tracked message IDs for final state
