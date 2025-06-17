@@ -27,6 +27,15 @@ const (
 
 // Conversation handlers.
 func (s *UpdateService) handleConversationMessage(ctx context.Context, user *domain.User, update domain.Update) error {
+	return s.handleConversationMessageWithReply(ctx, user, update, nil)
+}
+
+func (s *UpdateService) handleConversationMessageWithReply(
+	ctx context.Context,
+	user *domain.User,
+	update domain.Update,
+	replyToMessageID *int64,
+) error {
 	// Check if an image is provided and validate model support
 	if len(update.ImageData) > 0 || update.ImageMimeType != "" {
 		modelInfo := domain.GetModelByID(user.SelectedModel)
@@ -283,9 +292,7 @@ func (s *UpdateService) handleConversationMessage(ctx context.Context, user *dom
 	}
 
 	// Send initial empty message to get message ID
-	// No automatic reply for new messages - only reply when continuing old conversations
-	var replyToMessageID *int64
-
+	// Use the replyToMessageID parameter if provided (for queued messages)
 	initialContent := domain.MessageContent{
 		Text:             "\\.\\.\\.",
 		ReplyToMessageID: replyToMessageID,
@@ -569,11 +576,27 @@ func (s *UpdateService) processQueuedMessages(ctx context.Context, user *domain.
 			continue
 		}
 
-		// Process the update - it will reply to the original message automatically
-		// since the update contains the original message ID
-		if processErr := s.processUpdate(ctx, freshUser, queuedItem.Update); processErr != nil {
-			s.logger.ErrorContext(ctx, "failed to process queued update",
-				slog.String("error", processErr.Error()))
+		// Process the update with reply to the original message
+		// We need to handle conversation messages specially to add reply_to_message_id
+		if freshUser.CurrentStep == domain.UserStateConversation && queuedItem.Update.MessageText != "" {
+			// Convert external message ID to int64 for reply
+			var replyToMessageID *int64
+			if queuedItem.Update.ExternalMessageID > 0 {
+				msgID := int64(queuedItem.Update.ExternalMessageID)
+				replyToMessageID = &msgID
+			}
+
+			// Process with reply to original message
+			if processErr := s.handleConversationMessageWithReply(ctx, freshUser, queuedItem.Update, replyToMessageID); processErr != nil {
+				s.logger.ErrorContext(ctx, "failed to process queued conversation update",
+					slog.String("error", processErr.Error()))
+			}
+		} else {
+			// Process normally for non-conversation states
+			if processErr := s.processUpdate(ctx, freshUser, queuedItem.Update); processErr != nil {
+				s.logger.ErrorContext(ctx, "failed to process queued update",
+					slog.String("error", processErr.Error()))
+			}
 		}
 
 		// Small delay between processing queued messages

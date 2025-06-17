@@ -264,6 +264,7 @@ func (s *UpdateService) processPendingMessages(ctx context.Context, user *domain
 	}
 
 	// Process the combined message
+	// For concatenated messages, don't reply - this is just regular conversation flow
 	err = s.handleConversationMessage(ctx, user, combinedUpdate)
 
 	// Clear generation lock
