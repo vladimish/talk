@@ -42,6 +42,34 @@ func (m *MockQueue) EXPECT() *MockQueueMockRecorder {
 	return m.recorder
 }
 
+// ClearGenerationLock mocks base method.
+func (m *MockQueue) ClearGenerationLock(ctx context.Context, userID string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ClearGenerationLock", ctx, userID)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// ClearGenerationLock indicates an expected call of ClearGenerationLock.
+func (mr *MockQueueMockRecorder) ClearGenerationLock(ctx, userID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ClearGenerationLock", reflect.TypeOf((*MockQueue)(nil).ClearGenerationLock), ctx, userID)
+}
+
+// ClearPendingMessages mocks base method.
+func (m *MockQueue) ClearPendingMessages(ctx context.Context, userID string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ClearPendingMessages", ctx, userID)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// ClearPendingMessages indicates an expected call of ClearPendingMessages.
+func (mr *MockQueueMockRecorder) ClearPendingMessages(ctx, userID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ClearPendingMessages", reflect.TypeOf((*MockQueue)(nil).ClearPendingMessages), ctx, userID)
+}
+
 // ClearProcessing mocks base method.
 func (m *MockQueue) ClearProcessing(ctx context.Context, userID string) error {
 	m.ctrl.T.Helper()
@@ -85,6 +113,21 @@ func (mr *MockQueueMockRecorder) EnqueueWithNotification(ctx, userID, update, no
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EnqueueWithNotification", reflect.TypeOf((*MockQueue)(nil).EnqueueWithNotification), ctx, userID, update, notificationID)
 }
 
+// GetPendingMessages mocks base method.
+func (m *MockQueue) GetPendingMessages(ctx context.Context, userID string) (*queue.PendingMessages, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetPendingMessages", ctx, userID)
+	ret0, _ := ret[0].(*queue.PendingMessages)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetPendingMessages indicates an expected call of GetPendingMessages.
+func (mr *MockQueueMockRecorder) GetPendingMessages(ctx, userID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPendingMessages", reflect.TypeOf((*MockQueue)(nil).GetPendingMessages), ctx, userID)
+}
+
 // GetQueueLength mocks base method.
 func (m *MockQueue) GetQueueLength(ctx context.Context, userID string) (int, error) {
 	m.ctrl.T.Helper()
@@ -100,6 +143,21 @@ func (mr *MockQueueMockRecorder) GetQueueLength(ctx, userID any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetQueueLength", reflect.TypeOf((*MockQueue)(nil).GetQueueLength), ctx, userID)
 }
 
+// IsGenerating mocks base method.
+func (m *MockQueue) IsGenerating(ctx context.Context, userID string) (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "IsGenerating", ctx, userID)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// IsGenerating indicates an expected call of IsGenerating.
+func (mr *MockQueueMockRecorder) IsGenerating(ctx, userID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsGenerating", reflect.TypeOf((*MockQueue)(nil).IsGenerating), ctx, userID)
+}
+
 // IsProcessing mocks base method.
 func (m *MockQueue) IsProcessing(ctx context.Context, userID string) (bool, error) {
 	m.ctrl.T.Helper()
@@ -113,6 +171,34 @@ func (m *MockQueue) IsProcessing(ctx context.Context, userID string) (bool, erro
 func (mr *MockQueueMockRecorder) IsProcessing(ctx, userID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsProcessing", reflect.TypeOf((*MockQueue)(nil).IsProcessing), ctx, userID)
+}
+
+// SetGenerationLock mocks base method.
+func (m *MockQueue) SetGenerationLock(ctx context.Context, userID string, ttl time.Duration) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetGenerationLock", ctx, userID, ttl)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SetGenerationLock indicates an expected call of SetGenerationLock.
+func (mr *MockQueueMockRecorder) SetGenerationLock(ctx, userID, ttl any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetGenerationLock", reflect.TypeOf((*MockQueue)(nil).SetGenerationLock), ctx, userID, ttl)
+}
+
+// SetPendingMessages mocks base method.
+func (m *MockQueue) SetPendingMessages(ctx context.Context, userID string, messages *queue.PendingMessages, ttl time.Duration) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetPendingMessages", ctx, userID, messages, ttl)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SetPendingMessages indicates an expected call of SetPendingMessages.
+func (mr *MockQueueMockRecorder) SetPendingMessages(ctx, userID, messages, ttl any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetPendingMessages", reflect.TypeOf((*MockQueue)(nil).SetPendingMessages), ctx, userID, messages, ttl)
 }
 
 // SetProcessing mocks base method.

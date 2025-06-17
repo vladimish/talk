@@ -20,7 +20,7 @@ func TestUpdateService_HandleConversationState(t *testing.T) {
 		name           string
 		user           *domain.User
 		update         domain.Update
-		setupMocks     func(*mocks.MockStorage, *mocks.MockSender, *mocks.MockCompletion)
+		setupMocks     func(*mocks.MockStorage, *mocks.MockSender, *mocks.MockCompletion, *mocks.MockQueue)
 		expectedResult func(*testing.T, error)
 	}{
 		{
@@ -33,7 +33,10 @@ func TestUpdateService_HandleConversationState(t *testing.T) {
 			update: domain.Update{
 				MessageText: i18n.GetString("en", i18n.ButtonBackToMenu),
 			},
-			setupMocks: func(mockStorage *mocks.MockStorage, mockSender *mocks.MockSender, _ *mocks.MockCompletion) {
+			setupMocks: func(mockStorage *mocks.MockStorage, mockSender *mocks.MockSender, _ *mocks.MockCompletion, mockQueue *mocks.MockQueue) {
+				mockQueue.EXPECT().
+					ClearPendingMessages(gomock.Any(), "12345").
+					Return(nil)
 				mockStorage.EXPECT().
 					UpdateUserCurrentStep(gomock.Any(), int64(1), domain.UserStateMenu).
 					Return(nil)
@@ -55,7 +58,7 @@ func TestUpdateService_HandleConversationState(t *testing.T) {
 			update: domain.Update{
 				MessageText: "",
 			},
-			setupMocks: func(_ *mocks.MockStorage, mockSender *mocks.MockSender, _ *mocks.MockCompletion) {
+			setupMocks: func(_ *mocks.MockStorage, mockSender *mocks.MockSender, _ *mocks.MockCompletion, _ *mocks.MockQueue) {
 				mockSender.EXPECT().
 					SendMessageWithContent(gomock.Any(), "12345", gomock.Any()).
 					DoAndReturn(func(_ context.Context, _ string, content domain.MessageContent) (string, error) {
@@ -86,7 +89,7 @@ func TestUpdateService_HandleConversationState(t *testing.T) {
 				logger, mockStorage, mockSender, mockCompletion, mockQueue, mockFileStorage,
 			)
 
-			tt.setupMocks(mockStorage, mockSender, mockCompletion)
+			tt.setupMocks(mockStorage, mockSender, mockCompletion, mockQueue)
 
 			ctx := t.Context()
 			err := updateService.HandleConversationState(ctx, tt.user, tt.update)

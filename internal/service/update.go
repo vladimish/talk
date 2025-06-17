@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log/slog"
 	"runtime/debug"
+	"sort"
 	"time"
 
 	"github.com/vladimish/talk/internal/domain"
@@ -17,7 +18,12 @@ import (
 	"github.com/vladimish/talk/pkg/i18n"
 )
 
-const initialTokenGrant = 20
+const (
+	initialTokenGrant             = 20
+	messageConcatenationWindow    = time.Second      // Time window to wait for additional messages
+	messageConcatenationTTLFactor = 2                // Factor for TTL calculation
+	generationLockDuration        = 10 * time.Minute // Duration for generation lock
+)
 
 type UpdateService struct {
 	logger      *slog.Logger
@@ -61,6 +67,11 @@ func (s *UpdateService) HandleUpdate(ctx context.Context, update domain.Update) 
 			err = fmt.Errorf("panic occurred while handling update: %v", r)
 		}
 	}()
+
+	// Set received timestamp for message ordering
+	if update.ReceivedAt.IsZero() {
+		update.ReceivedAt = time.Now()
+	}
 
 	// Check if this user is in conversation state and might need queueing
 	user, err := s.getOrCreateUser(ctx, update)
@@ -140,6 +151,226 @@ func (s *UpdateService) getOrCreateUser(ctx context.Context, update domain.Updat
 	return user, nil
 }
 
+// handleConversationMessageWithConcatenation handles message concatenation for split messages.
+func (s *UpdateService) handleConversationMessageWithConcatenation(
+	ctx context.Context,
+	user *domain.User,
+	update domain.Update,
+) error {
+	// Check if there's an ongoing generation that we need to cancel
+	isGenerating, err := s.queue.IsGenerating(ctx, user.ExternalID)
+	if err != nil {
+		s.logger.WarnContext(ctx, "failed to check generation status",
+			slog.String("error", err.Error()))
+		// Continue anyway
+	}
+
+	// If there's an ongoing generation, we'll cancel it by clearing the lock and adding to pending
+	if isGenerating {
+		if clearErr := s.queue.ClearGenerationLock(ctx, user.ExternalID); clearErr != nil {
+			s.logger.WarnContext(ctx, "failed to clear generation lock",
+				slog.String("error", clearErr.Error()))
+		}
+		s.logger.InfoContext(ctx, "cancelled ongoing generation for message concatenation",
+			slog.String("user_id", user.ExternalID))
+	}
+
+	// Check if there are already pending messages
+	pending, err := s.queue.GetPendingMessages(ctx, user.ExternalID)
+	if err != nil && !errors.Is(err, queue.ErrEmptyQueue) {
+		s.logger.WarnContext(ctx, "failed to get pending messages",
+			slog.String("error", err.Error()))
+		// Continue with just this message
+		pending = nil
+	} else if errors.Is(err, queue.ErrEmptyQueue) {
+		pending = nil
+	}
+
+	now := time.Now()
+	var messages []domain.Update
+
+	if pending != nil {
+		// Add to existing pending messages
+		messages = make([]domain.Update, len(pending.Messages), len(pending.Messages)+1)
+		copy(messages, pending.Messages)
+		messages = append(messages, update)
+		s.logger.InfoContext(ctx, "added message to concatenation batch",
+			slog.String("user_id", user.ExternalID),
+			slog.Int("total_messages", len(messages)),
+			slog.Int("new_message_id", update.ExternalMessageID))
+	} else {
+		// Start new batch
+		messages = []domain.Update{update}
+		s.logger.InfoContext(ctx, "started new message concatenation batch",
+			slog.String("user_id", user.ExternalID),
+			slog.Int("message_id", update.ExternalMessageID))
+	}
+
+	// Store updated pending messages with timeout
+	newPending := &queue.PendingMessages{
+		Messages:  messages,
+		Timestamp: now,
+	}
+
+	if setErr := s.queue.SetPendingMessages(ctx, user.ExternalID, newPending, messageConcatenationWindow*messageConcatenationTTLFactor); setErr != nil {
+		s.logger.ErrorContext(ctx, "failed to set pending messages",
+			slog.String("error", setErr.Error()))
+		// Fall back to immediate processing
+		return s.handleConversationMessage(ctx, user, update)
+	}
+
+	// Schedule processing after concatenation window
+	go func() {
+		time.Sleep(messageConcatenationWindow)
+		s.processPendingMessages(context.Background(), user)
+	}()
+
+	return nil
+}
+
+// processPendingMessages processes all pending messages for a user.
+func (s *UpdateService) processPendingMessages(ctx context.Context, user *domain.User) {
+	// Get pending messages
+	pending, err := s.queue.GetPendingMessages(ctx, user.ExternalID)
+	if err != nil && !errors.Is(err, queue.ErrEmptyQueue) {
+		s.logger.ErrorContext(ctx, "failed to get pending messages for processing",
+			slog.String("error", err.Error()))
+		return
+	} else if errors.Is(err, queue.ErrEmptyQueue) {
+		return // No messages to process
+	}
+
+	if pending == nil || len(pending.Messages) == 0 {
+		return // No messages to process
+	}
+
+	// Clear pending messages
+	if clearErr := s.queue.ClearPendingMessages(ctx, user.ExternalID); clearErr != nil {
+		s.logger.WarnContext(ctx, "failed to clear pending messages",
+			slog.String("error", clearErr.Error()))
+	}
+
+	s.logger.InfoContext(ctx, "processing pending concatenated messages",
+		slog.String("user_id", user.ExternalID),
+		slog.Int("message_count", len(pending.Messages)))
+
+	// Combine all messages
+	combinedUpdate := s.combineMessages(pending.Messages)
+
+	// Set generation lock to prevent new concatenations during processing
+	if lockErr := s.queue.SetGenerationLock(ctx, user.ExternalID, generationLockDuration); lockErr != nil {
+		s.logger.WarnContext(ctx, "failed to set generation lock",
+			slog.String("error", lockErr.Error()))
+	}
+
+	// Process the combined message
+	err = s.handleConversationMessage(ctx, user, combinedUpdate)
+
+	// Clear generation lock
+	if clearErr := s.queue.ClearGenerationLock(ctx, user.ExternalID); clearErr != nil {
+		s.logger.WarnContext(ctx, "failed to clear generation lock after processing",
+			slog.String("error", clearErr.Error()))
+	}
+
+	if err != nil {
+		s.logger.ErrorContext(ctx, "failed to process concatenated messages",
+			slog.String("error", err.Error()),
+			slog.String("user_id", user.ExternalID))
+
+		// Send error message to user
+		errorMsg := i18n.GetString(user.Language, i18n.ErrorResponseGeneration)
+		_, sendErr := s.sender.SendMessage(ctx, user.ExternalID, errorMsg)
+		if sendErr != nil {
+			s.logger.ErrorContext(ctx, "failed to send error message to user",
+				slog.String("send_error", sendErr.Error()),
+				slog.String("original_error", err.Error()))
+		}
+	}
+}
+
+// combineMessages combines multiple domain.Update messages into a single one in correct order.
+func (s *UpdateService) combineMessages(messages []domain.Update) domain.Update {
+	if len(messages) == 0 {
+		return domain.Update{}
+	}
+
+	if len(messages) == 1 {
+		return messages[0]
+	}
+
+	// Sort messages by external message ID first, then by received timestamp
+	// This ensures messages are combined in the correct order
+	sortedMessages := make([]domain.Update, len(messages))
+	copy(sortedMessages, messages)
+
+	sort.Slice(sortedMessages, func(i, j int) bool {
+		// Primary sort: by external message ID (Telegram message order)
+		if sortedMessages[i].ExternalMessageID != sortedMessages[j].ExternalMessageID {
+			return sortedMessages[i].ExternalMessageID < sortedMessages[j].ExternalMessageID
+		}
+		// Secondary sort: by received timestamp for messages with same ID (should be rare)
+		return sortedMessages[i].ReceivedAt.Before(sortedMessages[j].ReceivedAt)
+	})
+
+	s.logger.DebugContext(context.Background(), "sorted messages for concatenation",
+		slog.Int("message_count", len(sortedMessages)),
+		slog.Any("message_ids", extractMessageIDs(sortedMessages)))
+
+	// Combine all message texts in sorted order
+	combinedText := ""
+	var combinedImageData []byte
+	var combinedImageMimeType string
+	var combinedPDFData []byte
+	var combinedPDFMimeType string
+	var combinedPDFFileName string
+	var lastExternalMessageID int64
+
+	for i, msg := range sortedMessages {
+		if i > 0 {
+			combinedText += " " // Add space between messages
+		}
+		combinedText += msg.MessageText
+
+		// Use attachments from the last message that has them (in sorted order)
+		if len(msg.ImageData) > 0 {
+			combinedImageData = msg.ImageData
+			combinedImageMimeType = msg.ImageMimeType
+		}
+		if len(msg.PDFData) > 0 {
+			combinedPDFData = msg.PDFData
+			combinedPDFMimeType = msg.PDFMimeType
+			combinedPDFFileName = msg.PDFFileName
+		}
+		if msg.ExternalMessageID > 0 {
+			lastExternalMessageID = int64(msg.ExternalMessageID)
+		}
+	}
+
+	// Create combined update using the first message as base
+	baseMsg := sortedMessages[0]
+	return domain.Update{
+		ExternalUserID:    baseMsg.ExternalUserID,
+		UserLanguage:      baseMsg.UserLanguage,
+		MessageText:       combinedText,
+		ImageData:         combinedImageData,
+		ImageMimeType:     combinedImageMimeType,
+		PDFData:           combinedPDFData,
+		PDFMimeType:       combinedPDFMimeType,
+		PDFFileName:       combinedPDFFileName,
+		ExternalMessageID: int(lastExternalMessageID),
+		ReceivedAt:        baseMsg.ReceivedAt, // Use the first message's timestamp
+	}
+}
+
+// extractMessageIDs extracts message IDs for logging purposes.
+func extractMessageIDs(messages []domain.Update) []int {
+	ids := make([]int, len(messages))
+	for i, msg := range messages {
+		ids[i] = msg.ExternalMessageID
+	}
+	return ids
+}
+
 func (s *UpdateService) createNewUserWithTokens(ctx context.Context, update domain.Update) (*domain.User, error) {
 	language := update.UserLanguage
 	now := time.Now()
@@ -185,6 +416,11 @@ func (s *UpdateService) createNewUserWithTokens(ctx context.Context, update doma
 func (s *UpdateService) HandleConversationState(ctx context.Context, user *domain.User, update domain.Update) error {
 	// Check if user sent "back to menu" text
 	if update.MessageText == i18n.GetString(user.Language, i18n.ButtonBackToMenu) {
+		// Clear any pending messages when going back to menu
+		if clearErr := s.queue.ClearPendingMessages(ctx, user.ExternalID); clearErr != nil {
+			s.logger.WarnContext(ctx, "failed to clear pending messages on menu transition",
+				slog.String("error", clearErr.Error()))
+		}
 		return s.transitionToMenu(ctx, user)
 	}
 
@@ -204,9 +440,9 @@ func (s *UpdateService) HandleConversationState(ctx context.Context, user *domai
 		return s.handleSubscriptionBuyCallback(ctx, user)
 	}
 
-	// Handle regular conversation message
+	// Handle regular conversation message with concatenation
 	if update.MessageText != "" && update.MessageText != i18n.GetString(user.Language, i18n.ButtonBackToMenu) {
-		return s.handleConversationMessage(ctx, user, update)
+		return s.handleConversationMessageWithConcatenation(ctx, user, update)
 	}
 
 	// Send back to menu button if no message text

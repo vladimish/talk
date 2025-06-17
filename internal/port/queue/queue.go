@@ -21,6 +21,12 @@ type QueuedItem struct {
 	QueueNotificationID string        `json:"notification_id"` // Message ID of the "queued" notification to delete
 }
 
+// PendingMessages represents messages waiting for concatenation.
+type PendingMessages struct {
+	Messages  []domain.Update `json:"messages"`
+	Timestamp time.Time       `json:"timestamp"`
+}
+
 // Queue interface for managing user request queues.
 type Queue interface {
 	// EnqueueWithNotification adds an update to a user's queue with notification message ID
@@ -42,4 +48,23 @@ type Queue interface {
 
 	// GetQueueLength returns the number of queued updates for a user
 	GetQueueLength(ctx context.Context, userID string) (int, error)
+
+	// Message concatenation methods
+	// SetPendingMessages stores messages that are waiting for potential concatenation
+	SetPendingMessages(ctx context.Context, userID string, messages *PendingMessages, ttl time.Duration) error
+
+	// GetPendingMessages retrieves pending messages for concatenation
+	GetPendingMessages(ctx context.Context, userID string) (*PendingMessages, error)
+
+	// ClearPendingMessages removes pending messages for a user
+	ClearPendingMessages(ctx context.Context, userID string) error
+
+	// SetGenerationLock marks a user as having an active AI generation (for cancellation)
+	SetGenerationLock(ctx context.Context, userID string, ttl time.Duration) error
+
+	// IsGenerating checks if a user has an active AI generation
+	IsGenerating(ctx context.Context, userID string) (bool, error)
+
+	// ClearGenerationLock removes the generation lock for a user
+	ClearGenerationLock(ctx context.Context, userID string) error
 }

@@ -136,6 +136,93 @@ func (r *Queue) GetQueueLength(ctx context.Context, userID string) (int, error) 
 	return int(length), nil
 }
 
+// SetPendingMessages stores messages that are waiting for potential concatenation.
+func (r *Queue) SetPendingMessages(
+	ctx context.Context,
+	userID string,
+	messages *queue.PendingMessages,
+	ttl time.Duration,
+) error {
+	pendingKey := r.pendingKey(userID)
+
+	data, err := json.Marshal(messages)
+	if err != nil {
+		return fmt.Errorf("failed to marshal pending messages: %w", err)
+	}
+
+	if setErr := r.client.Set(ctx, pendingKey, data, ttl).Err(); setErr != nil {
+		return fmt.Errorf("failed to set pending messages: %w", setErr)
+	}
+
+	return nil
+}
+
+// GetPendingMessages retrieves pending messages for concatenation.
+func (r *Queue) GetPendingMessages(ctx context.Context, userID string) (*queue.PendingMessages, error) {
+	pendingKey := r.pendingKey(userID)
+
+	data, err := r.client.Get(ctx, pendingKey).Bytes()
+	if err != nil {
+		if errors.Is(err, redis.Nil) {
+			return nil, queue.ErrEmptyQueue // No pending messages
+		}
+		return nil, fmt.Errorf("failed to get pending messages: %w", err)
+	}
+
+	var messages queue.PendingMessages
+	if unmarshalErr := json.Unmarshal(data, &messages); unmarshalErr != nil {
+		return nil, fmt.Errorf("failed to unmarshal pending messages: %w", unmarshalErr)
+	}
+
+	return &messages, nil
+}
+
+// ClearPendingMessages removes pending messages for a user.
+func (r *Queue) ClearPendingMessages(ctx context.Context, userID string) error {
+	pendingKey := r.pendingKey(userID)
+
+	if err := r.client.Del(ctx, pendingKey).Err(); err != nil {
+		return fmt.Errorf("failed to clear pending messages: %w", err)
+	}
+
+	return nil
+}
+
+// SetGenerationLock marks a user as having an active AI generation (for cancellation).
+func (r *Queue) SetGenerationLock(ctx context.Context, userID string, ttl time.Duration) error {
+	genKey := r.generationKey(userID)
+
+	// Use SET with EX (expiration)
+	if err := r.client.Set(ctx, genKey, "1", ttl).Err(); err != nil {
+		return fmt.Errorf("failed to set generation lock: %w", err)
+	}
+
+	return nil
+}
+
+// IsGenerating checks if a user has an active AI generation.
+func (r *Queue) IsGenerating(ctx context.Context, userID string) (bool, error) {
+	genKey := r.generationKey(userID)
+
+	exists, err := r.client.Exists(ctx, genKey).Result()
+	if err != nil {
+		return false, fmt.Errorf("failed to check generation lock: %w", err)
+	}
+
+	return exists > 0, nil
+}
+
+// ClearGenerationLock removes the generation lock for a user.
+func (r *Queue) ClearGenerationLock(ctx context.Context, userID string) error {
+	genKey := r.generationKey(userID)
+
+	if err := r.client.Del(ctx, genKey).Err(); err != nil {
+		return fmt.Errorf("failed to clear generation lock: %w", err)
+	}
+
+	return nil
+}
+
 func (r *Queue) Close() error {
 	return r.client.Close()
 }
@@ -147,4 +234,12 @@ func (r *Queue) queueKey(userID string) string {
 
 func (r *Queue) lockKey(userID string) string {
 	return fmt.Sprintf("lock:user:%s", userID)
+}
+
+func (r *Queue) pendingKey(userID string) string {
+	return fmt.Sprintf("pending:user:%s", userID)
+}
+
+func (r *Queue) generationKey(userID string) string {
+	return fmt.Sprintf("generation:user:%s", userID)
 }

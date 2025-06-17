@@ -1,5 +1,9 @@
 package domain
 
+import (
+	"time"
+)
+
 type CallbackQuery struct {
 	ID             string `json:"id"`
 	ExternalUserID string `json:"external_user_id"`
@@ -37,6 +41,7 @@ type Update struct {
 	PDFMimeType       string             `json:"pdf_mime_type,omitempty"`   // MIME type of the PDF
 	PDFFileName       string             `json:"pdf_filename,omitempty"`    // Original file name
 	ExternalMessageID int                `json:"external_message_id"`       // Telegram message ID
+	ReceivedAt        time.Time          `json:"received_at"`               // Timestamp when message was received
 	CallbackQuery     *CallbackQuery     `json:"callback_query,omitempty"`
 	PreCheckoutQuery  *PreCheckoutQuery  `json:"pre_checkout_query,omitempty"`
 	SuccessfulPayment *SuccessfulPayment `json:"successful_payment,omitempty"`

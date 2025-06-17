@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/vladimish/talk/internal/domain"
 	"github.com/vladimish/talk/internal/service"
@@ -104,6 +105,7 @@ func (b *Bot) Handle(ctx context.Context, _ *bot.Bot, update *models.Update) {
 		PDFMimeType:       pdfMimeType,
 		PDFFileName:       pdfFileName,
 		ExternalMessageID: update.Message.ID,
+		ReceivedAt:        time.Now(),
 	})
 	if err != nil {
 		b.l.ErrorContext(ctx, fmt.Errorf("error while handling update: %w", err).Error())
