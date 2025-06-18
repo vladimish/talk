@@ -12,6 +12,10 @@ import (
 	"github.com/vladimish/talk/pkg/i18n"
 )
 
+const (
+	defaultConversationName = "New conversation"
+)
+
 // Conversation list handlers.
 func (s *UpdateService) transitionToConversationList(ctx context.Context, user *domain.User) error {
 	conversationListState := domain.UserStateConversationList
@@ -66,6 +70,11 @@ func (s *UpdateService) HandleConversationListState(
 		if update.MessageText == fmt.Sprintf("💬 %s, %s", conversation.Name, lastUpdate) {
 			return s.selectConversation(ctx, user, conversation.ID)
 		}
+	}
+
+	// If message doesn't match any list option, create new conversation and process the message
+	if update.MessageText != "" {
+		return s.createNewConversationFromList(ctx, user, update)
 	}
 
 	// If no valid selection, show conversation list again
@@ -139,6 +148,12 @@ func (s *UpdateService) showConversationList(ctx context.Context, user *domain.U
 		{Text: i18n.GetString(user.Language, i18n.ButtonBackToMenu)},
 	})
 
+	// Get current model display name with emojis
+	currentModelDisplay := user.SelectedModel
+	if currentModel := domain.GetModelByID(user.SelectedModel); currentModel != nil {
+		currentModelDisplay = currentModel.GetDisplayNameWithEmojis(user.Language)
+	}
+
 	text := i18n.GetString(user.Language, i18n.ConversationListSelect)
 	if totalConversations == 0 {
 		text = i18n.GetString(user.Language, i18n.ConversationListEmpty)
@@ -147,6 +162,9 @@ func (s *UpdateService) showConversationList(ctx context.Context, user *domain.U
 		totalPages := ((totalConversations - 1) / pageSize) + 1
 		text = fmt.Sprintf(i18n.GetString(user.Language, i18n.ConversationListPageInfo), currentPage, totalPages)
 	}
+
+	// Add current model to the message
+	text = fmt.Sprintf("%s\n\nCurrent model: %s", text, currentModelDisplay)
 
 	content := domain.MessageContent{
 		Text:         text,
@@ -164,7 +182,7 @@ func (s *UpdateService) showConversationList(ctx context.Context, user *domain.U
 
 func (s *UpdateService) createNewConversation(ctx context.Context, user *domain.User) error {
 	// Create new conversation with temporary name
-	conversationName := "New conversation"
+	conversationName := defaultConversationName
 	conversation, err := s.storage.CreateConversation(ctx, &domain.Conversation{
 		Name:      conversationName,
 		UserID:    user.ID,
@@ -264,4 +282,38 @@ func (s *UpdateService) handlePrevPage(ctx context.Context, user *domain.User) e
 // formatDateTime formats a timestamp in a unified dd.mm hh:mm format.
 func (s *UpdateService) formatDateTime(t time.Time) string {
 	return t.Format("02.01 15:04")
+}
+
+// createNewConversationFromList creates a new conversation from conversation list and processes the message.
+func (s *UpdateService) createNewConversationFromList(
+	ctx context.Context,
+	user *domain.User,
+	update domain.Update,
+) error {
+	// Create new conversation with temporary name
+	conversationName := defaultConversationName
+	conversation, err := s.storage.CreateConversation(ctx, &domain.Conversation{
+		Name:      conversationName,
+		UserID:    user.ID,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	})
+	if err != nil {
+		return fmt.Errorf("can't create conversation: %w", err)
+	}
+
+	// Update user's current conversation
+	user.CurrentConversationID = &conversation.ID
+	err = s.storage.UpdateUserCurrentConversationID(ctx, user.ID, &conversation.ID)
+	if err != nil {
+		return fmt.Errorf("can't update user conversation: %w", err)
+	}
+
+	// Transition to conversation state with the conversation keyboard
+	if transitionErr := s.transitionToConversation(ctx, user, nil); transitionErr != nil {
+		return fmt.Errorf("can't transition to conversation: %w", transitionErr)
+	}
+
+	// Process the message in the new conversation
+	return s.handleConversationMessage(ctx, user, update)
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/vladimish/talk/internal/domain"
 	"github.com/vladimish/talk/internal/port/storage"
@@ -35,6 +36,11 @@ func (s *UpdateService) HandleMenuState(ctx context.Context, user *domain.User, 
 	// Check if user sent "subscription" text
 	if update.MessageText == i18n.GetString(user.Language, i18n.ButtonSubscription) {
 		return s.handleSubscriptionBuyCallback(ctx, user)
+	}
+
+	// If message doesn't match any menu option, create new conversation and process the message
+	if update.MessageText != "" {
+		return s.createNewConversationFromMenu(ctx, user, update)
 	}
 
 	// Send menu with keyboard
@@ -218,4 +224,38 @@ func (s *UpdateService) getWebSearchOffMessage(language string, isResuming bool)
 		return i18n.GetString(language, i18n.ConversationResumedWebSearchOff)
 	}
 	return i18n.GetString(language, i18n.ConversationStartedWebSearchOff)
+}
+
+// createNewConversationFromMenu creates a new conversation from menu and processes the message.
+func (s *UpdateService) createNewConversationFromMenu(
+	ctx context.Context,
+	user *domain.User,
+	update domain.Update,
+) error {
+	// Create new conversation with temporary name
+	conversationName := defaultConversationName
+	conversation, err := s.storage.CreateConversation(ctx, &domain.Conversation{
+		Name:      conversationName,
+		UserID:    user.ID,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	})
+	if err != nil {
+		return fmt.Errorf("can't create conversation: %w", err)
+	}
+
+	// Update user's current conversation
+	user.CurrentConversationID = &conversation.ID
+	err = s.storage.UpdateUserCurrentConversationID(ctx, user.ID, &conversation.ID)
+	if err != nil {
+		return fmt.Errorf("can't update user conversation: %w", err)
+	}
+
+	// Transition to conversation state with the conversation keyboard
+	if transitionErr := s.transitionToConversation(ctx, user, nil); transitionErr != nil {
+		return fmt.Errorf("can't transition to conversation: %w", transitionErr)
+	}
+
+	// Process the message in the new conversation
+	return s.handleConversationMessage(ctx, user, update)
 }

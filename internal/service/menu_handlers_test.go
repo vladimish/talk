@@ -1,11 +1,10 @@
 package service_test
 
 import (
-	"context"
+	"errors"
 	"log/slog"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 
@@ -129,26 +128,26 @@ func TestUpdateService_HandleMenuState(t *testing.T) {
 			},
 		},
 		{
-			name: "unknown input - shows menu",
+			name: "unknown input - creates new conversation",
 			user: &domain.User{
-				ID:         1,
-				ExternalID: "12345",
-				Language:   "en",
+				ID:            1,
+				ExternalID:    "12345",
+				Language:      "en",
+				SelectedModel: "openai/gpt-4o-mini",
 			},
 			update: domain.Update{
-				MessageText: "unknown command",
+				MessageText: "Hello, I want to chat!",
 			},
-			setupMocks: func(_ *mocks.MockStorage, mockSender *mocks.MockSender) {
-				mockSender.EXPECT().
-					SendMessageWithContent(gomock.Any(), "12345", gomock.Any()).
-					DoAndReturn(func(_ context.Context, _ string, content domain.MessageContent) (string, error) {
-						assert.Contains(t, content.Text, "Welcome")
-						assert.NotNil(t, content.ReplyKeyboard)
-						return "msg123", nil
-					})
+			setupMocks: func(mockStorage *mocks.MockStorage, _ *mocks.MockSender) {
+				// Create new conversation - this should fail to test just the conversation creation path
+				mockStorage.EXPECT().
+					CreateConversation(gomock.Any(), gomock.Any()).
+					Return(nil, errors.New("test: conversation creation attempted"))
 			},
 			expectedResult: func(t *testing.T, err error) {
-				require.NoError(t, err)
+				// We expect an error because we're testing that it attempts to create a conversation
+				require.Error(t, err)
+				require.Contains(t, err.Error(), "test: conversation creation attempted")
 			},
 		},
 	}
