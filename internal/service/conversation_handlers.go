@@ -23,6 +23,7 @@ const (
 	maxConversationNameLength = 50
 	minConversationNameLength = 2
 	queueProcessingDelay      = 100 * time.Millisecond
+	typingIndicatorInterval   = 4500 * time.Millisecond // 4.5 seconds
 )
 
 // Conversation handlers.
@@ -301,6 +302,12 @@ func (s *UpdateService) handleConversationMessageWithReply(
 	var hasReasoningMessage bool
 	var hasMainMessage bool
 	lastUpdate := time.Now()
+
+	// Start periodic typing indicator
+	typingDone := make(chan struct{})
+	defer close(typingDone)
+
+	go s.sendPeriodicTyping(ctx, user.ExternalID, typingDone)
 
 	for token := range tokenStream {
 		if token.Error != nil {
@@ -1000,5 +1007,26 @@ func (s *UpdateService) handlePDFUpload(
 		objectName:  objectName,
 		contentType: pdfMimeType,
 		size:        int64(len(pdfData)),
+	}
+}
+
+// sendPeriodicTyping sends typing indicators every 4.5 seconds during generation.
+func (s *UpdateService) sendPeriodicTyping(ctx context.Context, userExternalID string, done <-chan struct{}) {
+	ticker := time.NewTicker(typingIndicatorInterval)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-done:
+			return
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			if err := s.sender.SendTyping(ctx, userExternalID); err != nil {
+				s.logger.WarnContext(ctx, "failed to send periodic typing indicator",
+					slog.String("error", err.Error()),
+					slog.String("user_id", userExternalID))
+			}
+		}
 	}
 }
