@@ -110,3 +110,14 @@ func (q *Queries) UpdateConversationName(ctx context.Context, arg UpdateConversa
 	_, err := q.db.ExecContext(ctx, updateConversationName, arg.ID, arg.Name)
 	return err
 }
+
+const updateConversationTimestamp = `-- name: UpdateConversationTimestamp :exec
+UPDATE conversations
+SET updated_at = NOW()
+WHERE id = $1
+`
+
+func (q *Queries) UpdateConversationTimestamp(ctx context.Context, id int64) error {
+	_, err := q.db.ExecContext(ctx, updateConversationTimestamp, id)
+	return err
+}

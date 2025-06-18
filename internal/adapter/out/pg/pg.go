@@ -300,6 +300,10 @@ func (p *PG) UpdateConversationName(ctx context.Context, conversationID int64, n
 	})
 }
 
+func (p *PG) UpdateConversationTimestamp(ctx context.Context, conversationID int64) error {
+	return p.q.UpdateConversationTimestamp(ctx, conversationID)
+}
+
 func (p *PG) UpdateUserCurrentConversationID(ctx context.Context, userID int64, conversationID *int64) error {
 	var conversation sql.NullInt64
 	if conversationID != nil {

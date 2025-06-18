@@ -163,6 +163,15 @@ func (s *UpdateService) handleConversationMessageWithReply(
 		return fmt.Errorf("can't save user message: %w", err)
 	}
 
+	// Update conversation timestamp when user message is created
+	if user.CurrentConversationID != nil {
+		if timestampErr := s.storage.UpdateConversationTimestamp(ctx, *user.CurrentConversationID); timestampErr != nil {
+			s.logger.WarnContext(ctx, "failed to update conversation timestamp",
+				slog.String("error", timestampErr.Error()),
+				slog.Int64("conversation_id", *user.CurrentConversationID))
+		}
+	}
+
 	// Generate conversation name if this is the first message
 	if isFirstMessage && user.CurrentConversationID != nil {
 		go s.generateAndUpdateConversationName(context.Background(), *user.CurrentConversationID, update.MessageText)
@@ -188,11 +197,17 @@ func (s *UpdateService) handleConversationMessageWithReply(
 		}
 	}
 
-	// Send typing indicator
+	// Send typing indicator and start periodic typing
 	err = s.sender.SendTyping(ctx, user.ExternalID)
 	if err != nil {
 		s.logger.WarnContext(ctx, "failed to send typing indicator", slog.String("error", err.Error()))
 	}
+
+	// Start periodic typing indicator for the entire duration
+	typingDone := make(chan struct{})
+	defer close(typingDone)
+
+	go s.sendPeriodicTyping(ctx, user.ExternalID, typingDone)
 
 	// Handle image upload if present
 	uploadResult := s.handleImageUpload(ctx, update.ImageData, update.ImageMimeType)
@@ -303,12 +318,6 @@ func (s *UpdateService) handleConversationMessageWithReply(
 	var hasMainMessage bool
 	lastUpdate := time.Now()
 
-	// Start periodic typing indicator
-	typingDone := make(chan struct{})
-	defer close(typingDone)
-
-	go s.sendPeriodicTyping(ctx, user.ExternalID, typingDone)
-
 	for token := range tokenStream {
 		if token.Error != nil {
 			return fmt.Errorf("completion stream error: %w", token.Error)
@@ -385,6 +394,15 @@ func (s *UpdateService) handleConversationMessageWithReply(
 	})
 	if err != nil {
 		return fmt.Errorf("can't save bot message: %w", err)
+	}
+
+	// Update conversation timestamp when bot message is created
+	if user.CurrentConversationID != nil {
+		if timestampErr := s.storage.UpdateConversationTimestamp(ctx, *user.CurrentConversationID); timestampErr != nil {
+			s.logger.WarnContext(ctx, "failed to update conversation timestamp",
+				slog.String("error", timestampErr.Error()),
+				slog.Int64("conversation_id", *user.CurrentConversationID))
+		}
 	}
 
 	// Save foreign message mappings for all bot messages

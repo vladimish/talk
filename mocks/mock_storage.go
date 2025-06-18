@@ -338,6 +338,20 @@ func (mr *MockStorageMockRecorder) UpdateConversationName(ctx, conversationID, n
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateConversationName", reflect.TypeOf((*MockStorage)(nil).UpdateConversationName), ctx, conversationID, name)
 }
 
+// UpdateConversationTimestamp mocks base method.
+func (m *MockStorage) UpdateConversationTimestamp(ctx context.Context, conversationID int64) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateConversationTimestamp", ctx, conversationID)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateConversationTimestamp indicates an expected call of UpdateConversationTimestamp.
+func (mr *MockStorageMockRecorder) UpdateConversationTimestamp(ctx, conversationID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateConversationTimestamp", reflect.TypeOf((*MockStorage)(nil).UpdateConversationTimestamp), ctx, conversationID)
+}
+
 // UpdatePaymentStatus mocks base method.
 func (m *MockStorage) UpdatePaymentStatus(ctx context.Context, paymentID int64, status domain.PaymentStatus, telegramChargeID, providerChargeID *string) (*domain.Payment, error) {
 	m.ctrl.T.Helper()

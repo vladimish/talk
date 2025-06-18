@@ -62,7 +62,8 @@ func (s *UpdateService) HandleConversationListState(
 	}
 
 	for _, conversation := range conversations {
-		if update.MessageText == fmt.Sprintf("💬 %s", conversation.Name) {
+		lastUpdate := s.formatDateTime(conversation.UpdatedAt)
+		if update.MessageText == fmt.Sprintf("💬 %s, %s", conversation.Name, lastUpdate) {
 			return s.selectConversation(ctx, user, conversation.ID)
 		}
 	}
@@ -105,8 +106,10 @@ func (s *UpdateService) showConversationList(ctx context.Context, user *domain.U
 
 	for i := start; i < end; i++ {
 		conversation := conversations[i]
+		// Format the last update time according to user's language
+		lastUpdate := s.formatDateTime(conversation.UpdatedAt)
 		buttons = append(buttons, []domain.KeyboardButton{
-			{Text: fmt.Sprintf("💬 %s", conversation.Name)},
+			{Text: fmt.Sprintf("💬 %s, %s", conversation.Name, lastUpdate)},
 		})
 	}
 
@@ -256,4 +259,9 @@ func (s *UpdateService) handlePrevPage(ctx context.Context, user *domain.User) e
 	}
 
 	return s.showConversationList(ctx, user)
+}
+
+// formatDateTime formats a timestamp in a unified dd.mm hh:mm format.
+func (s *UpdateService) formatDateTime(t time.Time) string {
+	return t.Format("02.01 15:04")
 }

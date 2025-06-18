@@ -17,3 +17,8 @@ LIMIT 1;
 UPDATE conversations
 SET name = $2, updated_at = NOW()
 WHERE id = $1;
+
+-- name: UpdateConversationTimestamp :exec
+UPDATE conversations
+SET updated_at = NOW()
+WHERE id = $1;

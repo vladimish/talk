@@ -27,6 +27,7 @@ type Storage interface {
 	GetConversationsByUserID(ctx context.Context, userID int64) ([]*domain.Conversation, error)
 	GetConversationByID(ctx context.Context, conversationID int64) (*domain.Conversation, error)
 	UpdateConversationName(ctx context.Context, conversationID int64, name string) error
+	UpdateConversationTimestamp(ctx context.Context, conversationID int64) error
 
 	UpdateUserCurrentConversationID(ctx context.Context, userID int64, conversationID *int64) error
 	CreateForeignMessage(ctx context.Context, messageID int32, foreignMessageID int32) error
