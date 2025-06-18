@@ -73,6 +73,15 @@ func (s *UpdateService) HandleUpdate(ctx context.Context, update domain.Update) 
 		update.ReceivedAt = time.Now()
 	}
 
+	// Check for /start command first - always redirect to menu regardless of current state
+	if update.MessageText == "/start" {
+		user, userErr := s.getOrCreateUser(ctx, update)
+		if userErr != nil {
+			return userErr
+		}
+		return s.transitionToMenu(ctx, user)
+	}
+
 	// Check if this user is in conversation state and might need queueing
 	user, err := s.getOrCreateUser(ctx, update)
 	if err != nil {
