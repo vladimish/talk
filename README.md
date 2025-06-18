@@ -29,7 +29,7 @@ Try it out at [@ookaa_chat_bot](https://t.me/ookaa_chat_bot)
 
 ## Quick Start
 
-Just run the unified startup script that handles everything:
+Just run the unified startup script that handles everything (don't forget to set TG_TOKEN with your bot token and OPENAI_API_KEY with your OpenRouter key):
 
 ```bash
 git clone https://github.com/vladimish/talk.git
@@ -43,8 +43,6 @@ The script will:
 - Set up sensible defaults for all other variables
 - Start all dependencies (PostgreSQL, Redis, MinIO, Telegramify)
 - Wait for services to be healthy
-- Ask if you want to run the bot locally with Go or in Docker
-- Start the bot and provide useful management commands
 
 That's it! The bot will automatically apply any pending database migrations on startup.
 
