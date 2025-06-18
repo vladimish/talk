@@ -291,81 +291,77 @@ func (s *UpdateService) handleConversationMessageWithReply(
 		return fmt.Errorf("can't get completion: %w", err)
 	}
 
-	// Send initial empty message to get message ID
-	// Use the replyToMessageID parameter if provided (for queued messages)
-	initialContent := domain.MessageContent{
-		Text:             "\\.\\.\\.",
-		ReplyToMessageID: replyToMessageID,
-	}
-	messageID, err := s.sender.SendMessageWithContent(ctx, user.ExternalID, initialContent)
-	if err != nil {
-		return fmt.Errorf("can't send initial message: %w", err)
-	}
-
-	// Track all message IDs (starts with just one)
-	messageIDs := []string{messageID}
-
-	// Stream response tokens and update message
+	// Stream response tokens and handle messaging
 	var responseBuilder strings.Builder
+	var reasoningBuilder strings.Builder
+	var messageIDs []string
+	var reasoningMessageIDs []string
 	var previousContent string
+	var previousReasoningContent string
+	var hasReasoningMessage bool
+	var hasMainMessage bool
 	lastUpdate := time.Now()
 
 	for token := range tokenStream {
 		if token.Error != nil {
 			return fmt.Errorf("completion stream error: %w", token.Error)
 		}
-		responseBuilder.WriteString(token.Content)
 
-		// Update message at most once per second
-		if time.Since(lastUpdate) >= time.Second/2 {
-			currentContent := responseBuilder.String()
+		// Handle reasoning tokens - accumulate in reasoning builder
+		if token.Reasoning != "" {
+			reasoningBuilder.WriteString(token.Reasoning)
+		}
 
-			// Send typing indicator to keep the conversation active
-			err = s.sender.SendTyping(ctx, user.ExternalID)
-			if err != nil {
-				s.logger.WarnContext(ctx, "failed to send typing indicator", slog.String("error", err.Error()))
-			}
+		// Handle regular content
+		if token.Content != "" {
+			responseBuilder.WriteString(token.Content)
+		}
 
-			// Update all tracked messages with optimization
-			updatedMessageIDs, updateErr := s.sender.UpdateMessages(
+		// Update messages at most once per second
+		if time.Since(lastUpdate) >= time.Second {
+			// Handle periodic updates
+			shouldContinue, updateErr := s.handlePeriodicUpdates(
 				ctx,
-				user.ExternalID,
-				messageIDs,
-				previousContent,
-				currentContent,
+				user,
+				&reasoningBuilder,
+				&responseBuilder,
+				&reasoningMessageIDs,
+				&messageIDs,
+				&previousReasoningContent,
+				&previousContent,
+				&hasReasoningMessage,
+				&hasMainMessage,
+				replyToMessageID,
 			)
 			if updateErr != nil {
-				// Log error but don't send another error message to user to avoid spam
-				s.logger.ErrorContext(ctx, "failed to update messages during streaming",
-					slog.String("error", updateErr.Error()),
-					slog.String("user_id", user.ExternalID))
-				return fmt.Errorf("can't update messages: %w", updateErr)
+				return updateErr
 			}
-			// Update our tracked message IDs
-			messageIDs = updatedMessageIDs
-			previousContent = currentContent
+			if shouldContinue {
+				continue
+			}
+
 			lastUpdate = time.Now()
 		}
 	}
 
-	// Send final update if needed
+	// Send final updates if needed
 	if time.Since(lastUpdate) > 0 {
-		finalContent := responseBuilder.String()
-		updatedMessageIDs, finalUpdateErr := s.sender.UpdateMessages(
+		messageIDs, err = s.sendFinalUpdates(
 			ctx,
-			user.ExternalID,
+			user,
+			&responseBuilder,
+			&reasoningBuilder,
 			messageIDs,
+			reasoningMessageIDs,
 			previousContent,
-			finalContent,
+			previousReasoningContent,
+			hasReasoningMessage,
+			hasMainMessage,
+			replyToMessageID,
 		)
-		if finalUpdateErr != nil {
-			s.logger.ErrorContext(ctx, "failed to update final messages",
-				slog.String("error", finalUpdateErr.Error()),
-				slog.String("user_id", user.ExternalID))
-			return fmt.Errorf("can't update final messages: %w", finalUpdateErr)
+		if err != nil {
+			return err
 		}
-		// Update our tracked message IDs for final state
-		messageIDs = updatedMessageIDs
 	}
 
 	responseText := responseBuilder.String()
@@ -460,6 +456,323 @@ func (s *UpdateService) handleConversationMessageWithReply(
 	}
 
 	return nil
+}
+
+// handleReasoningUpdate manages reasoning message creation and updates.
+func (s *UpdateService) handleReasoningUpdate(
+	ctx context.Context,
+	user *domain.User,
+	reasoningBuilder *strings.Builder,
+	reasoningMessageIDs []string,
+	previousReasoningContent string,
+	hasReasoningMessage bool,
+) ([]string, string, bool) {
+	if reasoningBuilder.Len() == 0 {
+		return reasoningMessageIDs, previousReasoningContent, hasReasoningMessage
+	}
+
+	currentReasoningContent := "```reasoning\n" + reasoningBuilder.String() + "\n```"
+
+	// Send initial reasoning message if not yet sent
+	if !hasReasoningMessage {
+		reasoningMsgID, reasoningErr := s.sender.SendMessage(ctx, user.ExternalID, currentReasoningContent)
+		if reasoningErr != nil {
+			s.logger.WarnContext(ctx, "failed to send reasoning message",
+				slog.String("error", reasoningErr.Error()))
+			return reasoningMessageIDs, previousReasoningContent, hasReasoningMessage
+		}
+		return []string{reasoningMsgID}, currentReasoningContent, true
+	}
+
+	// Update existing reasoning message if content changed
+	if currentReasoningContent != previousReasoningContent {
+		updatedReasoningIDs, updateErr := s.sender.UpdateMessages(
+			ctx,
+			user.ExternalID,
+			reasoningMessageIDs,
+			previousReasoningContent,
+			currentReasoningContent,
+		)
+		if updateErr != nil {
+			// Don't fail on rate limit errors - we'll retry next time
+			if strings.Contains(updateErr.Error(), "Too Many Requests") ||
+				strings.Contains(updateErr.Error(), "too many requests") {
+				s.logger.WarnContext(ctx, "rate limited while updating reasoning messages, will retry",
+					slog.String("error", updateErr.Error()))
+				return reasoningMessageIDs, previousReasoningContent, hasReasoningMessage
+			}
+			// Log other errors but continue
+			s.logger.WarnContext(ctx, "failed to update reasoning messages",
+				slog.String("error", updateErr.Error()))
+			return reasoningMessageIDs, previousReasoningContent, hasReasoningMessage
+		}
+		return updatedReasoningIDs, currentReasoningContent, hasReasoningMessage
+	}
+
+	return reasoningMessageIDs, previousReasoningContent, hasReasoningMessage
+}
+
+// handleMainContentUpdate manages main content message creation and updates.
+func (s *UpdateService) handleMainContentUpdate(
+	ctx context.Context,
+	user *domain.User,
+	responseBuilder *strings.Builder,
+	messageIDs []string,
+	previousContent string,
+	hasMainMessage bool,
+	replyToMessageID *int64,
+) ([]string, string, bool, error) {
+	currentContent := responseBuilder.String()
+	if currentContent == previousContent {
+		return messageIDs, previousContent, hasMainMessage, nil
+	}
+
+	// Send initial main message if not yet sent
+	if !hasMainMessage {
+		initialContent := domain.MessageContent{
+			Text:             currentContent,
+			ReplyToMessageID: replyToMessageID,
+		}
+		messageID, err := s.sender.SendMessageWithContent(ctx, user.ExternalID, initialContent)
+		if err != nil {
+			return messageIDs, previousContent, hasMainMessage, fmt.Errorf("can't send main message: %w", err)
+		}
+		return []string{messageID}, currentContent, true, nil
+	}
+
+	// Send typing indicator to keep the conversation active
+	err := s.sender.SendTyping(ctx, user.ExternalID)
+	if err != nil {
+		s.logger.WarnContext(ctx, "failed to send typing indicator", slog.String("error", err.Error()))
+	}
+
+	// Update all tracked messages with optimization
+	updatedMessageIDs, updateErr := s.sender.UpdateMessages(
+		ctx,
+		user.ExternalID,
+		messageIDs,
+		previousContent,
+		currentContent,
+	)
+	if updateErr != nil {
+		// Check if it's a rate limit error
+		if strings.Contains(updateErr.Error(), "Too Many Requests") ||
+			strings.Contains(updateErr.Error(), "too many requests") {
+			s.logger.WarnContext(ctx, "rate limited while updating main content, will retry",
+				slog.String("error", updateErr.Error()))
+			return messageIDs, previousContent, hasMainMessage, nil
+		}
+		// Log error but don't send another error message to user to avoid spam
+		s.logger.ErrorContext(ctx, "failed to update messages during streaming",
+			slog.String("error", updateErr.Error()),
+			slog.String("user_id", user.ExternalID))
+		return messageIDs, previousContent, hasMainMessage, fmt.Errorf("can't update messages: %w", updateErr)
+	}
+
+	return updatedMessageIDs, currentContent, hasMainMessage, nil
+}
+
+// sendFinalUpdates handles final message updates at the end of streaming.
+func (s *UpdateService) sendFinalUpdates(
+	ctx context.Context,
+	user *domain.User,
+	responseBuilder *strings.Builder,
+	reasoningBuilder *strings.Builder,
+	messageIDs []string,
+	reasoningMessageIDs []string,
+	previousContent string,
+	previousReasoningContent string,
+	hasReasoningMessage bool,
+	hasMainMessage bool,
+	replyToMessageID *int64,
+) ([]string, error) {
+	// Final reasoning update
+	s.handleFinalReasoningUpdate(ctx, user, reasoningBuilder, reasoningMessageIDs,
+		previousReasoningContent, hasReasoningMessage)
+
+	// Final content update - create message if needed
+	return s.handleFinalContentUpdate(ctx, user, responseBuilder, messageIDs,
+		previousContent, hasMainMessage, replyToMessageID)
+}
+
+// handlePeriodicUpdates manages periodic message updates during streaming.
+func (s *UpdateService) handlePeriodicUpdates(
+	ctx context.Context,
+	user *domain.User,
+	reasoningBuilder *strings.Builder,
+	responseBuilder *strings.Builder,
+	reasoningMessageIDs *[]string,
+	messageIDs *[]string,
+	previousReasoningContent *string,
+	previousContent *string,
+	hasReasoningMessage *bool,
+	hasMainMessage *bool,
+	replyToMessageID *int64,
+) (bool, error) {
+	// Handle reasoning message updates (create reasoning message first if we have reasoning)
+	if reasoningBuilder.Len() > 0 {
+		*reasoningMessageIDs, *previousReasoningContent, *hasReasoningMessage = s.handleReasoningUpdate(
+			ctx,
+			user,
+			reasoningBuilder,
+			*reasoningMessageIDs,
+			*previousReasoningContent,
+			*hasReasoningMessage,
+		)
+	}
+
+	// Handle main content updates (create main message after reasoning)
+	if responseBuilder.Len() > 0 {
+		updatedMessageIDs, updatedContent, updatedHasMessage, err := s.handleMainContentUpdate(
+			ctx,
+			user,
+			responseBuilder,
+			*messageIDs,
+			*previousContent,
+			*hasMainMessage,
+			replyToMessageID,
+		)
+		if err != nil {
+			// Check if it's a rate limit error
+			if strings.Contains(err.Error(), "Too Many Requests") ||
+				strings.Contains(err.Error(), "too many requests") {
+				s.logger.WarnContext(ctx, "rate limited by Telegram, will retry in next iteration",
+					slog.String("error", err.Error()))
+				// Skip this update and continue - don't update lastUpdate so we retry sooner
+				return true, nil // shouldContinue = true
+			}
+			return false, err
+		}
+		*messageIDs = updatedMessageIDs
+		*previousContent = updatedContent
+		*hasMainMessage = updatedHasMessage
+	}
+
+	return false, nil // shouldContinue = false
+}
+
+// handleFinalReasoningUpdate handles the final reasoning message update.
+func (s *UpdateService) handleFinalReasoningUpdate(
+	ctx context.Context,
+	user *domain.User,
+	reasoningBuilder *strings.Builder,
+	reasoningMessageIDs []string,
+	previousReasoningContent string,
+	hasReasoningMessage bool,
+) {
+	if hasReasoningMessage && reasoningBuilder.Len() > 0 {
+		finalReasoningContent := "```reasoning\n" + reasoningBuilder.String() + "\n```"
+		if finalReasoningContent != previousReasoningContent {
+			s.updateFinalReasoningContent(ctx, user, reasoningMessageIDs,
+				previousReasoningContent, finalReasoningContent)
+		}
+	}
+}
+
+// updateFinalReasoningContent updates the final reasoning content.
+func (s *UpdateService) updateFinalReasoningContent(
+	ctx context.Context,
+	user *domain.User,
+	reasoningMessageIDs []string,
+	previousReasoningContent string,
+	finalReasoningContent string,
+) {
+	_, updateErr := s.sender.UpdateMessages(
+		ctx,
+		user.ExternalID,
+		reasoningMessageIDs,
+		previousReasoningContent,
+		finalReasoningContent,
+	)
+	if updateErr != nil {
+		// Don't fail on rate limit errors - we'll retry next time
+		if strings.Contains(updateErr.Error(), "Too Many Requests") ||
+			strings.Contains(updateErr.Error(), "too many requests") {
+			s.logger.WarnContext(ctx, "rate limited while updating final reasoning messages",
+				slog.String("error", updateErr.Error()))
+		} else {
+			s.logger.WarnContext(ctx, "failed to update final reasoning messages",
+				slog.String("error", updateErr.Error()))
+		}
+	}
+}
+
+// handleFinalContentUpdate handles the final content message update or creation.
+func (s *UpdateService) handleFinalContentUpdate(
+	ctx context.Context,
+	user *domain.User,
+	responseBuilder *strings.Builder,
+	messageIDs []string,
+	previousContent string,
+	hasMainMessage bool,
+	replyToMessageID *int64,
+) ([]string, error) {
+	finalContent := responseBuilder.String()
+
+	if finalContent != "" && !hasMainMessage {
+		return s.createFinalMainMessage(ctx, user, finalContent, messageIDs, replyToMessageID)
+	} else if finalContent != previousContent && hasMainMessage {
+		return s.updateFinalMainMessage(ctx, user, messageIDs, previousContent, finalContent)
+	}
+
+	return messageIDs, nil
+}
+
+// createFinalMainMessage creates a main message if we never created one.
+func (s *UpdateService) createFinalMainMessage(
+	ctx context.Context,
+	user *domain.User,
+	finalContent string,
+	messageIDs []string,
+	replyToMessageID *int64,
+) ([]string, error) {
+	initialContent := domain.MessageContent{
+		Text:             finalContent,
+		ReplyToMessageID: replyToMessageID,
+	}
+	messageID, err := s.sender.SendMessageWithContent(ctx, user.ExternalID, initialContent)
+	if err != nil {
+		// Check if it's a rate limit error
+		if strings.Contains(err.Error(), "Too Many Requests") ||
+			strings.Contains(err.Error(), "too many requests") {
+			s.logger.WarnContext(ctx, "rate limited while sending final main message",
+				slog.String("error", err.Error()))
+			return messageIDs, nil
+		}
+		return messageIDs, fmt.Errorf("can't send final main message: %w", err)
+	}
+	return []string{messageID}, nil
+}
+
+// updateFinalMainMessage updates the existing main message.
+func (s *UpdateService) updateFinalMainMessage(
+	ctx context.Context,
+	user *domain.User,
+	messageIDs []string,
+	previousContent string,
+	finalContent string,
+) ([]string, error) {
+	updatedMessageIDs, finalUpdateErr := s.sender.UpdateMessages(
+		ctx,
+		user.ExternalID,
+		messageIDs,
+		previousContent,
+		finalContent,
+	)
+	if finalUpdateErr != nil {
+		// Check if it's a rate limit error
+		if strings.Contains(finalUpdateErr.Error(), "Too Many Requests") ||
+			strings.Contains(finalUpdateErr.Error(), "too many requests") {
+			s.logger.WarnContext(ctx, "rate limited while updating final main content",
+				slog.String("error", finalUpdateErr.Error()))
+			return messageIDs, nil
+		}
+		s.logger.ErrorContext(ctx, "failed to update final messages",
+			slog.String("error", finalUpdateErr.Error()),
+			slog.String("user_id", user.ExternalID))
+		return messageIDs, fmt.Errorf("can't update final messages: %w", finalUpdateErr)
+	}
+	return updatedMessageIDs, nil
 }
 
 func (s *UpdateService) generateAndUpdateConversationName(

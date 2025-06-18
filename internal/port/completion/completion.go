@@ -9,8 +9,9 @@ import (
 //go:generate go tool mockgen -source=completion.go -destination=../../../mocks/mock_completion.go -package=mocks
 
 type StreamToken struct {
-	Content string
-	Error   error
+	Content   string
+	Reasoning string // Reasoning tokens from models that support them
+	Error     error
 }
 
 type FileAttachment struct {

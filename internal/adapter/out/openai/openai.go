@@ -64,6 +64,15 @@ func NewOpenAICompletion(apiKey string) *Completion {
 	}
 }
 
+// supportsReasoning checks if a model supports reasoning tokens.
+func (o *Completion) supportsReasoning(model string) bool {
+	modelInfo := domain.GetModelByID(model)
+	if modelInfo == nil {
+		return false
+	}
+	return modelInfo.Reasoning
+}
+
 func (o *Completion) CompleteStream(
 	ctx context.Context,
 	model string,
@@ -124,6 +133,11 @@ func (o *Completion) CompleteStream(
 		Model:    model,
 		Messages: openaiMessages,
 		Stream:   true,
+	}
+
+	// Handle reasoning models with custom request
+	if o.supportsReasoning(model) {
+		return o.createStreamWithReasoning(ctx, model, openaiMessages, webSearchEnabled)
 	}
 
 	// Handle web search plugin with custom request
@@ -253,6 +267,11 @@ func (o *Completion) CompleteStreamWithAttachments(
 		Stream:   true,
 	}
 
+	// Handle reasoning models with custom request
+	if o.supportsReasoning(model) {
+		return o.createStreamWithReasoning(ctx, model, openaiMessages, webSearchEnabled)
+	}
+
 	// Handle web search plugin with custom request
 	if webSearchEnabled {
 		return o.createStreamWithPlugins(ctx, openaiMessages, systemPrompt)
@@ -314,9 +333,98 @@ type CustomRequest struct {
 type CustomStreamResponse struct {
 	Choices []struct {
 		Delta struct {
-			Content string `json:"content"`
+			Content   string `json:"content"`
+			Reasoning string `json:"reasoning,omitempty"`
 		} `json:"delta"`
 	} `json:"choices"`
+}
+
+// ReasoningRequest represents a request with reasoning support.
+type ReasoningRequest struct {
+	Model     string                         `json:"model"`
+	Messages  []openai.ChatCompletionMessage `json:"messages"`
+	Stream    bool                           `json:"stream"`
+	Reasoning map[string]interface{}         `json:"reasoning,omitempty"`
+	Plugins   []map[string]interface{}       `json:"plugins,omitempty"`
+}
+
+func (o *Completion) createStreamWithReasoning(
+	ctx context.Context,
+	model string,
+	messages []openai.ChatCompletionMessage,
+	webSearchEnabled bool,
+) (<-chan completion.StreamToken, error) {
+	// Create request with reasoning configuration
+	reqBody := ReasoningRequest{
+		Model:    model,
+		Messages: messages,
+		Stream:   true,
+		Reasoning: map[string]interface{}{
+			"effort": "high", // Use high effort for better quality reasoning
+		},
+	}
+
+	// Add plugins if needed
+	if webSearchEnabled {
+		reqBody.Plugins = []map[string]interface{}{
+			{"id": "web"},
+		}
+	}
+
+	jsonData, err := json.Marshal(reqBody)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal reasoning request: %w", err)
+	}
+
+	req, err := http.NewRequestWithContext(
+		ctx,
+		http.MethodPost,
+		"https://openrouter.ai/api/v1/chat/completions",
+		bytes.NewBuffer(jsonData),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create reasoning request: %w", err)
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+o.apiKey)
+
+	client := &http.Client{}
+	resp, err := client.Do(req) //nolint:bodyclose // body is closed in the goroutine defer
+	if err != nil {
+		return nil, fmt.Errorf("failed to send reasoning request: %w", err)
+	}
+
+	// Check for HTTP errors
+	if resp.StatusCode >= httpErrorThreshold {
+		// Read response body for error details
+		bodyBytes, readErr := io.ReadAll(resp.Body)
+		_ = resp.Body.Close()
+
+		var errorMsg string
+		if readErr != nil {
+			errorMsg = fmt.Sprintf("HTTP error: %d (failed to read response body: %v)", resp.StatusCode, readErr)
+		} else {
+			errorMsg = fmt.Sprintf("HTTP error: %d - Response: %s", resp.StatusCode, string(bodyBytes))
+		}
+
+		return nil, fmt.Errorf("%s", errorMsg)
+	}
+
+	tokenChan := make(chan completion.StreamToken)
+
+	go func() {
+		defer close(tokenChan)
+		defer func() {
+			if closeErr := resp.Body.Close(); closeErr != nil {
+				o.logger.Error("failed to close response body", "error", closeErr)
+			}
+		}()
+
+		o.processReasoningStreamResponse(ctx, resp, tokenChan)
+	}()
+
+	return tokenChan, nil
 }
 
 func (o *Completion) createStreamWithPlugins(
@@ -565,6 +673,60 @@ func (o *Completion) processStreamResponse(
 			if content != "" {
 				select {
 				case tokenChan <- completion.StreamToken{Content: content}:
+				case <-ctx.Done():
+					return
+				}
+			}
+		}
+	}
+
+	if scanErr := scanner.Err(); scanErr != nil {
+		select {
+		case tokenChan <- completion.StreamToken{Error: fmt.Errorf("scanner error: %w", scanErr)}:
+		case <-ctx.Done():
+		}
+	}
+}
+
+func (o *Completion) processReasoningStreamResponse(
+	ctx context.Context,
+	resp *http.Response,
+	tokenChan chan<- completion.StreamToken,
+) {
+	scanner := bufio.NewScanner(resp.Body)
+	for scanner.Scan() {
+		line := scanner.Text()
+		if !strings.HasPrefix(line, "data: ") {
+			continue
+		}
+
+		data := strings.TrimPrefix(line, "data: ")
+		if data == "[DONE]" {
+			return
+		}
+
+		var streamResp CustomStreamResponse
+		if unmarshalErr := json.Unmarshal([]byte(data), &streamResp); unmarshalErr != nil {
+			continue // Skip malformed lines
+		}
+
+		if len(streamResp.Choices) > 0 {
+			token := completion.StreamToken{}
+
+			// Handle regular content
+			if streamResp.Choices[0].Delta.Content != "" {
+				token.Content = streamResp.Choices[0].Delta.Content
+			}
+
+			// Handle reasoning tokens
+			if streamResp.Choices[0].Delta.Reasoning != "" {
+				token.Reasoning = streamResp.Choices[0].Delta.Reasoning
+			}
+
+			// Send token if we have any content
+			if token.Content != "" || token.Reasoning != "" {
+				select {
+				case tokenChan <- token:
 				case <-ctx.Done():
 					return
 				}
