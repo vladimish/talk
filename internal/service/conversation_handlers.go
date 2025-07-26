@@ -57,6 +57,8 @@ func (s *UpdateService) handleConversationMessageWithReply(
 	// Get model info for cost calculation
 	currentModel := domain.GetModelByID(user.SelectedModel)
 	if currentModel == nil {
+		fmt.Println(user.SelectedModel)
+		fmt.Println(domain.AvailableModels)
 		return fmt.Errorf("model not found: %s", user.SelectedModel)
 	}
 
