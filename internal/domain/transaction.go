@@ -70,7 +70,7 @@ const (
 // AvailableModels defines all available AI models with their complete information.
 var AvailableModels = []ModelInfo{
 	{
-		ID:              "google/gemini-2.5-flash-preview-05-20",
+		ID:              "google/gemini-2.5-flash",
 		I18nKey:         i18n.ModelGeminiFlash,
 		Cost:            TokenCostLow,
 		TokenType:       TokenTypeRegular,
