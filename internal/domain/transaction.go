@@ -235,8 +235,8 @@ func (m *ModelInfo) GetDisplayNameForUser(
 
 // ModelCosts defines the token costs for each AI model (for backward compatibility).
 var ModelCosts = map[string]ModelCost{
-	"google/gemini-2.5-flash-preview-05-20": {
-		ModelName: "google/gemini-2.5-flash-preview-05-20",
+	"google/gemini-2.5-flash": {
+		ModelName: "google/gemini-2.5-flash",
 		Cost:      TokenCostLow,
 		TokenType: TokenTypeRegular,
 	},

@@ -388,7 +388,7 @@ func (s *UpdateService) createNewUserWithTokens(ctx context.Context, update doma
 		ExternalID:             update.ExternalUserID,
 		Language:               language,
 		CurrentStep:            domain.UserStateMenu,
-		SelectedModel:          "google/gemini-2.5-flash-preview-05-20",
+		SelectedModel:          "google/gemini-2.5-flash",
 		ConversationListOffset: 0,
 		CreatedAt:              now,
 		UpdatedAt:              now,

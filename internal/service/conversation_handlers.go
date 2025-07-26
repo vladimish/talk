@@ -823,7 +823,7 @@ Examples:
 	// Use Gemini model for generating conversation name
 	tokenStream, err := s.completion.CompleteStream(
 		ctx,
-		"google/gemini-2.5-flash-preview-05-20",
+		"google/gemini-2.5-flash",
 		systemPrompt,
 		messages,
 		"",    // no image for conversation name generation
